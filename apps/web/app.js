@@ -93,7 +93,13 @@ async function bootstrap() {
       return;
     }
 
-    const client = createClient(config.supabaseUrl, config.supabaseAnonKey);
+    const client = createClient(config.supabaseUrl, config.supabaseAnonKey, {
+      global: {
+        headers: {
+          'x-invite-code': inviteCode,
+        },
+      },
+    });
 
     const { data: groups, error } = await client
       .from('groups')
