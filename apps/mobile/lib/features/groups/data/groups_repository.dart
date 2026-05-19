@@ -162,11 +162,16 @@ class GroupsRepository {
     }
 
     await _ensureUserProfile(user);
-    await _runWithSchemaCheck(() => _supabase.from('group_members').upsert({
-          'group_id': groupId,
-          'user_id': user.id,
-          'role': 'member',
-        }));
+    await _runWithSchemaCheck(
+      () => _supabase.from('group_members').upsert(
+            {
+              'group_id': groupId,
+              'user_id': user.id,
+              'role': 'member',
+            },
+            onConflict: 'group_id,user_id',
+          ),
+    );
   }
 
   Future<int> _countMembers(String groupId) async {

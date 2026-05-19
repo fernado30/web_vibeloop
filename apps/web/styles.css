@@ -32,45 +32,9 @@ body {
 }
 
 .shell {
-  max-width: 980px;
+  max-width: 680px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 24px;
-  align-items: start;
-}
-
-.hero {
-  padding: 24px 8px;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border: 1px solid var(--panel-border);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--accent);
-  letter-spacing: 0.12em;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-h1 {
-  margin: 18px 0 14px;
-  font-size: clamp(2.4rem, 5vw, 4.5rem);
-  line-height: 0.95;
-  letter-spacing: -0.04em;
-  max-width: 10ch;
-}
-
-.lede {
-  max-width: 58ch;
-  color: var(--muted);
-  font-size: 1.05rem;
-  line-height: 1.7;
+  display: block;
 }
 
 .card {
@@ -195,10 +159,6 @@ code {
 }
 
 @media (max-width: 900px) {
-  .shell {
-    grid-template-columns: 1fr;
-  }
-
   body {
     padding: 18px;
   }
