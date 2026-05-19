@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "installCommand": "echo skip",
+  "buildCommand": "node apps/web/build.mjs",
+  "outputDirectory": "apps/web/dist",
+  "rewrites": [
+    {
+      "source": "/invite/:code",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

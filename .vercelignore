@@ -1,0 +1,9 @@
+apps/mobile/**
+supabase/**
+node_modules/**
+.dart_tool/**
+.vscode/**
+*.iml
+.env
+.env.example
+.env.web.example

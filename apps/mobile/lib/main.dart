@@ -1,0 +1,98 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'core/router/app_router.dart';
+import 'core/theme/app_theme.dart';
+import 'core/supabase/supabase_config.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    final config = await SupabaseConfig.load();
+    await Supabase.initialize(
+      url: config.url,
+      anonKey: config.anonKey,
+    );
+    runApp(const ProviderScope(child: VibeloopApp()));
+  } catch (error, stackTrace) {
+    runApp(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: _BootstrapErrorScreen(
+          error: error,
+          stackTrace: stackTrace,
+        ),
+      ),
+    );
+  }
+}
+
+class VibeloopApp extends ConsumerWidget {
+  const VibeloopApp({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+    return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
+      title: 'VIBELOOP',
+      theme: vibeloopDarkTheme,
+      routerConfig: router,
+    );
+  }
+}
+
+class _BootstrapErrorScreen extends StatelessWidget {
+  const _BootstrapErrorScreen({
+    required this.error,
+    required this.stackTrace,
+  });
+
+  final Object error;
+  final StackTrace stackTrace;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0F0F0F),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'No pudimos iniciar VIBELOOP',
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Colors.white),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    error.toString(),
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Revisa el archivo apps/mobile/assets/.env y vuelve a abrir la app.',
+                    style: TextStyle(color: Colors.white54),
+                  ),
+                  const SizedBox(height: 18),
+                  SingleChildScrollView(
+                    child: Text(
+                      stackTrace.toString(),
+                      style: const TextStyle(fontSize: 12, color: Colors.white38),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

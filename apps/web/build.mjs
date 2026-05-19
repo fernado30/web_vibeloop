@@ -1,0 +1,52 @@
+import { mkdir, readFile, writeFile, copyFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = fileURLToPath(new URL('.', import.meta.url));
+const distDir = join(root, 'dist');
+
+const requiredEnv = ['SUPABASE_URL', 'SUPABASE_ANON_KEY'];
+
+function readEnv(name) {
+  return process.env[name]?.trim() ?? '';
+}
+
+function assertEnv(name, value) {
+  if (!value || value.includes('YOUR_')) {
+    throw new Error(`Missing or placeholder env var: ${name}`);
+  }
+}
+
+async function main() {
+  for (const name of requiredEnv) {
+    assertEnv(name, readEnv(name));
+  }
+
+  await mkdir(distDir, { recursive: true });
+
+  await copyFile(join(root, 'index.html'), join(distDir, 'index.html'));
+  await copyFile(join(root, 'styles.css'), join(distDir, 'styles.css'));
+  await copyFile(join(root, 'app.js'), join(distDir, 'app.js'));
+
+  const config = {
+    supabaseUrl: readEnv('SUPABASE_URL'),
+    supabaseAnonKey: readEnv('SUPABASE_ANON_KEY'),
+  };
+
+  await writeFile(
+    join(distDir, 'config.js'),
+    `window.VIBELOOP_WEB_CONFIG = ${JSON.stringify(config, null, 2)};\n`,
+    'utf8',
+  );
+
+  await writeFile(
+    join(distDir, '404.html'),
+    await readFile(join(distDir, 'index.html'), 'utf8'),
+    'utf8',
+  );
+}
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : error);
+  process.exitCode = 1;
+});

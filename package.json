@@ -1,0 +1,12 @@
+{
+  "name": "vibeloop",
+  "private": true,
+  "scripts": {
+    "supabase:link": "npx supabase link --project-ref rkwugxemjrwtfjvtckes --yes",
+    "supabase:migrate": "npx supabase db push --yes"
+  },
+  "devDependencies": {
+    "@supabase/cli": "^1.0.0",
+    "supabase": "^2.65.0"
+  }
+}
