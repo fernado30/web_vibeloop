@@ -48,29 +48,20 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
-    final functionResponse = await _supabase.functions.invoke(
-      'register-user',
-      body: {
-        'email': email,
-        'password': password,
-        'displayName': name,
+    final response = await _supabase.auth.signUp(
+      email: email,
+      password: password,
+      data: {
+        'display_name': name,
       },
     );
 
-    final functionData = functionResponse.data;
-    if (functionData is Map && functionData['error'] != null) {
-      throw StateError(functionData['error'].toString());
-    }
-
-    final response = await _supabase.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
-
     final user = response.user;
-    if (user != null) {
-      await _ensureProfile(user, displayName: name);
+    if (user == null) {
+      throw StateError('No se pudo crear la cuenta invitada.');
     }
+
+    await _ensureProfile(user, displayName: name);
 
     return response;
   }
