@@ -170,6 +170,7 @@ class GroupsRepository {
               'role': 'member',
             },
             onConflict: 'group_id,user_id',
+            ignoreDuplicates: true,
           ),
     );
   }

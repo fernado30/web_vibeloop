@@ -72,22 +72,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _anonymous() async {
-    if (!mounted) return;
-    _safeSetState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      await ref.read(authRepositoryProvider).signInAnonymously();
-      if (mounted) context.go('/groups');
-    } catch (e) {
-      _safeSetState(() => _error = e.toString());
-    } finally {
-      _safeSetState(() => _loading = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -133,11 +117,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       onPressed: _loading ? null : _signInGoogle,
                       icon: const Icon(Icons.login),
                       label: const Text('Google Sign-In'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: _loading ? null : _anonymous,
-                      child: const Text('Unirse anónimamente'),
                     ),
                     const SizedBox(height: 16),
                     TextButton(

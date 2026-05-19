@@ -75,16 +75,6 @@ class AuthRepository {
     return response;
   }
 
-  Future<AuthResponse> signInAnonymously() {
-    return _supabase.auth.signInAnonymously().then((response) async {
-      final user = response.user;
-      if (user != null) {
-        await _ensureProfile(user, displayName: 'Anónimo');
-      }
-      return response;
-    });
-  }
-
   Future<void> signOut() {
     return _supabase.auth.signOut();
   }
@@ -143,10 +133,6 @@ class AuthController extends StateNotifier<local_auth.AuthState> {
 
   Future<void> signUpWithEmail(String name, String email, String password) async {
     await _repository.signUpWithEmail(name: name, email: email, password: password);
-  }
-
-  Future<void> signInAnonymously() async {
-    await _repository.signInAnonymously();
   }
 
   Future<void> signOut() async {

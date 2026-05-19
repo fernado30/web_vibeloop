@@ -26,12 +26,13 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
 
   Future<void> _bootstrap() async {
     try {
-      final authRepo = ref.read(authRepositoryProvider);
-      if (authRepo.currentUser == null) {
-        await authRepo.signInAnonymously();
-      }
       if (mounted) {
         setState(() => _error = null);
+      }
+
+      final authRepo = ref.read(authRepositoryProvider);
+      if (authRepo.currentUser == null) {
+        await _signInGuestAccount(authRepo);
       }
 
       final group = await ref.read(groupsRepositoryProvider).getGroupByInviteCode(widget.inviteCode);
@@ -49,6 +50,19 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
         setState(() => _loading = false);
       }
     }
+  }
+
+  Future<void> _signInGuestAccount(AuthRepository authRepo) async {
+    final safeCode = widget.inviteCode.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toLowerCase();
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final guestEmail = 'guest-$safeCode-$timestamp@vibeloop.local';
+    final guestPassword = 'guest-${timestamp}-${widget.inviteCode.hashCode.abs()}';
+
+    await authRepo.signUpWithEmail(
+      name: 'Invitado',
+      email: guestEmail,
+      password: guestPassword,
+    );
   }
 
   @override
