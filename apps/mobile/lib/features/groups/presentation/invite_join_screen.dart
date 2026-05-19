@@ -55,7 +55,7 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
   Future<void> _signInGuestAccount(AuthRepository authRepo) async {
     final safeCode = widget.inviteCode.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toLowerCase();
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final guestEmail = 'guest-$safeCode-$timestamp@vibeloop.local';
+    final guestEmail = 'guest-$safeCode-$timestamp@example.com';
     final guestPassword = 'guest-${timestamp}-${widget.inviteCode.hashCode.abs()}';
 
     await authRepo.signUpWithEmail(
