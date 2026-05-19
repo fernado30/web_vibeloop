@@ -95,15 +95,17 @@ async function bootstrap() {
 
     const client = createClient(config.supabaseUrl, config.supabaseAnonKey);
 
-    const { data: group, error } = await client
+    const { data: groups, error } = await client
       .from('groups')
       .select('id, name, description, created_at, invite_code, group_members(id)')
       .eq('invite_code', inviteCode)
-      .single();
+      .limit(1);
 
     if (error) {
       throw new Error(`No se pudo cargar la invitación: ${error.message}`);
     }
+
+    const group = Array.isArray(groups) ? groups[0] : null;
 
     if (!group) {
       throw new Error('La invitación no existe o ya no es válida.');
