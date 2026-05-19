@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../groups/data/groups_repository.dart';
 import '../data/chat_repository.dart';
@@ -136,12 +136,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Future<void> _shareInviteLink() async {
     final inviteLink = await ref.read(groupsRepositoryProvider).generateInviteLink(widget.groupId);
-    await Clipboard.setData(ClipboardData(text: inviteLink));
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Link web copiado: $inviteLink'),
-        duration: const Duration(seconds: 3),
+    final box = context.findRenderObject() as RenderBox?;
+    await SharePlus.instance.share(
+      ShareParams(
+        text: inviteLink,
+        title: 'Invitación a VIBELOOP',
+        sharePositionOrigin: box == null ? null : box.localToGlobal(Offset.zero) & box.size,
       ),
     );
   }

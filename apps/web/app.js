@@ -11,6 +11,7 @@ const createdAtEl = document.getElementById('createdAt');
 const photoInputEl = document.getElementById('photo');
 const previewEl = document.getElementById('preview');
 const joinButtonEl = document.getElementById('joinButton');
+const hintEl = document.getElementById('hint');
 
 function showError(message) {
   statusEl.classList.add('hidden');
@@ -73,21 +74,8 @@ function setPreview(file) {
   previewEl.classList.remove('hidden');
 }
 
-async function uploadPhoto(client, file, userId) {
-  const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-  const contentType = file.type || (extension === 'png' ? 'image/png' : 'image/jpeg');
-  const path = `${userId}/${Date.now()}.${extension}`;
-
-  const { error } = await client.storage.from('avatars').upload(path, file, {
-    contentType,
-    upsert: true,
-  });
-
-  if (error) {
-    throw new Error(`No se pudo subir la foto: ${error.message}`);
-  }
-
-  return client.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+function buildMobileLink(token) {
+  return `vibeloop:/invite/${token}`;
 }
 
 async function bootstrap() {
@@ -106,10 +94,6 @@ async function bootstrap() {
     }
 
     const client = createClient(config.supabaseUrl, config.supabaseAnonKey);
-    const { error: authError } = await client.auth.signInAnonymously();
-    if (authError) {
-      throw new Error(`No se pudo iniciar sesión anónima: ${authError.message}`);
-    }
 
     const { data: group, error } = await client
       .from('groups')
@@ -131,63 +115,54 @@ async function bootstrap() {
     memberCountEl.textContent = `${group.group_members?.length ?? 0} miembros`;
     createdAtEl.textContent = `Creado ${formatDate(group.created_at)}`;
 
-    const user = client.auth.currentUser;
-    if (!user) {
-      throw new Error('No hay una sesión activa para continuar.');
-    }
-
     let selectedFile = null;
+    let previewUrl = null;
 
     photoInputEl.addEventListener('change', (event) => {
       const file = event.target.files?.[0] ?? null;
       selectedFile = file;
-      setPreview(file);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        previewUrl = null;
+      }
+
+      if (file) {
+        previewUrl = URL.createObjectURL(file);
+        previewEl.style.backgroundImage = `url(${previewUrl})`;
+        previewEl.classList.remove('hidden');
+        joinButtonEl.disabled = false;
+        hintEl.textContent = 'Tu foto está lista. Pulsa acceder para abrir el chat en la app.';
+      } else {
+        setPreview(null);
+        joinButtonEl.disabled = true;
+        hintEl.textContent = 'Primero sube una foto para continuar.';
+      }
     });
 
     joinButtonEl.addEventListener('click', async () => {
-      joinButtonEl.disabled = true;
-      joinButtonEl.textContent = 'Entrando...';
-
-      try {
-        let avatarUrl = null;
-        if (selectedFile) {
-          avatarUrl = await uploadPhoto(client, selectedFile, user.id);
-        }
-
-        const displayName = 'Invitado';
-        const username = `${displayName.toLowerCase()}_${user.id.substring(0, 8)}`;
-
-        const { error: profileError } = await client.from('users').upsert({
-          id: user.id,
-          username,
-          display_name: displayName,
-          avatar_url: avatarUrl,
-        });
-
-        if (profileError) {
-          throw new Error(`No se pudo guardar tu perfil: ${profileError.message}`);
-        }
-
-        const { error: joinError } = await client.from('group_members').upsert({
-          group_id: group.id,
-          user_id: user.id,
-          role: 'member',
-        });
-
-        if (joinError) {
-          throw new Error(`No se pudo entrar al grupo: ${joinError.message}`);
-        }
-
-        statusEl.textContent = 'Listo. Ya puedes usar este grupo desde la app o seguir construyendo la web.';
-        statusEl.classList.remove('hidden');
-        inviteViewEl.classList.add('hidden');
-      } catch (joinErr) {
-        showError(joinErr instanceof Error ? joinErr.message : 'No se pudo completar el ingreso al grupo.');
-      } finally {
-        joinButtonEl.disabled = false;
-        joinButtonEl.textContent = 'Entrar al grupo';
+      if (!selectedFile) {
+        showError('Primero sube una foto para poder acceder al grupo.');
+        return;
       }
+
+      joinButtonEl.disabled = true;
+      joinButtonEl.textContent = 'Abriendo la app...';
+
+      const mobileLink = buildMobileLink(token);
+      window.location.href = mobileLink;
+
+      setTimeout(() => {
+        if (document.visibilityState === 'visible') {
+          joinButtonEl.disabled = false;
+          joinButtonEl.textContent = 'Acceder al grupo';
+          hintEl.textContent = 'Si la app no se abrió, revisa que VIBELOOP esté instalado en tu teléfono.';
+        }
+      }, 1500);
     });
+
+    joinButtonEl.disabled = true;
+    joinButtonEl.textContent = 'Acceder al grupo';
+    hintEl.textContent = 'Sube tu foto y pulsa acceder para abrir el chat en la app móvil.';
   } catch (err) {
     showError(err instanceof Error ? err.message : 'No se pudo iniciar la web.');
   }

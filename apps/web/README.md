@@ -6,7 +6,7 @@ Standalone web app for invitation links.
 
 - Opens links in the form `/invite/:token`
 - Loads the group from Supabase using the public anon key
-- Lets a guest upload a photo and join the group
+- Lets a guest upload a photo and then open the mobile app chat
 
 ## Setup
 
