@@ -3,39 +3,54 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VIBELOOP Web</title>
+    <title>VIBELOOP Anonymous</title>
     <meta
       name="description"
-      content="Web invitation experience for VIBELOOP groups."
+      content="Web de mensajes anónimos para grupos VIBELOOP."
     />
     <link rel="stylesheet" href="/styles.css" />
     <script src="/config.js"></script>
   </head>
   <body>
-    <main class="shell">
+    <main class="page">
       <section class="card">
-        <div id="status" class="status">Cargando invitación...</div>
+        <div id="status" class="status">Cargando buzón anónimo...</div>
 
-        <div id="inviteView" class="invite hidden">
-          <p class="eyebrow">Invitación</p>
-          <h2 id="groupName">Grupo</h2>
-          <p id="groupDescription" class="description"></p>
+        <div id="inboxView" class="inbox hidden">
+          <header class="hero">
+            <div class="avatar" aria-hidden="true">?</div>
+            <div class="hero-copy">
+              <p class="eyebrow">Mensajes anónimos</p>
+              <h1 id="groupName">Mándame mensajes anónimos</h1>
+              <p id="groupDescription" class="subtitle"></p>
+            </div>
+          </header>
 
-          <div class="meta">
-            <span id="memberCount"></span>
-            <span id="createdAt"></span>
+          <form id="messageForm" class="composer">
+            <label class="sr-only" for="messageInput">Mensaje anónimo</label>
+            <textarea
+              id="messageInput"
+              class="message-input"
+              maxlength="500"
+              placeholder="¿Qué quieres decir?"
+            ></textarea>
+
+            <div class="composer-footer">
+              <span id="charCount" class="counter">0/500</span>
+              <button id="sendButton" class="primary" type="submit">¡Enviar!</button>
+            </div>
+          </form>
+
+          <p id="feedback" class="feedback hidden"></p>
+
+          <div class="prompts">
+            <span>🔒 mensajes anónimos para el grupo</span>
+            <span>✨ sin login, sin nombre y sin perfil</span>
           </div>
 
-          <div class="photo-block">
-            <label for="photo">Tu foto</label>
-            <input id="photo" type="file" accept="image/*" />
-            <div id="preview" class="preview hidden"></div>
-          </div>
-
-          <button id="joinButton" class="primary">Acceder al grupo</button>
-          <p id="hint" class="hint">
-            Sube tu foto y pulsa acceder para abrir el chat en la app móvil.
-          </p>
+          <button id="openAppButton" class="open-app" type="button">
+            Abrir el chat del grupo
+          </button>
         </div>
 
         <div id="errorView" class="error hidden"></div>

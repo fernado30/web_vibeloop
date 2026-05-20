@@ -1,12 +1,13 @@
 # VIBELOOP Web
 
-Standalone web app for invitation links.
+Standalone web app for anonymous messages.
 
 ## What it does
 
 - Opens links in the form `/invite/:token`
 - Loads the group from Supabase using the public anon key
-- Lets a guest upload a photo and then open the mobile app chat
+- Lets anyone write and send anonymous messages to that group
+- Includes a button to open the group chat in the mobile app
 
 ## Setup
 

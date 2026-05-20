@@ -2,53 +2,40 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const config = window.VIBELOOP_WEB_CONFIG ?? {};
 const statusEl = document.getElementById('status');
-const inviteViewEl = document.getElementById('inviteView');
 const errorViewEl = document.getElementById('errorView');
+const inboxViewEl = document.getElementById('inboxView');
 const groupNameEl = document.getElementById('groupName');
 const groupDescriptionEl = document.getElementById('groupDescription');
-const memberCountEl = document.getElementById('memberCount');
-const createdAtEl = document.getElementById('createdAt');
-const photoInputEl = document.getElementById('photo');
-const previewEl = document.getElementById('preview');
-const joinButtonEl = document.getElementById('joinButton');
-const hintEl = document.getElementById('hint');
+const messageFormEl = document.getElementById('messageForm');
+const messageInputEl = document.getElementById('messageInput');
+const charCountEl = document.getElementById('charCount');
+const sendButtonEl = document.getElementById('sendButton');
+const openAppButtonEl = document.getElementById('openAppButton');
+const feedbackEl = document.getElementById('feedback');
+
+const MAX_MESSAGE_LENGTH = 500;
 
 function showError(message) {
   statusEl.classList.add('hidden');
-  inviteViewEl.classList.add('hidden');
+  inboxViewEl.classList.add('hidden');
   errorViewEl.textContent = message;
   errorViewEl.classList.remove('hidden');
 }
 
-function showInvite() {
+function showInbox() {
   statusEl.classList.add('hidden');
   errorViewEl.classList.add('hidden');
-  inviteViewEl.classList.remove('hidden');
+  inboxViewEl.classList.remove('hidden');
 }
 
 function parseInviteToken() {
   const match = window.location.pathname.match(/^\/invite\/([^/]+)\/?$/);
-  if (!match) {
-    return null;
-  }
-
-  return match[1];
+  return match ? match[1] : null;
 }
 
 function getInviteCode(token) {
   const parts = token.split('-');
   return parts[parts.length - 1] ?? null;
-}
-
-function formatDate(value) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return 'Fecha no disponible';
-  }
-
-  return new Intl.DateTimeFormat('es', {
-    dateStyle: 'medium',
-  }).format(date);
 }
 
 function requireConfig() {
@@ -62,25 +49,35 @@ function requireConfig() {
   }
 }
 
-function setPreview(file) {
-  if (!file) {
-    previewEl.classList.add('hidden');
-    previewEl.style.backgroundImage = '';
-    return;
-  }
-
-  const objectUrl = URL.createObjectURL(file);
-  previewEl.style.backgroundImage = `url(${objectUrl})`;
-  previewEl.classList.remove('hidden');
-}
-
 function buildMobileLink(token) {
   return `vibeloop:/invite/${token}`;
+}
+
+function hasUrl(content) {
+  return /(https?:\/\/|www\.)/i.test(content);
+}
+
+function updateCharacterCount() {
+  charCountEl.textContent = `${messageInputEl.value.length}/${MAX_MESSAGE_LENGTH}`;
+}
+
+function setSendingState(isSending) {
+  sendButtonEl.disabled = isSending;
+  messageInputEl.disabled = isSending;
+  openAppButtonEl.disabled = isSending;
+  sendButtonEl.textContent = isSending ? 'Enviando...' : '¡Enviar!';
+}
+
+function flashFeedback(message, kind = 'success') {
+  feedbackEl.textContent = message;
+  feedbackEl.dataset.kind = kind;
+  feedbackEl.classList.remove('hidden');
 }
 
 async function bootstrap() {
   try {
     requireConfig();
+
     const token = parseInviteToken();
     if (!token) {
       showError('La ruta no es válida. Abre un link con formato /invite/:token.');
@@ -89,88 +86,80 @@ async function bootstrap() {
 
     const inviteCode = getInviteCode(token);
     if (!inviteCode) {
-      showError('No pudimos leer el código de invitación.');
+      showError('No pudimos leer el código del enlace.');
       return;
     }
 
-    const client = createClient(config.supabaseUrl, config.supabaseAnonKey, {
-      global: {
-        headers: {
-          'x-invite-code': inviteCode,
-        },
-      },
-    });
-
+    const client = createClient(config.supabaseUrl, config.supabaseAnonKey);
     const { data: groups, error } = await client
       .from('groups')
-      .select('id, name, description, created_at, invite_code, group_members(id)')
+      .select('id, name, description, created_at')
       .eq('invite_code', inviteCode)
       .limit(1);
 
     if (error) {
-      throw new Error(`No se pudo cargar la invitación: ${error.message}`);
+      throw new Error(`No se pudo cargar el buzón anónimo: ${error.message}`);
     }
 
     const group = Array.isArray(groups) ? groups[0] : null;
-
     if (!group) {
       throw new Error('La invitación no existe o ya no es válida.');
     }
 
-    showInvite();
-    groupNameEl.textContent = group.name ?? 'Grupo';
-    groupDescriptionEl.textContent = group.description || 'Sin descripción.';
-    memberCountEl.textContent = `${group.group_members?.length ?? 0} miembros`;
-    createdAtEl.textContent = `Creado ${formatDate(group.created_at)}`;
-
-    let selectedFile = null;
-    let previewUrl = null;
-
-    photoInputEl.addEventListener('change', (event) => {
-      const file = event.target.files?.[0] ?? null;
-      selectedFile = file;
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-        previewUrl = null;
-      }
-
-      if (file) {
-        previewUrl = URL.createObjectURL(file);
-        previewEl.style.backgroundImage = `url(${previewUrl})`;
-        previewEl.classList.remove('hidden');
-        joinButtonEl.disabled = false;
-        hintEl.textContent = 'Tu foto está lista. Pulsa acceder para abrir el chat en la app.';
-      } else {
-        setPreview(null);
-        joinButtonEl.disabled = true;
-        hintEl.textContent = 'Primero sube una foto para continuar.';
-      }
+    showInbox();
+    groupNameEl.textContent = group.name ?? 'Mensajes anónimos';
+    groupDescriptionEl.textContent = group.description || 'Escribe algo anónimo para este grupo. Sin login, sin nombre y sin perfil.';
+    openAppButtonEl.addEventListener('click', () => {
+      window.location.href = buildMobileLink(token);
     });
 
-    joinButtonEl.addEventListener('click', async () => {
-      if (!selectedFile) {
-        showError('Primero sube una foto para poder acceder al grupo.');
+    updateCharacterCount();
+    messageInputEl.addEventListener('input', updateCharacterCount);
+
+    messageFormEl.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const content = messageInputEl.value.trim();
+      if (!content) {
+        flashFeedback('Escribe un mensaje antes de enviar.', 'error');
         return;
       }
 
-      joinButtonEl.disabled = true;
-      joinButtonEl.textContent = 'Abriendo la app...';
+      if (content.length > MAX_MESSAGE_LENGTH) {
+        flashFeedback(`El mensaje no puede pasar de ${MAX_MESSAGE_LENGTH} caracteres.`, 'error');
+        return;
+      }
 
-      const mobileLink = buildMobileLink(token);
-      window.location.href = mobileLink;
+      if (hasUrl(content)) {
+        flashFeedback('No permitimos URLs dentro del mensaje.', 'error');
+        return;
+      }
 
-      setTimeout(() => {
-        if (document.visibilityState === 'visible') {
-          joinButtonEl.disabled = false;
-          joinButtonEl.textContent = 'Acceder al grupo';
-          hintEl.textContent = 'Si la app no se abrió, revisa que VIBELOOP esté instalado en tu teléfono.';
+      setSendingState(true);
+      feedbackEl.classList.add('hidden');
+
+      try {
+        const { error: insertError } = await client.from('anonymous_messages').insert({
+          group_id: group.id,
+          content,
+        });
+
+        if (insertError) {
+          throw new Error(insertError.message);
         }
-      }, 1500);
-    });
 
-    joinButtonEl.disabled = true;
-    joinButtonEl.textContent = 'Acceder al grupo';
-    hintEl.textContent = 'Sube tu foto y pulsa acceder para abrir el chat en la app móvil.';
+        messageInputEl.value = '';
+        updateCharacterCount();
+        flashFeedback('Mensaje enviado de forma anónima.', 'success');
+      } catch (err) {
+        flashFeedback(
+          err instanceof Error ? `No se pudo enviar el mensaje: ${err.message}` : 'No se pudo enviar el mensaje.',
+          'error',
+        );
+      } finally {
+        setSendingState(false);
+      }
+    });
   } catch (err) {
     showError(err instanceof Error ? err.message : 'No se pudo iniciar la web.');
   }
