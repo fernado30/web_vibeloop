@@ -10,7 +10,6 @@ const messageFormEl = document.getElementById('messageForm');
 const messageInputEl = document.getElementById('messageInput');
 const charCountEl = document.getElementById('charCount');
 const sendButtonEl = document.getElementById('sendButton');
-const openAppButtonEl = document.getElementById('openAppButton');
 const feedbackEl = document.getElementById('feedback');
 
 const MAX_MESSAGE_LENGTH = 500;
@@ -49,10 +48,6 @@ function requireConfig() {
   }
 }
 
-function buildMobileLink(token) {
-  return `vibeloop:/invite/${token}`;
-}
-
 function hasUrl(content) {
   return /(https?:\/\/|www\.)/i.test(content);
 }
@@ -64,7 +59,6 @@ function updateCharacterCount() {
 function setSendingState(isSending) {
   sendButtonEl.disabled = isSending;
   messageInputEl.disabled = isSending;
-  openAppButtonEl.disabled = isSending;
   sendButtonEl.textContent = isSending ? 'Enviando...' : '¡Enviar!';
 }
 
@@ -109,9 +103,6 @@ async function bootstrap() {
     showInbox();
     groupNameEl.textContent = group.name ?? 'Mensajes anónimos';
     groupDescriptionEl.textContent = group.description || 'Escribe algo anónimo para este grupo. Sin login, sin nombre y sin perfil.';
-    openAppButtonEl.addEventListener('click', () => {
-      window.location.href = buildMobileLink(token);
-    });
 
     updateCharacterCount();
     messageInputEl.addEventListener('input', updateCharacterCount);
