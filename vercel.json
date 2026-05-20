@@ -6,6 +6,10 @@
   "outputDirectory": "apps/web/dist",
   "rewrites": [
     {
+      "source": "/open/:code",
+      "destination": "/index.html"
+    },
+    {
       "source": "/invite/:code",
       "destination": "/index.html"
     },

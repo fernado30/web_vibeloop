@@ -58,6 +58,18 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
     redirect: (context, state) {
       final uri = state.uri;
+      if (uri.scheme == 'vibeloop') {
+        if (uri.host == 'invite') {
+          final invitePath = uri.pathSegments.isEmpty ? '' : '/${uri.pathSegments.join('/')}';
+          final query = uri.hasQuery ? '?${uri.query}' : '';
+          return '/invite$invitePath$query';
+        }
+
+        if (uri.host == 'auth-callback') {
+          return '/auth-callback';
+        }
+      }
+
       if (uri.hasScheme && uri.path.isNotEmpty) {
         final normalizedLocation = uri.path + (uri.hasQuery ? '?${uri.query}' : '');
         if (normalizedLocation != state.uri.toString()) {

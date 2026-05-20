@@ -4,10 +4,11 @@ Standalone web app for anonymous messages.
 
 ## What it does
 
-- Opens links in the form `/invite/:token`
+- Opens links in the form `/open/:token` and `/invite/:token`
 - Loads the group from Supabase using the public anon key
 - Lets anyone write and send anonymous messages to that group
-- Includes a button to open the group chat in the mobile app
+- `/open/:token` tries to open the mobile app with an Android `intent://` link and falls back to the web inbox
+- `/invite/:token` opens the anonymous message inbox directly
 
 ## Setup
 
@@ -24,7 +25,7 @@ For local testing, you can edit `config.js` directly.
 
 Deploy the contents of this folder as a static site.
 
-Make sure your host rewrites all routes to `index.html`, so direct visits to `/invite/:token` work.
+Make sure your host rewrites all routes to `index.html`, so direct visits to `/open/:token` and `/invite/:token` work.
 
 This repo already includes a root `vercel.json` configured for that flow.
 

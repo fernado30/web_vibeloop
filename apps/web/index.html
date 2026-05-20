@@ -3,54 +3,65 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VIBELOOP Anonymous</title>
-    <meta
-      name="description"
-      content="Web de mensajes anónimos para grupos VIBELOOP."
-    />
+    <title>VIBELOOP</title>
+    <meta name="description" content="Mensajes anónimos y acceso al grupo de VIBELOOP." />
     <link rel="stylesheet" href="/styles.css" />
     <script src="/config.js"></script>
   </head>
   <body>
-    <main class="page">
-      <section class="card">
+    <main class="shell">
+      <section id="landingView" class="landing card hidden">
+        <div class="landing-brand">VIBELOOP</div>
+        <div class="landing-avatar">?</div>
+        <h1>Abriendo tu grupo...</h1>
+        <p class="landing-copy">
+          Estamos intentando abrir la app. Si no está instalada, puedes seguir en la web anónima.
+        </p>
+        <div class="landing-actions">
+          <button id="openNativeButton" class="primary-button" type="button">Abrir la app</button>
+          <button id="goWebButton" class="secondary-button" type="button">Ir a la web anónima</button>
+        </div>
+        <p id="landingHint" class="landing-hint">
+          Si la app no se abre en unos segundos, toca "Ir a la web anónima".
+        </p>
+      </section>
+
+      <section id="inboxView" class="inbox card hidden">
         <div id="status" class="status">Cargando buzón anónimo...</div>
 
-        <div id="inboxView" class="inbox hidden">
-          <header class="hero">
-            <div class="avatar" aria-hidden="true">?</div>
-            <div class="hero-copy">
-              <p class="eyebrow">Mensajes anónimos</p>
-              <h1 id="groupName">Mándame mensajes anónimos</h1>
-              <p id="groupDescription" class="subtitle"></p>
-            </div>
-          </header>
-
-          <form id="messageForm" class="composer">
-            <label class="sr-only" for="messageInput">Mensaje anónimo</label>
-            <textarea
-              id="messageInput"
-              class="message-input"
-              maxlength="500"
-              placeholder="¿Qué quieres decir?"
-            ></textarea>
-
-            <div class="composer-footer">
-              <span id="charCount" class="counter">0/500</span>
-              <button id="sendButton" class="primary" type="submit">¡Enviar!</button>
-            </div>
-          </form>
-
-          <p id="feedback" class="feedback hidden"></p>
-
-          <div class="prompts">
-            <span>🔒 mensajes anónimos para el grupo</span>
-            <span>✨ sin login, sin nombre y sin perfil</span>
+        <div class="inbox-head">
+          <div class="inbox-avatar">?</div>
+          <div class="inbox-copy">
+            <p class="eyebrow">Mensajes anónimos</p>
+            <h1 id="groupName">Mándame mensajes anónimos</h1>
+            <p id="groupDescription" class="subtitle"></p>
           </div>
         </div>
 
-        <div id="errorView" class="error hidden"></div>
+        <form id="messageForm" class="composer">
+          <label class="sr-only" for="messageInput">Mensaje anónimo</label>
+          <textarea
+            id="messageInput"
+            class="message-input"
+            maxlength="500"
+            placeholder="¿Qué quieres decir?"
+          ></textarea>
+
+          <div class="composer-footer">
+            <span id="charCount" class="counter">0/500</span>
+            <button id="sendButton" class="send-button" type="submit">¡Enviar!</button>
+          </div>
+        </form>
+
+        <p id="feedback" class="feedback hidden"></p>
+
+        <div class="prompts">
+          <span>🔒 mensajes anónimos para el grupo</span>
+          <span>✨ sin login, sin nombre y sin perfil</span>
+        </div>
       </section>
+
+      <div id="errorView" class="error hidden"></div>
     </main>
 
     <script type="module" src="/app.js"></script>
