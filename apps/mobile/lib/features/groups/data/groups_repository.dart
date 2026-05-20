@@ -137,7 +137,7 @@ class GroupsRepository {
         .trim();
     final inviteNumber = 1000 + Random().nextInt(9000);
     final token = '${_safeSlug(displayName)}-$inviteNumber-$inviteCode';
-    final appLink = 'vibeloop:/invite/$token';
+    final appLink = 'vibeloop://invite/$token';
     final normalizedWebUrl = config.webUrl.replaceAll(RegExp(r'/+$'), '');
     final webLink = '$normalizedWebUrl/invite/$token';
 
