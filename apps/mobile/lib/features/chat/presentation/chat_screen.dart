@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../groups/data/groups_repository.dart';
 import '../data/chat_repository.dart';
@@ -21,6 +21,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   late final Stream<List<MessageModel>> _messagesStream;
   late final RealtimeChannel _presenceChannel;
+  late final Future<InviteLinks> _inviteLinksFuture;
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
@@ -32,6 +33,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void initState() {
     super.initState();
     _messagesStream = ref.read(chatRepositoryProvider).watchMessages(widget.groupId);
+    _inviteLinksFuture = ref.read(groupsRepositoryProvider).generateInviteLinks(widget.groupId);
     _presenceChannel = Supabase.instance.client.channel('chat-presence-${widget.groupId}');
     _setupPresence();
     _focusNode.addListener(_handleFocusChange);
@@ -134,16 +136,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     await ref.read(chatRepositoryProvider).reactToMessage(messageId, emoji);
   }
 
-  Future<void> _shareInviteLink() async {
-    final inviteLink = await ref.read(groupsRepositoryProvider).generateInviteLink(widget.groupId);
+  Future<void> _copyInviteLink({
+    required String label,
+    required String Function(InviteLinks links) pickLink,
+  }) async {
+    final links = await _inviteLinksFuture;
+    await Clipboard.setData(ClipboardData(text: pickLink(links)));
     if (!mounted) return;
-    final box = context.findRenderObject() as RenderBox?;
-    await SharePlus.instance.share(
-      ShareParams(
-        text: inviteLink,
-        title: 'Invitación a VIBELOOP',
-        sharePositionOrigin: box == null ? null : box.localToGlobal(Offset.zero) & box.size,
-      ),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$label copiado al portapapeles')),
     );
   }
 
@@ -176,9 +177,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         title: Text('Chat del grupo ${widget.groupId.substring(0, 6)}'),
         actions: [
           IconButton(
-            tooltip: 'Compartir enlace de invitación',
-            onPressed: _shareInviteLink,
-            icon: const Icon(Icons.share),
+            tooltip: 'Copiar link de la app',
+            onPressed: () => _copyInviteLink(
+              label: 'Link de la app',
+              pickLink: (links) => links.appLink,
+            ),
+            icon: const Icon(Icons.phone_android),
+          ),
+          IconButton(
+            tooltip: 'Copiar link web',
+            onPressed: () => _copyInviteLink(
+              label: 'Link web',
+              pickLink: (links) => links.webLink,
+            ),
+            icon: const Icon(Icons.language),
           ),
         ],
       ),

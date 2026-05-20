@@ -118,7 +118,7 @@ class GroupsRepository {
     return GroupModel.fromJson(json);
   }
 
-  Future<String> generateInviteLink(String groupId) async {
+  Future<InviteLinks> generateInviteLinks(String groupId) async {
     final row = await _runWithSchemaCheck(() => _supabase.from('groups').select('invite_code').eq('id', groupId).single());
     final inviteCode = row['invite_code'] as String;
     final config = await InviteLinkConfig.load();
@@ -137,8 +137,11 @@ class GroupsRepository {
         .trim();
     final inviteNumber = 1000 + Random().nextInt(9000);
     final token = '${_safeSlug(displayName)}-$inviteNumber-$inviteCode';
+    final appLink = 'vibeloop:/invite/$token';
     final normalizedWebUrl = config.webUrl.replaceAll(RegExp(r'/+$'), '');
-    return '$normalizedWebUrl/invite/$token';
+    final webLink = '$normalizedWebUrl/invite/$token';
+
+    return InviteLinks(appLink: appLink, webLink: webLink);
   }
 
   Future<GroupModel> getGroupByInviteCode(String inviteCode) async {
@@ -197,6 +200,16 @@ class GroupsRepository {
       }),
     );
   }
+}
+
+class InviteLinks {
+  const InviteLinks({
+    required this.appLink,
+    required this.webLink,
+  });
+
+  final String appLink;
+  final String webLink;
 }
 
 class GroupsController extends StateNotifier<AsyncValue<List<GroupModel>>> {
