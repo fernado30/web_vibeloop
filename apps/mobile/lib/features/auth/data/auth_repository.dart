@@ -48,23 +48,12 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
-    final functionResponse = await _supabase.functions.invoke(
-      'register-user',
-      body: {
-        'email': email,
-        'password': password,
-        'displayName': name,
-      },
-    );
-
-    final functionData = functionResponse.data;
-    if (functionData is Map && functionData['error'] != null) {
-      throw StateError(functionData['error'].toString());
-    }
-
-    final response = await _supabase.auth.signInWithPassword(
+    final response = await _supabase.auth.signUp(
       email: email,
       password: password,
+      data: {
+        'display_name': name,
+      },
     );
 
     final user = response.user;

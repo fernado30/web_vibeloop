@@ -150,8 +150,13 @@ class GroupsRepository {
           .from('groups')
           .select('id, name, description, image_url, created_by, invite_code, created_at')
           .eq('invite_code', inviteCode)
-          .single(),
+          .limit(1)
+          .maybeSingle(),
     );
+
+    if (row == null) {
+      throw StateError('La invitación no existe o ya no es válida.');
+    }
 
     final json = Map<String, dynamic>.from(row);
     json['member_count'] = await _countMembers(json['id'] as String);
