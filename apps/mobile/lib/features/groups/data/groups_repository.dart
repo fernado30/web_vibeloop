@@ -30,6 +30,22 @@ class GroupsRepository {
 
   SupabaseClient get _supabase => _client;
 
+  Future<T> _withInviteCodeHeader<T>(
+    String inviteCode,
+    Future<T> Function() action,
+  ) async {
+    final previousHeaders = Map<String, String>.from(_supabase.headers);
+    try {
+      _supabase.headers = {
+        ...previousHeaders,
+        'x-invite-code': inviteCode,
+      };
+      return await action();
+    } finally {
+      _supabase.headers = previousHeaders;
+    }
+  }
+
   Future<T> _runWithSchemaCheck<T>(Future<T> Function() action) async {
     try {
       return await action();
@@ -146,12 +162,15 @@ class GroupsRepository {
 
   Future<GroupModel> getGroupByInviteCode(String inviteCode) async {
     final row = await _runWithSchemaCheck(
-      () => _supabase
-          .from('groups')
-          .select('id, name, description, image_url, created_by, invite_code, created_at')
-          .eq('invite_code', inviteCode)
-          .limit(1)
-          .maybeSingle(),
+      () => _withInviteCodeHeader(
+        inviteCode,
+        () => _supabase
+            .from('groups')
+            .select('id, name, description, image_url, created_by, invite_code, created_at')
+            .eq('invite_code', inviteCode)
+            .limit(1)
+            .maybeSingle(),
+      ),
     );
 
     if (row == null) {

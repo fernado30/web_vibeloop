@@ -171,10 +171,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ];
 
     final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat del grupo ${widget.groupId.substring(0, 6)}'),
+        title: Text('Grupo ${widget.groupId.substring(0, 6)}'),
         actions: [
           IconButton(
             tooltip: 'Copiar link de la app',
@@ -199,9 +200,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           if (_otherTypingUsers.isNotEmpty)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: Colors.white10,
-              child: const Text('Escribiendo...'),
+              margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.82),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: colorScheme.outline.withValues(alpha: 0.35)),
+              ),
+              child: Text(
+                'Escribiendo...',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
+              ),
             ),
           Expanded(
             child: StreamBuilder<List<MessageModel>>(
@@ -220,7 +230,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 return ListView.separated(
                   controller: _scrollController,
                   reverse: true,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
                   itemCount: messages.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
@@ -233,7 +243,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         onLongPress: () async {
                           final reaction = await showModalBottomSheet<String>(
                             context: context,
-                            backgroundColor: Theme.of(context).colorScheme.surface,
+                            backgroundColor: colorScheme.surface,
                             builder: (context) {
                               return Padding(
                                 padding: const EdgeInsets.all(16),
@@ -259,28 +269,53 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         },
                         child: Container(
                           constraints: const BoxConstraints(maxWidth: 320),
-                          padding: const EdgeInsets.all(14),
+                          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
                           decoration: BoxDecoration(
-                            color: isMine ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.only(
-                              topLeft: const Radius.circular(18),
-                              topRight: const Radius.circular(18),
-                              bottomLeft: Radius.circular(isMine ? 18 : 4),
-                              bottomRight: Radius.circular(isMine ? 4 : 18),
+                            gradient: isMine
+                                ? const LinearGradient(
+                                    colors: [
+                                      Color(0xFF2EA8FF),
+                                      Color(0xFF8AD8FF),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : null,
+                            color: isMine ? null : Colors.white.withValues(alpha: 0.92),
+                            border: Border.all(
+                              color: isMine ? Colors.transparent : colorScheme.outline.withValues(alpha: 0.32),
                             ),
+                            borderRadius: BorderRadius.only(
+                              topLeft: const Radius.circular(22),
+                              topRight: const Radius.circular(22),
+                              bottomLeft: Radius.circular(isMine ? 22 : 8),
+                              bottomRight: Radius.circular(isMine ? 8 : 22),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 18,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 isMine ? 'Tu' : message.senderName,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.white70,
+                                  color: isMine ? Colors.white.withValues(alpha: 0.95) : colorScheme.onSurfaceVariant,
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              Text(message.content),
+                              Text(
+                                message.content,
+                                style: TextStyle(
+                                  color: isMine ? Colors.white : colorScheme.onSurface,
+                                ),
+                              ),
                               if (message.reactions.isNotEmpty) ...[
                                 const SizedBox(height: 10),
                                 Wrap(
@@ -291,10 +326,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                         (entry) => Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: Colors.white10,
+                                            color: isMine
+                                                ? Colors.white.withValues(alpha: 0.16)
+                                                : colorScheme.primary.withValues(alpha: 0.06),
                                             borderRadius: BorderRadius.circular(999),
                                           ),
-                                          child: Text('${entry.key} ${entry.value}'),
+                                          child: Text(
+                                            '${entry.key} ${entry.value}',
+                                            style: TextStyle(
+                                              color: isMine ? Colors.white : colorScheme.onSurfaceVariant,
+                                            ),
+                                          ),
                                         ),
                                       )
                                       .toList(),
@@ -314,26 +356,48 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             top: false,
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _textController,
-                      focusNode: _focusNode,
-                      minLines: 1,
-                      maxLines: 4,
-                      decoration: const InputDecoration(
-                        hintText: 'Escribe un mensaje...',
-                      ),
-                      onSubmitted: (_) => _sendMessage(),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.82),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: colorScheme.outline.withValues(alpha: 0.35)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  FilledButton(
-                    onPressed: _sendMessage,
-                    child: const Icon(Icons.send),
-                  ),
-                ],
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _textController,
+                        focusNode: _focusNode,
+                        minLines: 1,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          hintText: 'Escribe un mensaje...',
+                          fillColor: colorScheme.surface,
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                        ),
+                        onSubmitted: (_) => _sendMessage(),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    FilledButton(
+                      onPressed: _sendMessage,
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(52, 52),
+                        padding: EdgeInsets.zero,
+                      ),
+                      child: const Icon(Icons.send),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

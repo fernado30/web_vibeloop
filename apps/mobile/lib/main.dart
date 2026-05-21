@@ -37,7 +37,7 @@ class VibeloopApp extends ConsumerWidget {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'VIBELOOP',
-      theme: vibeloopDarkTheme,
+      theme: vibeloopTheme,
       routerConfig: router,
     );
   }
@@ -54,8 +54,9 @@ class _BootstrapErrorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F0F),
+      backgroundColor: const Color(0xFFF6F7FB),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -66,25 +67,29 @@ class _BootstrapErrorScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'No pudimos iniciar VIBELOOP',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Colors.white),
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: colorScheme.onSurface,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     error.toString(),
-                    style: const TextStyle(color: Colors.white70),
+                    style: TextStyle(color: colorScheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: 18),
-                  const Text(
+                  Text(
                     'Revisa el archivo apps/mobile/assets/.env y vuelve a abrir la app.',
-                    style: TextStyle(color: Colors.white54),
+                    style: TextStyle(color: colorScheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: 18),
                   SingleChildScrollView(
                     child: Text(
                       stackTrace.toString(),
-                      style: const TextStyle(fontSize: 12, color: Colors.white38),
+                      style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
                     ),
                   ),
                 ],

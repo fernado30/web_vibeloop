@@ -31,6 +31,8 @@ class _AnonymousInboxScreenState extends ConsumerState<AnonymousInboxScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Buzón anónimo')),
       body: RefreshIndicator(
@@ -47,9 +49,15 @@ class _AnonymousInboxScreenState extends ConsumerState<AnonymousInboxScreen> {
               return ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(24),
-                children: const [
-                  SizedBox(height: 120),
-                  Center(child: Text('Todavía no hay mensajes anónimos.')),
+                children: [
+                  const SizedBox(height: 120),
+                  Center(
+                    child: Text(
+                      'Todavía no hay mensajes anónimos.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: colorScheme.onSurfaceVariant),
+                    ),
+                  ),
                 ],
               );
             }
@@ -62,15 +70,22 @@ class _AnonymousInboxScreenState extends ConsumerState<AnonymousInboxScreen> {
               itemBuilder: (context, index) {
                 final message = messages[index];
                 return Card(
-                  color: Theme.of(context).colorScheme.surface,
+                  color: Colors.white.withValues(alpha: 0.85),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(18),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Anónimo', style: TextStyle(fontWeight: FontWeight.w700)),
+                        Text(
+                          'Anónimo',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: colorScheme.primary,
+                          ),
+                        ),
                         const SizedBox(height: 8),
-                        Text(message.content),
+                        Text(message.content, style: TextStyle(color: colorScheme.onSurface)),
                         if (message.reactions.isNotEmpty) ...[
                           const SizedBox(height: 12),
                           Wrap(
@@ -79,7 +94,11 @@ class _AnonymousInboxScreenState extends ConsumerState<AnonymousInboxScreen> {
                             children: message.reactions.entries
                                 .map(
                                   (entry) => ActionChip(
-                                    label: Text('${entry.key} ${entry.value}'),
+                                    backgroundColor: colorScheme.primary.withValues(alpha: 0.08),
+                                    label: Text(
+                                      '${entry.key} ${entry.value}',
+                                      style: TextStyle(color: colorScheme.onSurfaceVariant),
+                                    ),
                                     onPressed: () => ref
                                         .read(anonymousRepositoryProvider)
                                         .reactToAnonymousMessage(message.id, entry.key),

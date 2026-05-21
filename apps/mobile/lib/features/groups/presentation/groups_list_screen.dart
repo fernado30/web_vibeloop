@@ -62,7 +62,7 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
         onRefresh: () => ref.read(groupsControllerProvider.notifier).loadMyGroups(),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
           children: [
             _HeroSection(onCreateGroup: _handleCreateGroupTap),
             const SizedBox(height: 24),
@@ -112,7 +112,7 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
               _StateMessage(
                 title: 'Entra sin cuenta cuando te inviten.',
                 subtitle:
-                    'Si solo quieres unirte a un grupo, basta con abrir el link y subir tu foto. Regístrate solo cuando quieras crear el tuyo.',
+                    'Si solo quieres unirte a un grupo, basta con abrir el link. Regístrate solo cuando quieras crear el tuyo.',
                 actionLabel: 'Crear grupo',
                 onAction: _handleCreateGroupTap,
               ),
@@ -131,16 +131,28 @@ class _HeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1A1A1A), Color(0xFF0F0F0F)],
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withValues(alpha: 0.88),
+            const Color(0xFFEAF5FF).withValues(alpha: 0.92),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white10),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.35)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,10 +160,17 @@ class _HeroSection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white10,
+              color: colorScheme.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: colorScheme.primary.withValues(alpha: 0.14)),
             ),
-            child: const Text('Social chat groups'),
+            child: Text(
+              'Social chat groups',
+              style: TextStyle(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           Text(
@@ -161,7 +180,7 @@ class _HeroSection extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             'Crea grupos, comparte invitaciones sin cuenta y mantén el chat vivo en tiempo real.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white70),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 20),
           Wrap(
@@ -205,7 +224,7 @@ class _FeatureGrid extends StatelessWidget {
           _FeatureCard(
             icon: Icons.lock_outline,
             title: 'Entrada sin cuenta',
-            subtitle: 'Los invitados abren el link, suben su foto y entran directo.',
+            subtitle: 'Los invitados abren el link y entran directo.',
           ),
         ];
 
@@ -229,12 +248,14 @@ class _FeatureGrid extends StatelessWidget {
 class _StatsStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white10),
+        color: Colors.white.withValues(alpha: 0.78),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.35)),
       ),
       child: Wrap(
         spacing: 12,
@@ -262,21 +283,30 @@ class _FeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white10),
+        color: Colors.white.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.35)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Theme.of(context).colorScheme.secondary, size: 30),
+          Icon(icon, color: colorScheme.primary, size: 30),
           const SizedBox(height: 14),
           Text(title, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 6),
-          Text(subtitle, style: const TextStyle(color: Colors.white70)),
+          Text(subtitle, style: TextStyle(color: colorScheme.onSurfaceVariant)),
         ],
       ),
     );
@@ -296,23 +326,28 @@ class _GroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
-      color: Theme.of(context).colorScheme.surface,
+      color: Colors.white.withValues(alpha: 0.85),
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(28),
         onTap: onOpenChat,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           child: Row(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
                 child: Container(
-                  width: 72,
-                  height: 72,
-                  color: Colors.white10,
+                  width: 76,
+                  height: 76,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(alpha: 0.08),
+                    border: Border.all(color: colorScheme.outline.withValues(alpha: 0.25)),
+                  ),
                   child: group.imageUrl == null
-                      ? const Icon(Icons.group, size: 32)
+                      ? Icon(Icons.group, size: 32, color: colorScheme.primary)
                       : Image.network(group.imageUrl!, fit: BoxFit.cover),
                 ),
               ),
@@ -327,7 +362,7 @@ class _GroupCard extends StatelessWidget {
                       group.description ?? 'Sin descripción',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white70),
+                      style: TextStyle(color: colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 8),
                     Wrap(
@@ -377,19 +412,21 @@ class _StateMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white10),
+        color: Colors.white.withValues(alpha: 0.78),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
-          Text(subtitle, style: const TextStyle(color: Colors.white70)),
+          Text(subtitle, style: TextStyle(color: colorScheme.onSurfaceVariant)),
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: 16),
             FilledButton(
@@ -410,13 +447,22 @@ class _Pill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white10,
+        color: colorScheme.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.12)),
       ),
-      child: Text(label),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: colorScheme.primary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
@@ -428,15 +474,21 @@ class _MetaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white10,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.35)),
       ),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 12),
+        style: TextStyle(
+          fontSize: 12,
+          color: colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }
@@ -449,15 +501,21 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white10,
+        color: colorScheme.primary.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.1)),
       ),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 12),
+        style: TextStyle(
+          fontSize: 12,
+          color: colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }

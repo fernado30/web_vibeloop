@@ -212,6 +212,22 @@ with check (
   )
 );
 
+do $$
+begin
+  alter publication supabase_realtime add table public.messages;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.reactions;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;
+
 drop policy if exists "anonymous_messages_select_all" on public.anonymous_messages;
 create policy "anonymous_messages_select_all"
 on public.anonymous_messages

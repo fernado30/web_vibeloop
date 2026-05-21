@@ -211,3 +211,19 @@ with check (
       and private.is_group_member(m.group_id)
   )
 );
+
+do $$
+begin
+  alter publication supabase_realtime add table public.messages;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.reactions;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;

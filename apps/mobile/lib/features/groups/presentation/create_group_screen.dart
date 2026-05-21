@@ -66,82 +66,99 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Crear grupo')),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(22),
           children: [
-            Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Nombre del grupo'),
-                    validator: (value) => (value ?? '').trim().isEmpty ? 'Escribe un nombre' : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _descriptionController,
-                    maxLines: 4,
-                    decoration: const InputDecoration(labelText: 'Descripción'),
-                    validator: (value) => (value ?? '').trim().isEmpty ? 'Escribe una descripción' : null,
-                  ),
-                  const SizedBox(height: 24),
-                  Text('Selector de imagen', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 140,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _coverOptions.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 12),
-                      itemBuilder: (context, index) {
-                        final url = _coverOptions[index];
-                        final selected = url == _selectedImageUrl;
-                        return GestureDetector(
-                          onTap: () => setState(() => _selectedImageUrl = url),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 180),
-                            width: 160,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color: selected ? Theme.of(context).colorScheme.secondary : Colors.white12,
-                                width: selected ? 2 : 1,
-                              ),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(18),
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  Image.network(url, fit: BoxFit.cover),
-                                  if (selected)
-                                    Container(
-                                      color: Colors.black26,
-                                      child: const Icon(Icons.check_circle, color: Colors.white, size: 36),
-                                    ),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.78),
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(color: colorScheme.outline.withValues(alpha: 0.35)),
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(labelText: 'Nombre del grupo'),
+                      validator: (value) => (value ?? '').trim().isEmpty ? 'Escribe un nombre' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _descriptionController,
+                      maxLines: 4,
+                      decoration: const InputDecoration(labelText: 'Descripción'),
+                      validator: (value) => (value ?? '').trim().isEmpty ? 'Escribe una descripción' : null,
+                    ),
+                    const SizedBox(height: 24),
+                    Text('Selector de imagen', style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 148,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _coverOptions.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 12),
+                        itemBuilder: (context, index) {
+                          final url = _coverOptions[index];
+                          final selected = url == _selectedImageUrl;
+                          return GestureDetector(
+                            onTap: () => setState(() => _selectedImageUrl = url),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              width: 168,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(28),
+                                border: Border.all(
+                                  color: selected ? colorScheme.primary : colorScheme.outline.withValues(alpha: 0.35),
+                                  width: selected ? 2 : 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.04),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 8),
+                                  ),
                                 ],
                               ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(28),
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    Image.network(url, fit: BoxFit.cover),
+                                    if (selected)
+                                      Container(
+                                        color: const Color(0x802EA8FF),
+                                        child: const Icon(Icons.check_circle, color: Colors.white, size: 36),
+                                      ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  FilledButton(
-                    onPressed: _loading ? null : _submit,
-                    child: const Text('Crear grupo'),
-                  ),
-                  if (_error != null) ...[
-                    const SizedBox(height: 16),
-                    Text(_error!, style: const TextStyle(color: Colors.redAccent)),
+                    const SizedBox(height: 20),
+                    FilledButton(
+                      onPressed: _loading ? null : _submit,
+                      child: const Text('Crear grupo'),
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 16),
+                      Text(_error!, style: TextStyle(color: colorScheme.error)),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ],
