@@ -33,11 +33,15 @@ class ChatRepository {
     json['sender_name'] = sender?['emoji']?.toString() ?? '🙂';
     json['reactions'] = _reactionCounts(json['reactions']);
     final message = MessageModel.fromJson(json);
-    final filtered = await SafetyRepository(_supabase).filterMessages([message]);
-    if (filtered.isEmpty) {
-      throw StateError('Mensaje filtrado.');
+    try {
+      final filtered = await SafetyRepository(_supabase).filterMessages([message]);
+      if (filtered.isNotEmpty) {
+        return filtered.first;
+      }
+    } catch (_) {
+      // Fallback to the raw message if safety filters are unavailable.
     }
-    return filtered.first;
+    return message;
   }
 
   Future<List<MessageModel>> fetchMessages(String groupId) async {
@@ -55,7 +59,11 @@ class ChatRepository {
       return MessageModel.fromJson(json);
     }).toList();
 
-    return SafetyRepository(_supabase).filterMessages(messages);
+    try {
+      return await SafetyRepository(_supabase).filterMessages(messages);
+    } catch (_) {
+      return messages;
+    }
   }
 
   Future<void> sendMessage(String groupId, String content, String type) async {
@@ -118,7 +126,7 @@ class ChatRepository {
             ...cache.skip(existingIndex + 1),
           ];
         }
-      } on StateError {
+      } catch (_) {
         cache = cache.where((item) => item.id != messageId).toList();
       }
 

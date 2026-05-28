@@ -68,6 +68,65 @@ function getInviteCode(token) {
   return parts[parts.length - 1] ?? null;
 }
 
+function emojiForSeed(seed) {
+  const emojis = ['🙂', '✨', '🌙', '💙', '🫶', '🔥', '🌊', '🍀', '⚡', '🎧'];
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+  }
+  return emojis[hash % emojis.length];
+}
+
+async function ensureGuestMembership(client, groupId, inviteCode) {
+  const { data: sessionData, error: sessionError } = await client.auth.getSession();
+  if (sessionError) {
+    throw new Error(`No pudimos iniciar la sesión anónima: ${sessionError.message}`);
+  }
+
+  if (!sessionData.session) {
+    const { error: signInError } = await client.auth.signInAnonymously();
+    if (signInError) {
+      throw new Error(`No pudimos iniciar la sesión anónima: ${signInError.message}`);
+    }
+  }
+
+  const { data: userData, error: userError } = await client.auth.getUser();
+  if (userError || !userData.user) {
+    throw new Error('No pudimos identificar la sesión invitada.');
+  }
+
+  const user = userData.user;
+  const username = `invitado_${user.id.replace(/-/g, '').slice(0, 8)}`;
+  const displayName = 'Invitado';
+
+  const { error: profileError } = await client.from('users').upsert({
+    id: user.id,
+    username,
+    display_name: displayName,
+    avatar_url: null,
+    emoji: emojiForSeed(inviteCode ?? user.id),
+  });
+
+  if (profileError) {
+    throw new Error(`No pudimos preparar tu perfil invitado: ${profileError.message}`);
+  }
+
+  const { error: memberError } = await client.from('group_members').upsert(
+    {
+      group_id: groupId,
+      user_id: user.id,
+      role: 'member',
+    },
+    {
+      onConflict: 'group_id,user_id',
+    },
+  );
+
+  if (memberError) {
+    throw new Error(`No pudimos unir tu sesión al grupo: ${memberError.message}`);
+  }
+}
+
 function hasUrl(content) {
   return /(https?:\/\/|www\.)/i.test(content);
 }
@@ -121,6 +180,8 @@ async function loadAnonymousInbox(token) {
   if (!group) {
     throw new Error('La invitación no existe o ya no es válida.');
   }
+
+  await ensureGuestMembership(client, group.id, inviteCode);
 
   showInbox();
   groupNameEl.textContent = group.name ?? 'Mensajes anónimos';

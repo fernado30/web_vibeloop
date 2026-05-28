@@ -30,7 +30,11 @@ class AnonymousRepository {
       return AnonymousMessageModel.fromJson(json);
     }).toList();
 
-    return SafetyRepository(_supabase).filterAnonymousMessages(messages);
+    try {
+      return await SafetyRepository(_supabase).filterAnonymousMessages(messages);
+    } catch (_) {
+      return messages;
+    }
   }
 
   Future<void> reactToAnonymousMessage(String messageId, String reaction) async {
