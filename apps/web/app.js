@@ -13,11 +13,11 @@ const charCountEl = document.getElementById('charCount');
 const sendButtonEl = document.getElementById('sendButton');
 const feedbackEl = document.getElementById('feedback');
 const openNativeButtonEl = document.getElementById('openNativeButton');
-const goWebButtonEl = document.getElementById('goWebButton');
 const landingHintEl = document.getElementById('landingHint');
 
 const MAX_MESSAGE_LENGTH = 500;
 const ANDROID_PACKAGE = 'com.vibeloop.vibeloop';
+const ANDROID_PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.vibeloop.vibeloop';
 
 function requireConfig() {
   const missing = [];
@@ -181,7 +181,11 @@ function attemptNativeOpen(token) {
 
   window.setTimeout(() => {
     if (document.visibilityState === 'visible') {
-      landingHintEl.textContent = 'No detectamos la app. Puedes seguir en la web anónima o volver a intentar abrirla.';
+      landingHintEl.textContent = 'No detectamos la app. Si quieres entrar al chat del grupo, instálala primero.';
+      openNativeButtonEl.textContent = 'Instalar la app';
+      openNativeButtonEl.onclick = () => {
+        window.location.href = ANDROID_PLAY_STORE_URL;
+      };
     }
   }, 1500);
 }
@@ -198,10 +202,7 @@ async function bootstrap() {
 
     if (route.kind === 'open') {
       showLanding();
-      openNativeButtonEl.addEventListener('click', () => attemptNativeOpen(route.token));
-      goWebButtonEl.addEventListener('click', () => {
-        window.location.href = `/invite/${route.token}`;
-      });
+      openNativeButtonEl.onclick = () => attemptNativeOpen(route.token);
       attemptNativeOpen(route.token);
       return;
     }

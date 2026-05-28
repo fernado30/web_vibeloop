@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/ads/ad_service.dart';
 import '../data/groups_repository.dart';
 
 class CreateGroupScreen extends ConsumerStatefulWidget {
@@ -51,12 +52,22 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
     });
 
     try {
+      final existingGroups = await ref.read(groupsRepositoryProvider).fetchMyGroups();
+      final shouldShowInterstitial = existingGroups.isNotEmpty;
+
       final group = await ref.read(groupsControllerProvider.notifier).createGroup(
             name: _nameController.text.trim(),
             description: _descriptionController.text.trim(),
             imageUrl: _selectedImageUrl!,
           );
-      if (mounted) context.go('/groups/${group.id}/chat');
+      if (mounted) {
+        if (shouldShowInterstitial) {
+          await AdService.instance.showInterstitialAfterGroupCreated(waitForDismissal: true);
+        }
+        if (mounted) {
+          context.go('/groups/${group.id}/chat');
+        }
+      }
     } catch (e) {
       _safeSetState(() => _error = e.toString());
     } finally {

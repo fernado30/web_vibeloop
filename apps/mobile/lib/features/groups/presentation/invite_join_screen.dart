@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/ads/vibe_loop_banner_ad.dart';
+import '../../../core/utils/profile_emojis.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/groups_repository.dart';
 
@@ -36,6 +38,10 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
       }
 
       final group = await ref.read(groupsRepositoryProvider).getGroupByInviteCode(widget.inviteCode);
+      final invitePaused = await ref.read(groupsRepositoryProvider).isInvitePausedForCode(widget.inviteCode);
+      if (invitePaused) {
+        throw StateError('invite_paused');
+      }
       await ref.read(groupsRepositoryProvider).joinGroup(group.id);
 
       if (mounted) {
@@ -43,7 +49,7 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _error = e.toString());
+        setState(() => _error = _friendlyError(e));
       }
     } finally {
       if (mounted) {
@@ -53,22 +59,38 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
   }
 
   Future<void> _signInGuestAccount(AuthRepository authRepo) async {
-    final safeCode = widget.inviteCode.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toLowerCase();
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final guestEmail = 'guest-$safeCode-$timestamp@example.com';
-    final guestPassword = 'guest-$timestamp-${widget.inviteCode.hashCode.abs()}';
-
-    await authRepo.signUpWithEmail(
-      name: 'Invitado',
-      email: guestEmail,
-      password: guestPassword,
+    await authRepo.signInAnonymously();
+    await authRepo.upsertProfile(
+      displayName: 'Invitado',
+      emoji: emojiForSeed(widget.inviteCode),
     );
+  }
+
+  String _friendlyError(Object error) {
+    final message = error.toString();
+    if (message.contains('anonymous_provider_disabled')) {
+      return 'Activa Anonymous Sign-ins en Supabase para permitir invitados sin correo.';
+    }
+    if (message.contains('over_email_send_rate_limit')) {
+      return 'El acceso de invitado ya no usa correo. Revisa que Anonymous Sign-ins esté activado.';
+    }
+    if (message.contains('invite_paused')) {
+      return 'Este enlace de invitación está pausado por el creador del grupo.';
+    }
+    return message;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Accediendo al grupo')),
+      bottomNavigationBar: const SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
+          child: VibeLoopBannerAd(),
+        ),
+      ),
       body: SafeArea(
         child: _loading
             ? const Center(

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../settings/data/safety_repository.dart';
 import '../domain/message_model.dart';
 
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
@@ -19,7 +20,7 @@ class ChatRepository {
   Future<MessageModel> _fetchMessageById(String messageId) async {
     final row = await _supabase
         .from('messages')
-        .select('id, group_id, sender_id, content, type, created_at, sender:users(display_name), reactions:reactions(emoji)')
+        .select('id, group_id, sender_id, content, type, created_at, sender:users(display_name, emoji), reactions:reactions(emoji)')
         .eq('id', messageId)
         .maybeSingle();
 
@@ -29,25 +30,32 @@ class ChatRepository {
 
     final json = Map<String, dynamic>.from(row as Map);
     final sender = json['sender'] as Map<String, dynamic>?;
-    json['sender_name'] = sender?['display_name']?.toString() ?? 'Miembro';
+    json['sender_name'] = sender?['emoji']?.toString() ?? '🙂';
     json['reactions'] = _reactionCounts(json['reactions']);
-    return MessageModel.fromJson(json);
+    final message = MessageModel.fromJson(json);
+    final filtered = await SafetyRepository(_supabase).filterMessages([message]);
+    if (filtered.isEmpty) {
+      throw StateError('Mensaje filtrado.');
+    }
+    return filtered.first;
   }
 
   Future<List<MessageModel>> fetchMessages(String groupId) async {
     final rows = await _supabase
         .from('messages')
-        .select('id, group_id, sender_id, content, type, created_at, sender:users(display_name), reactions:reactions(emoji)')
+        .select('id, group_id, sender_id, content, type, created_at, sender:users(display_name, emoji), reactions:reactions(emoji)')
         .eq('group_id', groupId)
         .order('created_at', ascending: false);
 
-    return (rows as List<dynamic>).map((row) {
+    final messages = (rows as List<dynamic>).map((row) {
       final json = Map<String, dynamic>.from(row as Map);
       final sender = json['sender'] as Map<String, dynamic>?;
-      json['sender_name'] = sender?['display_name']?.toString() ?? 'Miembro';
+      json['sender_name'] = sender?['emoji']?.toString() ?? '🙂';
       json['reactions'] = _reactionCounts(json['reactions']);
       return MessageModel.fromJson(json);
     }).toList();
+
+    return SafetyRepository(_supabase).filterMessages(messages);
   }
 
   Future<void> sendMessage(String groupId, String content, String type) async {
@@ -80,7 +88,7 @@ class ChatRepository {
   Stream<List<MessageModel>> watchMessages(String groupId) {
     final controller = StreamController<List<MessageModel>>.broadcast();
     final channel = _supabase.channel('messages-$groupId');
-    var cache = <MessageModel>[];
+    var cache = <MessageModel>[]; 
     var loaded = false;
 
     Future<void> emit() async {
@@ -97,17 +105,21 @@ class ChatRepository {
         return;
       }
 
-      final message = await _fetchMessageById(messageId);
-      final existingIndex = cache.indexWhere((item) => item.id == message.id);
+      try {
+        final message = await _fetchMessageById(messageId);
+        final existingIndex = cache.indexWhere((item) => item.id == message.id);
 
-      if (existingIndex == -1) {
-        cache = [message, ...cache];
-      } else {
-        cache = [
-          ...cache.take(existingIndex),
-          message,
-          ...cache.skip(existingIndex + 1),
-        ];
+        if (existingIndex == -1) {
+          cache = [message, ...cache];
+        } else {
+          cache = [
+            ...cache.take(existingIndex),
+            message,
+            ...cache.skip(existingIndex + 1),
+          ];
+        }
+      } on StateError {
+        cache = cache.where((item) => item.id != messageId).toList();
       }
 
       if (!controller.isClosed) {

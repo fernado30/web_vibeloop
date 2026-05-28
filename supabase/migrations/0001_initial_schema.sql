@@ -5,6 +5,7 @@ create table if not exists public.users (
   username text unique not null,
   display_name text,
   avatar_url text,
+  emoji text not null default '🙂',
   created_at timestamptz default now()
 );
 
@@ -102,6 +103,23 @@ as $$
   );
 $$;
 
+create or replace function private.can_view_user_profile(target_user_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select exists (
+    select 1
+    from public.group_members viewer_members
+    join public.group_members sender_members
+      on sender_members.group_id = viewer_members.group_id
+    where viewer_members.user_id = auth.uid()
+      and sender_members.user_id = target_user_id
+  );
+$$;
+
 create or replace function public.group_member_count(target_group_id uuid)
 returns integer
 language sql
@@ -120,6 +138,15 @@ on public.users
 for select
 using (auth.uid() = id);
 
+drop policy if exists "users_select_group_member" on public.users;
+create policy "users_select_group_member"
+on public.users
+for select
+using (
+  auth.uid() = id
+  or private.can_view_user_profile(public.users.id)
+);
+
 drop policy if exists "users_insert_own" on public.users;
 create policy "users_insert_own"
 on public.users
@@ -132,6 +159,8 @@ on public.users
 for update
 using (auth.uid() = id)
 with check (auth.uid() = id);
+
+grant select on public.users to authenticated;
 
 drop policy if exists "groups_select_member_or_invite" on public.groups;
 create policy "groups_select_member_or_invite"
@@ -223,6 +252,14 @@ end $$;
 do $$
 begin
   alter publication supabase_realtime add table public.reactions;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.anonymous_messages;
 exception
   when duplicate_object then null;
   when undefined_object then null;

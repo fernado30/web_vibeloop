@@ -1,9 +1,14 @@
+import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/config/invite_link_config.dart';
+import '../../../core/utils/profile_emojis.dart';
+import '../domain/group_photo_model.dart';
 import '../domain/group_model.dart';
 
 final groupsRepositoryProvider = Provider<GroupsRepository>((ref) {
@@ -134,6 +139,207 @@ class GroupsRepository {
     return GroupModel.fromJson(json);
   }
 
+  Future<List<GroupPhotoModel>> fetchGroupPhotos(String groupId) async {
+    final rows = await _runWithSchemaCheck(
+      () => _supabase
+          .from('group_photos')
+          .select('id, group_id, uploaded_by, uploader_emoji, image_url, storage_path, created_at')
+          .eq('group_id', groupId)
+          .order('created_at', ascending: false),
+    );
+
+    final photos = (rows as List<dynamic>).map((row) {
+      return GroupPhotoModel.fromJson(Map<String, dynamic>.from(row as Map));
+    }).toList();
+
+    return _hydrateGroupPhotoUrls(await _attachUploaderEmojis(photos));
+  }
+
+  Stream<List<GroupPhotoModel>> watchGroupPhotos(String groupId) {
+    final controller = StreamController<List<GroupPhotoModel>>.broadcast();
+    final channel = _supabase.channel('group-photos-$groupId');
+    var cache = <GroupPhotoModel>[];
+    var loaded = false;
+
+    Future<void> emit() async {
+      if (controller.isClosed) return;
+      cache = await fetchGroupPhotos(groupId);
+      loaded = true;
+      controller.add(cache);
+    }
+
+    Future<void> refreshSingle(String photoId) async {
+      if (!loaded || controller.isClosed) {
+        await emit();
+        return;
+      }
+
+      final row = await _supabase
+          .from('group_photos')
+          .select('id, group_id, uploaded_by, uploader_emoji, image_url, storage_path, created_at')
+          .eq('id', photoId)
+          .maybeSingle();
+
+      if (row == null) {
+        await emit();
+        return;
+      }
+
+      final photo = GroupPhotoModel.fromJson(Map<String, dynamic>.from(row as Map));
+      final enrichedPhotos = await _hydrateGroupPhotoUrls(await _attachUploaderEmojis([photo]));
+      final enrichedPhoto = enrichedPhotos.first;
+      final existingIndex = cache.indexWhere((item) => item.id == enrichedPhoto.id);
+      if (existingIndex == -1) {
+        cache = [enrichedPhoto, ...cache];
+      } else {
+        cache = [
+          ...cache.take(existingIndex),
+          enrichedPhoto,
+          ...cache.skip(existingIndex + 1),
+        ];
+      }
+
+      if (!controller.isClosed) {
+        controller.add(cache);
+      }
+    }
+
+    channel.onPostgresChanges(
+      event: PostgresChangeEvent.insert,
+      schema: 'public',
+      table: 'group_photos',
+      filter: PostgresChangeFilter(column: 'group_id', value: groupId, type: PostgresChangeFilterType.eq),
+      callback: (payload) {
+        final photoId = payload.newRecord['id']?.toString();
+        if (photoId == null || photoId.isEmpty) {
+          emit();
+          return;
+        }
+        refreshSingle(photoId);
+      },
+    );
+
+    channel.onPostgresChanges(
+      event: PostgresChangeEvent.update,
+      schema: 'public',
+      table: 'group_photos',
+      filter: PostgresChangeFilter(column: 'group_id', value: groupId, type: PostgresChangeFilterType.eq),
+      callback: (payload) {
+        final photoId = payload.newRecord['id']?.toString();
+        if (photoId == null || photoId.isEmpty) {
+          emit();
+          return;
+        }
+        refreshSingle(photoId);
+      },
+    );
+
+    channel.onPostgresChanges(
+      event: PostgresChangeEvent.delete,
+      schema: 'public',
+      table: 'group_photos',
+      filter: PostgresChangeFilter(column: 'group_id', value: groupId, type: PostgresChangeFilterType.eq),
+      callback: (payload) {
+        final deletedId = payload.oldRecord['id']?.toString();
+        if (deletedId == null || deletedId.isEmpty) {
+          emit();
+          return;
+        }
+
+        cache = cache.where((photo) => photo.id != deletedId).toList();
+        if (!controller.isClosed) {
+          controller.add(cache);
+        }
+      },
+    );
+
+    channel.subscribe();
+    emit();
+
+    controller.onCancel = () async {
+      channel.unsubscribe();
+      await controller.close();
+    };
+
+    return controller.stream;
+  }
+
+  Future<GroupPhotoModel> addGroupPhoto(String groupId, XFile image) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      throw AuthException('Debes iniciar sesion para subir fotos.');
+    }
+
+    await _ensureUserProfile(user);
+    final profile = await _runWithSchemaCheck(
+      () => _supabase.from('users').select('emoji').eq('id', user.id).maybeSingle(),
+    );
+    final uploaderEmoji = profile?['emoji']?.toString() ?? user.userMetadata?['emoji']?.toString() ?? emojiForSeed(user.id);
+
+    final extension = _imageExtension(image.path);
+    final storagePath = 'groups/$groupId/${user.id}/${DateTime.now().millisecondsSinceEpoch}.$extension';
+    final file = File(image.path);
+
+    try {
+      await _supabase.storage.from('group-photos').upload(
+            storagePath,
+            file,
+            fileOptions: FileOptions(contentType: _imageContentType(extension)),
+          );
+
+      final publicUrl = _supabase.storage.from('group-photos').getPublicUrl(storagePath);
+      final row = await _runWithSchemaCheck(
+        () => _supabase
+          .from('group_photos')
+          .insert({
+              'group_id': groupId,
+              'uploaded_by': user.id,
+              'uploader_emoji': uploaderEmoji,
+              'image_url': publicUrl,
+              'storage_path': storagePath,
+            })
+            .select('id, group_id, uploaded_by, uploader_emoji, image_url, storage_path, created_at')
+            .single(),
+      );
+
+      final photo = GroupPhotoModel.fromJson(Map<String, dynamic>.from(row));
+      final hydrated = await _hydrateGroupPhotoUrls(await _attachUploaderEmojis([photo]));
+      return hydrated.first;
+    } catch (_) {
+      await _supabase.storage.from('group-photos').remove([storagePath]);
+      rethrow;
+    }
+  }
+
+  Future<void> deleteGroupPhoto(String photoId) async {
+    final row = await _runWithSchemaCheck(
+      () => _supabase
+          .from('group_photos')
+          .select('id, storage_path')
+          .eq('id', photoId)
+          .maybeSingle(),
+    );
+
+    if (row == null) {
+      throw StateError('La foto ya no existe.');
+    }
+
+    final storagePath = row['storage_path']?.toString();
+    await _runWithSchemaCheck(
+      () => _supabase.from('group_photos').delete().eq('id', photoId),
+    );
+
+    if (storagePath != null && storagePath.isNotEmpty) {
+      unawaited(() async {
+        try {
+          await _supabase.storage.from('group-photos').remove([storagePath]);
+        } catch (_) {
+          // The photo is already gone from the collage; storage cleanup can be retried later.
+        }
+      }());
+    }
+  }
+
   Future<InviteLinks> generateInviteLinks(String groupId) async {
     final row = await _runWithSchemaCheck(() => _supabase.from('groups').select('invite_code').eq('id', groupId).single());
     final inviteCode = row['invite_code'] as String;
@@ -143,7 +349,7 @@ class GroupsRepository {
     final profile = user == null
         ? null
         : await _runWithSchemaCheck(
-            () => _supabase.from('users').select('display_name').eq('id', user.id).maybeSingle(),
+            () => _supabase.from('users').select('display_name, emoji').eq('id', user.id).maybeSingle(),
           );
 
     final displayName = (profile?['display_name']?.toString() ??
@@ -182,6 +388,57 @@ class GroupsRepository {
     return GroupModel.fromJson(json);
   }
 
+  Future<bool> isInvitePausedForCode(String inviteCode) async {
+    final row = await _runWithSchemaCheck(
+      () => _withInviteCodeHeader(
+        inviteCode,
+        () => _supabase
+            .from('groups')
+            .select('invite_paused')
+            .eq('invite_code', inviteCode)
+            .limit(1)
+            .maybeSingle(),
+      ),
+    );
+
+    return row?['invite_paused'] == true;
+  }
+
+  Future<List<GroupInviteSetting>> fetchOwnedGroupInviteSettings() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      return const [];
+    }
+
+    final rows = await _runWithSchemaCheck(
+      () => _supabase
+          .from('groups')
+          .select('id, name, invite_code, invite_paused, created_at')
+          .eq('created_by', user.id)
+          .order('created_at', ascending: false),
+    );
+
+    return (rows as List<dynamic>).map((row) {
+      final json = Map<String, dynamic>.from(row as Map);
+      return GroupInviteSetting(
+        id: json['id']?.toString() ?? '',
+        name: json['name']?.toString() ?? '',
+        inviteCode: json['invite_code']?.toString() ?? '',
+        invitePaused: json['invite_paused'] == true,
+        createdAt: DateTime.parse(json['created_at']?.toString() ?? DateTime.now().toIso8601String()),
+      );
+    }).where((group) => group.id.isNotEmpty).toList();
+  }
+
+  Future<void> setGroupInvitePaused({
+    required String groupId,
+    required bool paused,
+  }) async {
+    await _runWithSchemaCheck(
+      () => _supabase.from('groups').update({'invite_paused': paused}).eq('id', groupId),
+    );
+  }
+
   Future<void> joinGroup(String groupId) async {
     final user = _supabase.auth.currentUser;
     if (user == null) {
@@ -214,6 +471,9 @@ class GroupsRepository {
         'user';
     final usernameBase = displayName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]+'), '_');
     final username = '${usernameBase}_${user.id.substring(0, 8)}';
+    final existingProfile = await _runWithSchemaCheck(
+      () => _supabase.from('users').select('emoji').eq('id', user.id).maybeSingle(),
+    );
 
     await _runWithSchemaCheck(
       () => _supabase.from('users').upsert({
@@ -221,8 +481,102 @@ class GroupsRepository {
         'username': username,
         'display_name': displayName,
         'avatar_url': user.userMetadata?['avatar_url']?.toString(),
+        'emoji': existingProfile?['emoji']?.toString() ?? user.userMetadata?['emoji']?.toString() ?? emojiForSeed(user.id),
       }),
     );
+  }
+
+  Future<List<GroupPhotoModel>> _attachUploaderEmojis(List<GroupPhotoModel> photos) async {
+    if (photos.isEmpty) {
+      return photos;
+    }
+
+    final uploaderIds = photos.map((photo) => photo.uploadedBy).toSet().toList();
+    final rows = await _runWithSchemaCheck(
+      () => _supabase.from('users').select('id, emoji').inFilter('id', uploaderIds),
+    );
+
+    final emojisByUserId = <String, String>{};
+    for (final row in rows as List<dynamic>) {
+      final json = Map<String, dynamic>.from(row as Map);
+      final userId = json['id']?.toString();
+      if (userId == null || userId.isEmpty) continue;
+      emojisByUserId[userId] = json['emoji']?.toString() ?? '🙂';
+    }
+
+    return photos
+        .map(
+          (photo) => photo.copyWith(
+            uploaderEmoji: emojisByUserId[photo.uploadedBy] ?? photo.uploaderEmoji,
+          ),
+        )
+        .toList();
+  }
+
+  Future<List<GroupPhotoModel>> _hydrateGroupPhotoUrls(List<GroupPhotoModel> photos) async {
+    if (photos.isEmpty) {
+      return photos;
+    }
+
+    final hydrated = await Future.wait(
+      photos.map((photo) async {
+        final storagePath = photo.storagePath.trim();
+        if (storagePath.isEmpty) {
+          return photo;
+        }
+
+        final publicUrl = publicGroupPhotoUrl(storagePath);
+        return photo.copyWith(imageUrl: publicUrl);
+      }),
+    );
+
+    return hydrated;
+  }
+
+  String publicGroupPhotoUrl(String storagePath) {
+    final trimmedPath = storagePath.trim();
+    if (trimmedPath.isEmpty) {
+      return '';
+    }
+
+    return _supabase.storage.from('group-photos').getPublicUrl(trimmedPath);
+  }
+
+  Future<String?> resolveGroupPhotoSignedUrl(String storagePath) async {
+    final trimmedPath = storagePath.trim();
+    if (trimmedPath.isEmpty) {
+      return null;
+    }
+
+    try {
+      return await _supabase.storage.from('group-photos').createSignedUrl(
+            trimmedPath,
+            24 * 60 * 60,
+          );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String _imageExtension(String path) {
+    final cleanPath = path.split(RegExp(r'[\\/]+')).last.toLowerCase();
+    if (cleanPath.endsWith('.png')) return 'png';
+    if (cleanPath.endsWith('.webp')) return 'webp';
+    if (cleanPath.endsWith('.heic')) return 'heic';
+    return 'jpg';
+  }
+
+  String _imageContentType(String extension) {
+    switch (extension) {
+      case 'png':
+        return 'image/png';
+      case 'webp':
+        return 'image/webp';
+      case 'heic':
+        return 'image/heic';
+      default:
+        return 'image/jpeg';
+    }
   }
 }
 
@@ -234,6 +588,22 @@ class InviteLinks {
 
   final String appLink;
   final String webLink;
+}
+
+class GroupInviteSetting {
+  const GroupInviteSetting({
+    required this.id,
+    required this.name,
+    required this.inviteCode,
+    required this.invitePaused,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String name;
+  final String inviteCode;
+  final bool invitePaused;
+  final DateTime createdAt;
 }
 
 class GroupsController extends StateNotifier<AsyncValue<List<GroupModel>>> {

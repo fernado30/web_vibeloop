@@ -3,6 +3,7 @@ insert into public.users (
   username,
   display_name,
   avatar_url,
+  emoji,
   created_at
 )
 select
@@ -28,6 +29,7 @@ select
     'VIBELOOP user'
   ) as display_name,
   u.raw_user_meta_data ->> 'avatar_url' as avatar_url,
+  coalesce(nullif(u.raw_user_meta_data ->> 'emoji', ''), '🙂') as emoji,
   coalesce(u.created_at, now()) as created_at
 from auth.users u
 left join public.users pu on pu.id = u.id

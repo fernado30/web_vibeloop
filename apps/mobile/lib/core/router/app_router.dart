@@ -6,13 +6,26 @@ import '../../features/auth/data/auth_repository.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/chat/presentation/chat_screen.dart';
+import '../../features/settings/presentation/settings_screen.dart';
+import '../../features/legal/presentation/privacy_policy_screen.dart';
+import '../../features/legal/presentation/terms_of_use_screen.dart';
+import '../../features/legal/presentation/help_screen.dart';
+import '../../features/legal/presentation/security_resources_screen.dart';
+import '../../features/settings/presentation/hidden_words_screen.dart';
+import '../../features/settings/presentation/blocked_users_screen.dart';
+import '../../features/settings/presentation/pause_link_screen.dart';
+import '../../features/settings/presentation/message_filtering_screen.dart';
+import '../../features/settings/presentation/notifications_screen.dart';
+import '../../features/settings/presentation/appearance_screen.dart';
 import '../../features/groups/presentation/create_group_screen.dart';
 import '../../features/groups/presentation/invite_join_screen.dart';
 import '../../features/groups/presentation/groups_list_screen.dart';
+import '../../features/groups/presentation/group_photos_screen.dart';
 import '../../features/anonymous/presentation/anonymous_inbox_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
+  final authRepo = ref.watch(authRepositoryProvider);
 
   return GoRouter(
     initialLocation: '/groups',
@@ -42,12 +55,62 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const GroupsListScreen(),
         routes: [
           GoRoute(
+            path: 'settings',
+            builder: (context, state) => const SettingsScreen(),
+            routes: [
+              GoRoute(
+                path: 'privacy-policy',
+                builder: (context, state) => const PrivacyPolicyScreen(),
+              ),
+              GoRoute(
+                path: 'terms-of-use',
+                builder: (context, state) => const TermsOfUseScreen(),
+              ),
+              GoRoute(
+                path: 'help',
+                builder: (context, state) => const HelpScreen(),
+              ),
+              GoRoute(
+                path: 'security-resources',
+                builder: (context, state) => const SecurityResourcesScreen(),
+              ),
+              GoRoute(
+                path: 'notifications',
+                builder: (context, state) => const NotificationsScreen(),
+              ),
+              GoRoute(
+                path: 'appearance',
+                builder: (context, state) => const AppearanceScreen(),
+              ),
+              GoRoute(
+                path: 'hidden-words',
+                builder: (context, state) => const HiddenWordsScreen(),
+              ),
+              GoRoute(
+                path: 'blocked-users',
+                builder: (context, state) => const BlockedUsersScreen(),
+              ),
+              GoRoute(
+                path: 'pause-link',
+                builder: (context, state) => const PauseLinkScreen(),
+              ),
+              GoRoute(
+                path: 'message-filtering',
+                builder: (context, state) => const MessageFilteringScreen(),
+              ),
+            ],
+          ),
+          GoRoute(
             path: 'create',
             builder: (context, state) => const CreateGroupScreen(),
           ),
           GoRoute(
             path: ':id/chat',
             builder: (context, state) => ChatScreen(groupId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: ':id/photos',
+            builder: (context, state) => GroupPhotosScreen(groupId: state.pathParameters['id']!),
           ),
           GoRoute(
             path: ':id/anonymous',
@@ -82,17 +145,23 @@ final routerProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
-      final isAuthed = authState.maybeWhen(authenticated: (_) => true, orElse: () => false);
+      final user = authState.maybeWhen(authenticated: (user) => user, orElse: () => null);
+      final isAuthed = user != null;
+      final isAnonymous = authRepo.currentUser?.isAnonymous ?? false;
       final goingToAuth = state.matchedLocation == '/login' || state.matchedLocation == '/register';
-      final isProtectedRoute = state.matchedLocation.startsWith('/groups/create') ||
-          state.matchedLocation.contains('/chat') ||
-          state.matchedLocation.contains('/anonymous');
+      final isProtectedRoute = state.matchedLocation.contains('/chat') ||
+          state.matchedLocation.contains('/anonymous') ||
+          state.matchedLocation.contains('/photos');
 
       if (!isAuthed && isProtectedRoute) {
         return '/login';
       }
 
-      if (isAuthed && goingToAuth) {
+      if (state.matchedLocation.startsWith('/groups/create') && (isAnonymous || !isAuthed)) {
+        return '/login';
+      }
+
+      if (isAuthed && !isAnonymous && goingToAuth) {
         return '/groups';
       }
 

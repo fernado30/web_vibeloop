@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/utils/profile_emojis.dart';
 import '../domain/auth_state.dart' as local_auth;
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -34,9 +35,20 @@ class AuthRepository {
     ).then((response) async {
       final user = response.user;
       if (user != null) {
+        final existingProfile = await _supabase
+            .from('users')
+            .select('display_name, emoji')
+            .eq('id', user.id)
+            .maybeSingle();
         await _ensureProfile(
           user,
-          displayName: user.userMetadata?['display_name']?.toString() ?? email.split('@').first,
+          displayName: (existingProfile?['display_name']?.toString() ??
+                  user.userMetadata?['display_name']?.toString() ??
+                  email.split('@').first)
+              .trim(),
+          emoji: existingProfile?['emoji']?.toString() ??
+              user.userMetadata?['emoji']?.toString() ??
+              emojiForSeed(user.id),
         );
       }
       return response;
@@ -47,21 +59,31 @@ class AuthRepository {
     required String name,
     required String email,
     required String password,
+    String? emoji,
   }) async {
     final response = await _supabase.auth.signUp(
       email: email,
       password: password,
       data: {
         'display_name': name,
+        if (emoji != null) 'emoji': emoji,
       },
     );
 
     final user = response.user;
-    if (user != null) {
-      await _ensureProfile(user, displayName: name);
+    if (user != null && response.session != null) {
+      await _ensureProfile(
+        user,
+        displayName: name,
+        emoji: emoji ?? emojiForSeed(user.id),
+      );
     }
 
     return response;
+  }
+
+  Future<AuthResponse> signInAnonymously() {
+    return _supabase.auth.signInAnonymously();
   }
 
   Future<void> signOut() {
@@ -73,6 +95,7 @@ class AuthRepository {
   Future<void> upsertProfile({
     required String displayName,
     String? avatarUrl,
+    String? emoji,
   }) async {
     final user = currentUser;
     if (user == null) {
@@ -82,6 +105,38 @@ class AuthRepository {
       user,
       displayName: displayName,
       avatarUrl: avatarUrl,
+      emoji: emoji,
+    );
+  }
+
+  Future<Map<String, dynamic>?> fetchCurrentProfile() async {
+    final user = currentUser;
+    if (user == null) {
+      return null;
+    }
+
+    return _supabase
+        .from('users')
+        .select('display_name, avatar_url, emoji')
+        .eq('id', user.id)
+        .maybeSingle();
+  }
+
+  Future<void> updateEmoji(String emoji) async {
+    final user = currentUser;
+    if (user == null) {
+      throw AuthException('No hay una sesion activa.');
+    }
+
+    final profile = await fetchCurrentProfile();
+    await _ensureProfile(
+      user,
+      displayName: profile?['display_name']?.toString() ??
+          user.userMetadata?['display_name']?.toString() ??
+          user.email?.split('@').first ??
+          'user',
+      avatarUrl: profile?['avatar_url']?.toString(),
+      emoji: emoji,
     );
   }
 
@@ -89,14 +144,21 @@ class AuthRepository {
     User user, {
     required String displayName,
     String? avatarUrl,
+    String? emoji,
   }) async {
     final usernameBase = displayName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]+'), '_');
     final username = '${usernameBase}_${user.id.substring(0, 8)}';
+    final existingProfile = await _supabase
+        .from('users')
+        .select('emoji')
+        .eq('id', user.id)
+        .maybeSingle();
     await _supabase.from('users').upsert({
       'id': user.id,
       'username': username,
       'display_name': displayName,
       'avatar_url': avatarUrl,
+      'emoji': emoji ?? existingProfile?['emoji']?.toString() ?? emojiForSeed(user.id),
     });
   }
 }
@@ -122,6 +184,10 @@ class AuthController extends StateNotifier<local_auth.AuthState> {
 
   Future<void> signUpWithEmail(String name, String email, String password) async {
     await _repository.signUpWithEmail(name: name, email: email, password: password);
+  }
+
+  Future<void> signInAnonymously() async {
+    await _repository.signInAnonymously();
   }
 
   Future<void> signOut() async {

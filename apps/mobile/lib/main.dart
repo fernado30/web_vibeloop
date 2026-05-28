@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'core/ads/ad_service.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/supabase/supabase_config.dart';
+import 'core/settings/app_preferences_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +16,11 @@ Future<void> main() async {
       url: config.url,
       anonKey: config.anonKey,
     );
+    try {
+      await AdService.instance.initialize();
+    } catch (error) {
+      debugPrint('AdMob init failed: $error');
+    }
     runApp(const ProviderScope(child: VibeloopApp()));
   } catch (error, stackTrace) {
     runApp(
@@ -34,10 +41,13 @@ class VibeloopApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final preferences = ref.watch(appPreferencesControllerProvider);
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'VIBELOOP',
       theme: vibeloopTheme,
+      darkTheme: vibeloopDarkTheme,
+      themeMode: preferences.themeMode,
       routerConfig: router,
     );
   }

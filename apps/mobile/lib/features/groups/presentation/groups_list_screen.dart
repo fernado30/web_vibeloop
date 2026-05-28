@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/ads/vibe_loop_banner_ad.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/groups_repository.dart';
 import '../domain/group_model.dart';
@@ -25,11 +26,13 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
 
   Future<void> _handleCreateGroupTap() async {
     final authState = ref.read(authStateProvider);
-    final isAuthed = authState.maybeWhen(authenticated: (_) => true, orElse: () => false);
+    final user = authState.maybeWhen(authenticated: (user) => user, orElse: () => null);
+    final isAuthed = user != null;
+    final isAnonymous = user?.isAnonymous ?? false;
 
-    if (!isAuthed) {
+    if (!isAuthed || isAnonymous) {
       if (!mounted) return;
-      context.go('/register');
+      context.go('/login');
       return;
     }
 
@@ -51,18 +54,34 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: () => ref.read(groupsControllerProvider.notifier).loadMyGroups(),
           ),
+          IconButton(
+            tooltip: 'Configuración',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => context.push('/groups/settings'),
+          ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _handleCreateGroupTap,
-        icon: const Icon(Icons.add),
-        label: const Text('Crear grupo'),
+      bottomNavigationBar: const SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(12, 0, 12, 8),
+          child: VibeLoopBannerAd(),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 72),
+        child: FloatingActionButton.small(
+          onPressed: _handleCreateGroupTap,
+          tooltip: 'Crear grupo',
+          child: const Icon(Icons.add),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(groupsControllerProvider.notifier).loadMyGroups(),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 48),
           children: [
             _HeroSection(onCreateGroup: _handleCreateGroupTap),
             const SizedBox(height: 24),

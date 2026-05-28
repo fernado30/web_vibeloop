@@ -136,3 +136,130 @@ final ThemeData vibeloopTheme = ThemeData(
     behavior: SnackBarBehavior.floating,
   ),
 );
+
+final ThemeData vibeloopDarkTheme = ThemeData(
+  useMaterial3: true,
+  brightness: Brightness.dark,
+  fontFamily: 'SF Pro Display',
+  colorScheme: const ColorScheme.dark(
+    primary: _accentSky,
+    secondary: _primaryBlue,
+    tertiary: _accentSky,
+    surface: Color(0xFF111827),
+    onPrimary: _textPrimary,
+    onSecondary: Colors.white,
+    onTertiary: Colors.white,
+    onSurface: Colors.white,
+    onSurfaceVariant: Color(0xFFB2BDD0),
+    outline: Color(0x334B5563),
+  ),
+  scaffoldBackgroundColor: const Color(0xFF0B1220),
+  appBarTheme: const AppBarTheme(
+    backgroundColor: Colors.transparent,
+    foregroundColor: Colors.white,
+    elevation: 0,
+    centerTitle: true,
+    toolbarHeight: 56,
+    surfaceTintColor: Colors.transparent,
+    titleTextStyle: TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+      color: Colors.white,
+      letterSpacing: -0.2,
+    ),
+  ),
+  cardTheme: CardThemeData(
+    color: const Color(0xFF111827).withValues(alpha: 0.92),
+    elevation: 0,
+    margin: EdgeInsets.zero,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(28),
+      side: const BorderSide(color: Color(0x334B5563), width: 0.7),
+    ),
+  ),
+  inputDecorationTheme: InputDecorationTheme(
+    filled: true,
+    fillColor: const Color(0xFF111827),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(20),
+      borderSide: BorderSide.none,
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(20),
+      borderSide: const BorderSide(color: Color(0x334B5563)),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(20),
+      borderSide: const BorderSide(color: _accentSky, width: 1.5),
+    ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+  ),
+  filledButtonTheme: FilledButtonThemeData(
+    style: FilledButton.styleFrom(
+      backgroundColor: _accentSky,
+      foregroundColor: _textPrimary,
+      minimumSize: const Size.fromHeight(54),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+    ),
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: _accentSky,
+      foregroundColor: _textPrimary,
+      minimumSize: const Size.fromHeight(54),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+    ),
+  ),
+  outlinedButtonTheme: OutlinedButtonThemeData(
+    style: OutlinedButton.styleFrom(
+      foregroundColor: _accentSky,
+      side: const BorderSide(color: _accentSky, width: 1.2),
+      minimumSize: const Size.fromHeight(54),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+    ),
+  ),
+  textButtonTheme: TextButtonThemeData(
+    style: TextButton.styleFrom(
+      foregroundColor: _accentSky,
+    ),
+  ),
+  textTheme: const TextTheme(
+    displayLarge: TextStyle(fontSize: 57, fontWeight: FontWeight.w700, height: 1.05),
+    displayMedium: TextStyle(fontSize: 45, fontWeight: FontWeight.w700, height: 1.05),
+    displaySmall: TextStyle(fontSize: 36, fontWeight: FontWeight.w700, height: 1.1),
+    headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w700, height: 1.15),
+    headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.w600, height: 1.15),
+    headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, height: 1.2),
+    titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, height: 1.25),
+    titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.25),
+    titleSmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, height: 1.25),
+    bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, height: 1.45),
+    bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, height: 1.45),
+    bodySmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, height: 1.35),
+    labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, height: 1.2),
+    labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: 1.2),
+    labelSmall: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, height: 1.2),
+  ),
+  chipTheme: ChipThemeData(
+    backgroundColor: const Color(0xFF111827),
+    selectedColor: _accentSky,
+    disabledColor: const Color(0xFF111827),
+    labelStyle: const TextStyle(color: Colors.white),
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+    side: BorderSide.none,
+  ),
+  bottomSheetTheme: const BottomSheetThemeData(
+    backgroundColor: Color(0xFF111827),
+    surfaceTintColor: Colors.transparent,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    ),
+  ),
+  snackBarTheme: SnackBarThemeData(
+    backgroundColor: const Color(0xFF111827),
+    contentTextStyle: const TextStyle(color: Colors.white),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    behavior: SnackBarBehavior.floating,
+  ),
+);
