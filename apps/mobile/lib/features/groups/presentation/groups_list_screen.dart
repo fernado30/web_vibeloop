@@ -1,8 +1,15 @@
+﻿import 'dart:ui';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/ads/vibe_loop_banner_ad.dart';
+import '../../../core/theme/vibe_tokens.dart';
+import '../../../core/widgets/vibe_svg_icon.dart';
+import '../../../core/widgets/vibe_ui.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/groups_repository.dart';
 import '../domain/group_model.dart';
@@ -43,291 +50,326 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
   @override
   Widget build(BuildContext context) {
     final groupsState = ref.watch(groupsControllerProvider);
-    final authState = ref.watch(authStateProvider);
-    final isAuthed = authState.maybeWhen(authenticated: (_) => true, orElse: () => false);
+    final groups = groupsState.maybeWhen(data: (groups) => groups, orElse: () => null);
+    final showEmptyState = groups != null && groups.isEmpty;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tus grupos'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => ref.read(groupsControllerProvider.notifier).loadMyGroups(),
-          ),
-          IconButton(
-            tooltip: 'Configuración',
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => context.push('/groups/settings'),
-          ),
-        ],
-      ),
-      bottomNavigationBar: const SafeArea(
-        top: false,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(12, 0, 12, 8),
-          child: VibeLoopBannerAd(),
-        ),
-      ),
+    return VibeScaffold(
+      appBar: showEmptyState
+          ? null
+          : _GroupsTopBar(
+              onRefresh: () => ref.read(groupsControllerProvider.notifier).loadMyGroups(),
+              onOpenSettings: () => context.push('/groups/settings'),
+            ),
+      bottomNavigationBar: showEmptyState ? null : const GlassBottomNavigation(child: VibeLoopBannerAd()),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 72),
-        child: FloatingActionButton.small(
-          onPressed: _handleCreateGroupTap,
-          tooltip: 'Crear grupo',
-          child: const Icon(Icons.add),
-        ),
-      ),
+      floatingActionButton: showEmptyState
+          ? null
+          : Padding(
+              padding: const EdgeInsets.only(bottom: 76),
+              child: FloatingCreateButton(
+                onPressed: _handleCreateGroupTap,
+                tooltip: 'Crear grupo',
+              ),
+            ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(groupsControllerProvider.notifier).loadMyGroups(),
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 48),
-          children: [
-            _HeroSection(onCreateGroup: _handleCreateGroupTap),
-            const SizedBox(height: 24),
-            _FeatureGrid(),
-            const SizedBox(height: 24),
-            _StatsStrip(),
-            const SizedBox(height: 28),
-            if (isAuthed) ...[
-              Text('Tus grupos', style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 12),
-              groupsState.when(
-                loading: () => const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 48),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (error, stack) => _StateMessage(
-                  title: 'No pudimos cargar tus grupos.',
-                  subtitle: '$error',
-                ),
-                data: (groups) {
-                  if (groups.isEmpty) {
-                    return _StateMessage(
-                      title: 'Aún no tienes grupos.',
-                      subtitle: 'Crea el primero y empieza a chatear con tu comunidad.',
-                      actionLabel: 'Crear grupo',
-                      onAction: _handleCreateGroupTap,
-                    );
-                  }
-
-                  return Column(
-                    children: groups
-                        .map(
-                          (group) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _GroupCard(
-                              group: group,
-                              onOpenChat: () => context.push('/groups/${group.id}/chat'),
-                              onOpenAnonymous: () => context.push('/groups/${group.id}/anonymous'),
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  );
-                },
-              ),
-            ] else ...[
-              _StateMessage(
-                title: 'Entra sin cuenta cuando te inviten.',
-                subtitle:
-                    'Si solo quieres unirte a un grupo, basta con abrir el link. Regístrate solo cuando quieras crear el tuyo.',
-                actionLabel: 'Crear grupo',
-                onAction: _handleCreateGroupTap,
+        child: groupsState.when(
+          loading: () => const _LoadingGroupsView(),
+          error: (error, stack) => ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+            children: [
+              ErrorStateCard(
+                title: 'No pudimos cargar tus grupos',
+                body: '$error',
+                onRetry: () => ref.read(groupsControllerProvider.notifier).loadMyGroups(),
               ),
             ],
-          ],
+          ),
+          data: (groups) {
+            if (groups.isEmpty) {
+              return _EmptyGroupsView(
+                onCreateGroup: _handleCreateGroupTap,
+                onOpenSettings: () => context.push('/groups/settings'),
+                onRefresh: () => ref.read(groupsControllerProvider.notifier).loadMyGroups(),
+              );
+            }
+
+            return ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+              children: [
+                for (final group in groups) ...[
+                  _GroupCard(
+                    group: group,
+                    onOpenChat: () => context.push('/groups/${group.id}/chat'),
+                    onOpenAnonymous: () => context.push('/groups/${group.id}/anonymous'),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ],
+            );
+          },
         ),
       ),
     );
   }
 }
 
-class _HeroSection extends StatelessWidget {
-  const _HeroSection({required this.onCreateGroup});
-
-  final VoidCallback onCreateGroup;
+class _LoadingGroupsView extends StatelessWidget {
+  const _LoadingGroupsView();
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withValues(alpha: 0.88),
-            const Color(0xFFEAF5FF).withValues(alpha: 0.92),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.35)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 28,
-            offset: const Offset(0, 14),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: colorScheme.primary.withValues(alpha: 0.14)),
-            ),
-            child: Text(
-              'Social chat groups',
-              style: TextStyle(
-                color: colorScheme.primary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'VIBELOOP',
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Crea grupos, comparte invitaciones sin cuenta y mantén el chat vivo en tiempo real.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: const [
-              _Pill(label: 'Realtime chat'),
-              _Pill(label: 'Anonymous inbox'),
-              _Pill(label: 'Entrada sin cuenta'),
-            ],
-          ),
-          const SizedBox(height: 22),
-          FilledButton.icon(
-            onPressed: onCreateGroup,
-            icon: const Icon(Icons.add),
-            label: const Text('Crear grupo'),
-          ),
-        ],
-      ),
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+      children: const [
+        LoadingStateCard(label: 'Cargando tus grupos...'),
+      ],
     );
   }
 }
 
-class _FeatureGrid extends StatelessWidget {
+class _EmptyGroupsView extends StatefulWidget {
+  const _EmptyGroupsView({
+    required this.onCreateGroup,
+    required this.onOpenSettings,
+    required this.onRefresh,
+  });
+
+  final VoidCallback onCreateGroup;
+  final VoidCallback onOpenSettings;
+  final VoidCallback onRefresh;
+
+  @override
+  State<_EmptyGroupsView> createState() => _EmptyGroupsViewState();
+}
+
+class _EmptyGroupsViewState extends State<_EmptyGroupsView>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 4200),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWide = constraints.maxWidth > 700;
-        final children = [
-          _FeatureCard(
-            icon: Icons.forum_outlined,
-            title: 'Chat grupal',
-            subtitle: 'Mensajes en tiempo real con presencia y reacciones.',
-          ),
-          _FeatureCard(
-            icon: Icons.visibility_off_outlined,
-            title: 'Mensajes anónimos',
-            subtitle: 'Abre un buzón privado para feedback sin identidad visible.',
-          ),
-          _FeatureCard(
-            icon: Icons.lock_outline,
-            title: 'Entrada sin cuenta',
-            subtitle: 'Los invitados abren el link y entran directo.',
-          ),
-        ];
-
-        return Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: children
-              .map(
-                (child) => SizedBox(
-                  width: isWide ? (constraints.maxWidth - 24) / 3 : constraints.maxWidth,
-                  child: child,
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Tus grupos',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: VibeColors.textPrimary,
+                      ),
                 ),
-              )
-              .toList(),
+                Row(
+                  children: [
+                    _TopCircleButton(
+                      iconAsset: VibeAssetIcons.refresh,
+                      tooltip: 'Actualizar',
+                      onPressed: widget.onRefresh,
+                    ),
+                    const SizedBox(width: 12),
+                    _TopCircleButton(
+                      iconData: Icons.settings,
+                      tooltip: 'Ajustes',
+                      onPressed: widget.onOpenSettings,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              height: constraints.maxHeight > 620 ? constraints.maxHeight - 260 : 400,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned(
+                          top: -16,
+                          left: -14,
+                          child: _MiniSpark(size: 24, color: const Color(0xFFDDD6FE)),
+                        ),
+                        Positioned(
+                          top: -10,
+                          right: -18,
+                          child: _MiniSpark(size: 20, color: const Color(0xFFDDD6FE)),
+                        ),
+                        Positioned(
+                          bottom: -12,
+                          right: -14,
+                          child: _MiniSpark(size: 16, color: const Color(0xFFDDD6FE)),
+                        ),
+                        AnimatedBuilder(
+                          animation: _controller,
+                          builder: (context, child) {
+                            final floatOffset = math.sin(_controller.value * math.pi * 2) * 8;
+                            final pulse = 0.98 + (_controller.value * 0.04);
+                            return Transform.translate(
+                              offset: Offset(0, floatOffset),
+                              child: Transform.scale(scale: pulse, child: child),
+                            );
+                          },
+                          child: const _PeopleGroupIcon(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    'Crea tu primer grupo',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: VibeColors.textPrimary,
+                          fontSize: 20,
+                        ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Empieza una conversación increíble con las personas que más te importan.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: VibeColors.textSecondary,
+                          fontSize: 14,
+                          height: 1.35,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(color: const Color(0xFFF3F4F6)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: ElevatedButton.icon(
+                        onPressed: widget.onCreateGroup,
+                        icon: const Icon(Icons.add_rounded, size: 20),
+                        label: const Text('Crear grupo'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6366F1),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        onPressed: widget.onOpenSettings,
+                        icon: const Icon(Icons.settings, size: 20),
+                        label: const Text('Ajustes'),
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF334155),
+                          side: const BorderSide(color: Color(0xFFE5E7EB)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         );
       },
     );
   }
 }
 
-class _StatsStrip extends StatelessWidget {
+class _MiniSpark extends StatelessWidget {
+  const _MiniSpark({required this.color, required this.size});
+
+  final Color color;
+  final double size;
+
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Container(
-      padding: const EdgeInsets.all(18),
+      width: size,
+      height: size,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.78),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.35)),
-      ),
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        children: const [
-          _StatChip(label: 'Grupo privado'),
-          _StatChip(label: 'Mensajes anónimos'),
-          _StatChip(label: 'Invitaciones por link'),
-        ],
+        color: color,
+        shape: BoxShape.circle,
       ),
     );
   }
 }
 
-class _FeatureCard extends StatelessWidget {
-  const _FeatureCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
+class _PeopleGroupIcon extends StatelessWidget {
+  const _PeopleGroupIcon();
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.35)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: colorScheme.primary, size: 30),
-          const SizedBox(height: 14),
-          Text(title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 6),
-          Text(subtitle, style: TextStyle(color: colorScheme.onSurfaceVariant)),
-        ],
-      ),
+    return SvgPicture.string(
+      '''<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="people-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366f1"/>
+            <stop offset="100%" stop-color="#a855f7"/>
+          </linearGradient>
+        </defs>
+        <circle cx="30" cy="45" r="10" fill="url(#people-gradient)" opacity="0.7"/>
+        <path d="M15 75C15 65 20 60 30 60C40 60 45 65 45 75" stroke="url(#people-gradient)" stroke-width="8" stroke-linecap="round" opacity="0.7" fill="none"/>
+        <circle cx="70" cy="45" r="10" fill="url(#people-gradient)" opacity="0.7"/>
+        <path d="M55 75C55 65 60 60 70 60C80 60 85 65 85 75" stroke="url(#people-gradient)" stroke-width="8" stroke-linecap="round" opacity="0.7" fill="none"/>
+        <circle cx="50" cy="35" r="12" fill="url(#people-gradient)"/>
+        <path d="M30 75C30 62 38 55 50 55C62 55 70 62 70 75" stroke="url(#people-gradient)" stroke-width="10" stroke-linecap="round" fill="none"/>
+      </svg>''',
+      width: 96,
+      height: 96,
     );
   }
 }
@@ -347,68 +389,92 @@ class _GroupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
-      color: Colors.white.withValues(alpha: 0.85),
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
         onTap: onOpenChat,
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  width: 76,
-                  height: 76,
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withValues(alpha: 0.08),
-                    border: Border.all(color: colorScheme.outline.withValues(alpha: 0.25)),
-                  ),
-                  child: group.imageUrl == null
-                      ? Icon(Icons.group, size: 32, color: colorScheme.primary)
-                      : Image.network(group.imageUrl!, fit: BoxFit.cover),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(group.name, style: Theme.of(context).textTheme.titleLarge),
-                    const SizedBox(height: 4),
-                    Text(
-                      group.description ?? 'Sin descripción',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: colorScheme.onSurfaceVariant),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _MetaChip(label: '${group.memberCount} miembros'),
-                        _MetaChip(label: group.inviteCode),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                children: [
-                  IconButton(
-                    onPressed: onOpenChat,
-                    icon: const Icon(Icons.chat_bubble_outline),
-                  ),
-                  IconButton(
-                    onPressed: onOpenAnonymous,
-                    icon: const Icon(Icons.visibility_off_outlined),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.42),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.34)),
+                boxShadow: [
+                  BoxShadow(
+                    color: VibeColors.primaryDeepBlue.withValues(alpha: 0.04),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
-            ],
+              child: Row(
+                children: [
+                  _GroupAvatar(imageUrl: group.imageUrl),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          group.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            height: 1.15,
+                            color: VibeColors.textPrimary,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          group.description?.trim().isNotEmpty == true ? group.description! : 'Sin descripcion',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.78),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            height: 1.35,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _GroupMetaPill(label: '${group.memberCount} miembros'),
+                            _GroupMetaPill(label: group.inviteCode, icon: Icons.link_rounded),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _GroupActionButton(
+                        icon: Icons.chat_bubble_outline_rounded,
+                        onPressed: onOpenChat,
+                      ),
+                      const SizedBox(height: 14),
+                      _GroupActionButton(
+                        icon: Icons.visibility_off_outlined,
+                        onPressed: onOpenAnonymous,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -416,126 +482,232 @@ class _GroupCard extends StatelessWidget {
   }
 }
 
-class _StateMessage extends StatelessWidget {
-  const _StateMessage({
-    required this.title,
-    required this.subtitle,
-    this.actionLabel,
-    this.onAction,
+class _GroupsTopBar extends StatelessWidget implements PreferredSizeWidget {
+  const _GroupsTopBar({
+    required this.onRefresh,
+    required this.onOpenSettings,
   });
 
-  final String title;
-  final String subtitle;
-  final String? actionLabel;
-  final VoidCallback? onAction;
+  final VoidCallback onRefresh;
+  final VoidCallback onOpenSettings;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(76);
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.78),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          Text(subtitle, style: TextStyle(color: colorScheme.onSurfaceVariant)),
-          if (actionLabel != null && onAction != null) ...[
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: onAction,
-              child: Text(actionLabel!),
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFFCF8FB).withValues(alpha: 0.82),
+            border: Border(
+              bottom: BorderSide(color: const Color(0xFFC0C6D6).withValues(alpha: 0.28)),
             ),
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Tus grupos',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                        color: VibeColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  _TopCircleButton(
+                    iconAsset: VibeAssetIcons.refresh,
+                    tooltip: 'Actualizar',
+                    onPressed: onRefresh,
+                  ),
+                  const SizedBox(width: 10),
+                  _TopCircleButton(
+                    iconData: Icons.settings_outlined,
+                    tooltip: 'Ajustes',
+                    onPressed: onOpenSettings,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GroupAvatar extends StatelessWidget {
+  const _GroupAvatar({this.imageUrl});
+
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: VibeGradients.cyanViolet,
+        boxShadow: [
+          BoxShadow(
+            color: VibeColors.primaryViolet.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: imageUrl == null
+          ? const Icon(Icons.groups_rounded, size: 26, color: Colors.white)
+          : Image.network(
+              imageUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(Icons.groups_rounded, size: 26, color: Colors.white);
+              },
+            ),
+    );
+  }
+}
+
+class _GroupMetaPill extends StatelessWidget {
+  const _GroupMetaPill({
+    required this.label,
+    this.icon,
+  });
+
+  final String label;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0EDEF).withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0xFFE4E2E4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 15, color: VibeColors.primaryDeepBlue.withValues(alpha: 0.82)),
+            const SizedBox(width: 6),
           ],
+          Text(
+            label,
+            style: const TextStyle(
+              color: VibeColors.primaryDeepBlue,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              height: 1.1,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _Pill extends StatelessWidget {
-  const _Pill({required this.label});
+class _GroupActionButton extends StatelessWidget {
+  const _GroupActionButton({
+    required this.icon,
+    required this.onPressed,
+  });
 
-  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.12)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: colorScheme.primary,
-          fontWeight: FontWeight.w600,
+    return SizedBox(
+      width: 36,
+      height: 36,
+      child: IconButton(
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+        splashRadius: 18,
+        visualDensity: VisualDensity.compact,
+        onPressed: onPressed,
+        icon: Icon(
+          icon,
+          size: 22,
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
         ),
       ),
     );
   }
 }
 
-class _MetaChip extends StatelessWidget {
-  const _MetaChip({required this.label});
+class _TopCircleButton extends StatelessWidget {
+  const _TopCircleButton({
+    this.iconAsset,
+    this.iconData,
+    required this.onPressed,
+    this.tooltip,
+  }) : assert(iconAsset != null || iconData != null, 'TopCircleButton requires an icon asset or icon data.');
 
-  final String label;
+  final String? iconAsset;
+  final IconData? iconData;
+  final VoidCallback onPressed;
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.35)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          color: colorScheme.onSurfaceVariant,
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkResponse(
+          onTap: onPressed,
+          radius: 24,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0EDEF).withValues(alpha: 0.55),
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFE4E2E4).withValues(alpha: 0.8)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Center(
+              child: iconData != null
+                  ? Icon(
+                      iconData,
+                      size: 18,
+                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.88),
+                    )
+                  : VibeSvgIcon(
+                      iconAsset!,
+                      size: 18,
+                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.88),
+                    ),
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-class _StatChip extends StatelessWidget {
-  const _StatChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: colorScheme.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.1)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          color: colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
-}

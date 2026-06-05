@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/widgets/vibe_ui.dart';
+
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
 
@@ -42,8 +44,6 @@ Podemos compartir o procesar información con proveedores que ayudan a operar VI
 - Google AdMob: entrega y medición de anuncios cuando la monetización está activa.
 - Servicios de notificaciones y transporte de mensajes, si se habilitan en el futuro.
 
-Estos proveedores actúan como procesadores o encargados del tratamiento según corresponda y solo deben usar los datos para prestar el servicio contratado.
-
 6. Base legal y uso permitido
 Tratamos la información cuando es necesaria para:
 - prestar el servicio solicitado por ti;
@@ -82,10 +82,9 @@ Si tienes preguntas sobre privacidad, eliminación de cuenta o manejo de datos, 
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return VibeScaffold(
       appBar: AppBar(
-        centerTitle: true,
-        title: const Text('Política de privacidad'),
+        title: const Text('Politica de privacidad'),
         actions: [
           IconButton(
             tooltip: 'Copiar',
@@ -94,7 +93,7 @@ Si tienes preguntas sobre privacidad, eliminación de cuenta o manejo de datos, 
               await Clipboard.setData(const ClipboardData(text: _policyText));
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Política copiada al portapapeles')),
+                const SnackBar(content: Text('Politica copiada al portapapeles')),
               );
             },
           ),
@@ -102,45 +101,30 @@ Si tienes preguntas sobre privacidad, eliminación de cuenta o manejo de datos, 
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.80),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            child: const Text(
-              'Este texto está redactado para reflejar el funcionamiento real de VIBELOOP. Antes de publicarlo en Play Store, revísalo con asesoría legal y reemplaza el contacto por el canal oficial de soporte.',
-              style: TextStyle(
-                color: Color(0xFF4B5563),
-                height: 1.45,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+        children: const [
+          SectionIntroCard(
+            title: 'Resumen legal y operativo',
+            body: 'Este texto refleja el funcionamiento real de VIBELOOP. Antes de publicarlo en una store, revísalo con asesoría legal y actualiza el contacto oficial.',
+            badge: SafetyBadge(label: 'Legal'),
           ),
-          const SizedBox(height: 16),
-          const _PolicySection(
+          SizedBox(height: 16),
+          _PolicySection(
             title: 'Resumen',
-            body:
-                'VIBELOOP recopila datos de cuenta, contenido compartido, actividad de grupos, fotos y datos técnicos para que el chat, los grupos, las invitaciones y las funciones sociales funcionen correctamente.',
+            body: 'VIBELOOP recopila datos de cuenta, contenido compartido, actividad de grupos, fotos y datos técnicos para que el chat, los grupos, las invitaciones y las funciones sociales funcionen correctamente.',
           ),
-          const _PolicySection(
+          _PolicySection(
             title: 'Datos que usamos',
-            body:
-                'Correo, nombre de usuario, nombre visible, emoji de perfil, avatar, mensajes, reacciones, fotos del grupo, datos de membresía, invitaciones, notificaciones y datos técnicos necesarios para operar la app.',
+            body: 'Correo, nombre de usuario, nombre visible, emoji de perfil, avatar, mensajes, reacciones, fotos del grupo, datos de membresía, invitaciones, notificaciones y datos técnicos necesarios para operar la app.',
           ),
-          const _PolicySection(
+          _PolicySection(
             title: 'Uso de terceros',
-            body:
-                'Supabase se usa para autenticación, base de datos, almacenamiento y tiempo real. Google AdMob puede procesar datos técnicos o de uso para mostrar anuncios cuando la monetización esté activa.',
+            body: 'Supabase se usa para autenticación, base de datos, almacenamiento y tiempo real. Google AdMob puede procesar datos técnicos o de uso para mostrar anuncios cuando la monetización esté activa.',
           ),
-          const _PolicySection(
+          _PolicySection(
             title: 'Tus controles',
-            body:
-                'Puedes solicitar eliminación de cuenta, dejar de usar la app, retirar permisos del dispositivo y revisar las opciones de privacidad o seguridad disponibles en Ajustes cuando se habiliten.',
+            body: 'Puedes solicitar eliminación de cuenta, dejar de usar la app, retirar permisos del dispositivo y revisar las opciones de privacidad o seguridad disponibles en Ajustes cuando se habiliten.',
           ),
-          const _PolicySection(
+          _PolicySection(
             title: 'Texto completo',
             body: _policyText,
             monospace: true,
@@ -165,36 +149,17 @@ class _PolicySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textStyle = monospace
-        ? const TextStyle(
-            fontFamily: 'monospace',
-            height: 1.45,
-            color: Color(0xFF111827),
-          )
-        : const TextStyle(
-            height: 1.45,
-            color: Color(0xFF111827),
-            fontWeight: FontWeight.w500,
-          );
+        ? const TextStyle(fontFamily: 'monospace', height: 1.45)
+        : Theme.of(context).textTheme.bodyMedium;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.78),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
+      child: GlassCard(
+        borderRadius: 24,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF111827),
-                  ),
-            ),
+            Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
             Text(body, style: textStyle),
           ],

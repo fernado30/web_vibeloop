@@ -18,6 +18,8 @@ dependencies:
   shared_preferences: ^2.3.2
   image_picker: ^1.1.2
   google_mobile_ads: ^8.0.0
+  flutter_svg: ^2.0.17
+  webview_flutter: ^4.10.0
   freezed_annotation: ^2.4.1
   json_annotation: ^4.9.0
 
@@ -43,3 +45,5 @@ flutter:
   assets:
     - assets/.env
     - assets/web.env
+    - assets/icons/
+    - assets/stitch/

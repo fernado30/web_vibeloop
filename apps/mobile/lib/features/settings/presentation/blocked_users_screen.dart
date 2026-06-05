@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/vibe_ui.dart';
 import '../data/safety_repository.dart';
 
 class BlockedUsersScreen extends ConsumerStatefulWidget {
@@ -46,29 +47,23 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text('Usuarios bloqueados'),
-      ),
+    return VibeScaffold(
+      appBar: AppBar(title: const Text('Usuarios bloqueados')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
-          const _IntroCard(
-            title: 'Gestiona quién puede aparecerte en el chat',
-            body:
-                'Bloquear a un usuario oculta sus mensajes en tu vista y ayuda a mantener el chat más cómodo. Solo puedes gestionar personas que ya forman parte de tus grupos.',
+          const SectionIntroCard(
+            title: 'Gestiona quien puede aparecerte en el chat',
+            body: 'Bloquear a un usuario oculta sus mensajes en tu vista y ayuda a mantener el chat más cómodo.',
+            badge: SafetyBadge(label: 'Control'),
           ),
           const SizedBox(height: 16),
           if (_loading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
-              child: Center(child: CircularProgressIndicator()),
-            )
+            const LoadingStateCard(label: 'Cargando miembros...')
           else if (_members.isEmpty)
-            const _EmptyState(
-              title: 'No encontramos personas para bloquear.',
-              body: 'Únete a grupos o espera a que aparezcan miembros para poder administrar esta lista.',
+            const EmptyStateCard(
+              title: 'No encontramos personas para bloquear',
+              body: 'Únete a grupos o espera a que aparezcan miembros para administrar esta lista.',
             )
           else
             ..._members.map(
@@ -76,18 +71,12 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                 final blocked = _blockedIds.contains(member.id);
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.78),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                    ),
+                  child: GlassCard(
+                    borderRadius: 24,
                     child: Row(
                       children: [
                         CircleAvatar(
                           radius: 22,
-                          backgroundColor: const Color(0xFFEFF6FF),
                           child: Text(member.emoji, style: const TextStyle(fontSize: 18)),
                         ),
                         const SizedBox(width: 14),
@@ -97,14 +86,14 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                             children: [
                               Text(
                                 member.displayName?.isNotEmpty == true ? member.displayName! : member.id,
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                    ),
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 blocked ? 'Bloqueado en tu vista' : 'Visible en tus grupos',
-                                style: const TextStyle(color: Color(0xFF6B7280)),
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    ),
                               ),
                             ],
                           ),
@@ -120,73 +109,6 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                 );
               },
             ),
-        ],
-      ),
-    );
-  }
-}
-
-class _IntroCard extends StatelessWidget {
-  const _IntroCard({required this.title, required this.body});
-
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF111827),
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            body,
-            style: const TextStyle(
-              height: 1.45,
-              color: Color(0xFF4B5563),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.title, required this.body});
-
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 8),
-          Text(body, style: const TextStyle(height: 1.45, color: Color(0xFF4B5563))),
         ],
       ),
     );

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/widgets/vibe_ui.dart';
 import '../data/auth_repository.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -74,33 +75,48 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Scaffold(
+    return VibeScaffold(
       appBar: AppBar(title: const Text('Crear cuenta')),
       body: SafeArea(
-        child: Stack(
-          children: [
-            const _PearlBackdrop(),
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.72),
-                      borderRadius: BorderRadius.circular(34),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.55)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 30,
-                          offset: const Offset(0, 14),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const GradientHeroCard(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF4B7BFF), Color(0xFF7B4DFF), Color(0xFFFF5CA8)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SafetyBadge(label: 'Nuevo perfil', color: Colors.white),
+                        SizedBox(height: 16),
+                        Text(
+                          'Crea tu espacio con más control',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w800,
+                            height: 1.05,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          'Regístrate para crear grupos, compartir portadas y manejar seguridad, apariencia y filtros desde un solo lugar.',
+                          style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
                         ),
                       ],
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  GlassCard(
+                    padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
                     child: Form(
                       key: _formKey,
                       child: Column(
@@ -109,9 +125,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           Text('Crear cuenta', style: Theme.of(context).textTheme.headlineMedium),
                           const SizedBox(height: 8),
                           Text(
-                            'Configura tu perfil para crear grupos y entrar con más control.',
+                            'Prepara tu perfil para lanzar grupos y entrar con más intención.',
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
                           ),
                           const SizedBox(height: 24),
@@ -125,20 +141,30 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             decoration: const InputDecoration(labelText: 'Email'),
-                            validator: (value) =>
-                                value == null || !value.contains('@') ? 'Ingresa un email válido' : null,
+                            validator: (value) => value == null || !value.contains('@') ? 'Ingresa un email valido' : null,
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
                             controller: _passwordController,
                             obscureText: true,
-                            decoration: const InputDecoration(labelText: 'Contraseña'),
-                            validator: (value) => (value ?? '').length < 8 ? 'Mínimo 8 caracteres' : null,
+                            decoration: const InputDecoration(labelText: 'Contrasena'),
+                            validator: (value) => (value ?? '').length < 8 ? 'Minimo 8 caracteres' : null,
                           ),
-                          const SizedBox(height: 24),
-                          FilledButton(
+                          if (_error != null) ...[
+                            const SizedBox(height: 16),
+                            Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                          ],
+                          const SizedBox(height: 20),
+                          GradientButton(
                             onPressed: _loading ? null : _submit,
-                            child: const Text('Registrarme'),
+                            label: 'Registrarme',
+                            icon: _loading
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                  )
+                                : const Icon(Icons.auto_awesome_rounded),
                           ),
                           const SizedBox(height: 12),
                           OutlinedButton.icon(
@@ -146,88 +172,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             icon: const Icon(Icons.login),
                             label: const Text('Registrarme con Google'),
                           ),
+                          const SizedBox(height: 14),
+                          const QuickActionPill(label: 'Crea grupos premium', icon: Icons.groups_rounded),
                           const SizedBox(height: 12),
                           TextButton(
                             onPressed: _loading ? null : () => context.go('/login'),
                             child: const Text('Ya tengo cuenta'),
                           ),
-                          if (_error != null) ...[
-                            const SizedBox(height: 16),
-                            Text(_error!, style: TextStyle(color: colorScheme.error)),
-                          ],
                         ],
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PearlBackdrop extends StatelessWidget {
-  const _PearlBackdrop();
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(0.85, -0.85),
-              radius: 1.2,
-              colors: [
-                const Color(0xFF8AD8FF).withValues(alpha: 0.34),
-                const Color(0xFFF6F7FB).withValues(alpha: 0.98),
-              ],
-            ),
           ),
-          child: Stack(
-            children: [
-              Positioned(
-                top: 40,
-                right: 24,
-                child: _Orb(color: const Color(0xFF2EA8FF).withValues(alpha: 0.18), size: 180),
-              ),
-              Positioned(
-                bottom: 64,
-                left: 24,
-                child: _Orb(color: const Color(0xFF8AD8FF).withValues(alpha: 0.18), size: 220),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Orb extends StatelessWidget {
-  const _Orb({
-    required this.color,
-    required this.size,
-  });
-
-  final Color color;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [
-            color,
-            color.withValues(alpha: 0.0),
-          ],
         ),
       ),
     );

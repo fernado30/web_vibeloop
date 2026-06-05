@@ -3,7 +3,10 @@
     <application
         android:label="vibeloop"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules">
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713" />
@@ -52,6 +55,15 @@
                     android:scheme="vibeloop"
                     android:host="invite"
                     android:pathPrefix="/" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="web-vibeloop.vercel.app"
+                    android:pathPrefix="/join" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

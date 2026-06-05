@@ -260,13 +260,16 @@ template = "Your code is {{ .Code }}"
 max_frequency = "5s"
 
 [functions.send-anonymous-message]
-verify_jwt = false
+verify_jwt = true
 
 [functions.join-guest-with-photo]
-verify_jwt = false
+verify_jwt = true
 
 [functions.register-user]
-verify_jwt = false
+verify_jwt = true
+
+[functions.delete-account]
+verify_jwt = true
 
 # Use pre-defined map of phone number to OTP for testing.
 # [auth.sms.test_otp]

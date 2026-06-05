@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.vibeloop.vibeloop",
+      "sha256_cert_fingerprints": [
+        "8A:FE:B3:9B:80:A3:98:4E:EB:FC:2A:2E:0C:46:A4:BE:80:EF:D7:D3:3E:42:96:91:2E:43:9A:FE:1A:0D:37:95"
+      ]
+    }
+  }
+]

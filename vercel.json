@@ -10,6 +10,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/join/:code",
+      "destination": "/index.html"
+    },
+    {
       "source": "/invite/:code",
       "destination": "/index.html"
     },

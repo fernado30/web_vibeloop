@@ -16,6 +16,7 @@ class AppPreferencesRepository {
   static const _messagePreviewsKey = 'message_previews';
   static const _soundsEnabledKey = 'sounds_enabled';
   static const _vibrationEnabledKey = 'vibration_enabled';
+  static const _onboardingSeenKey = 'onboarding_seen';
 
   Future<SharedPreferences> get _prefs async => SharedPreferences.getInstance();
 
@@ -58,6 +59,16 @@ class AppPreferencesRepository {
     await prefs.setBool(_soundsEnabledKey, preferences.soundsEnabled);
     await prefs.setBool(_vibrationEnabledKey, preferences.vibrationEnabled);
   }
+
+  Future<bool> loadOnboardingSeen() async {
+    final prefs = await _prefs;
+    return prefs.getBool(_onboardingSeenKey) ?? false;
+  }
+
+  Future<void> saveOnboardingSeen() async {
+    final prefs = await _prefs;
+    await prefs.setBool(_onboardingSeenKey, true);
+  }
 }
 
 class AppPreferencesController extends StateNotifier<AppPreferencesState> {
@@ -70,10 +81,12 @@ class AppPreferencesController extends StateNotifier<AppPreferencesState> {
   Future<void> _load() async {
     final themeMode = await _repository.loadThemeMode();
     final notifications = await _repository.loadNotificationPreferences();
-    state = AppPreferencesState(
+    final onboardingSeen = await _repository.loadOnboardingSeen();
+    state = state.copyWith(
       loaded: true,
       themeMode: themeMode,
       notifications: notifications,
+      onboardingSeen: state.onboardingSeen || onboardingSeen,
     );
   }
 
@@ -86,6 +99,12 @@ class AppPreferencesController extends StateNotifier<AppPreferencesState> {
     state = state.copyWith(notifications: notifications);
     await _repository.saveNotificationPreferences(notifications);
   }
+
+  Future<void> markOnboardingSeen() async {
+    if (state.onboardingSeen) return;
+    state = state.copyWith(onboardingSeen: true);
+    await _repository.saveOnboardingSeen();
+  }
 }
 
 class AppPreferencesState {
@@ -93,21 +112,25 @@ class AppPreferencesState {
     this.loaded = false,
     this.themeMode = ThemeMode.system,
     this.notifications = const NotificationPreferences(),
+    this.onboardingSeen = false,
   });
 
   final bool loaded;
   final ThemeMode themeMode;
   final NotificationPreferences notifications;
+  final bool onboardingSeen;
 
   AppPreferencesState copyWith({
     bool? loaded,
     ThemeMode? themeMode,
     NotificationPreferences? notifications,
+    bool? onboardingSeen,
   }) {
     return AppPreferencesState(
       loaded: loaded ?? this.loaded,
       themeMode: themeMode ?? this.themeMode,
       notifications: notifications ?? this.notifications,
+      onboardingSeen: onboardingSeen ?? this.onboardingSeen,
     );
   }
 }

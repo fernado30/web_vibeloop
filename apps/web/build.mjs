@@ -1,5 +1,6 @@
-import { mkdir, readFile, writeFile, copyFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, copyFile, access } from 'node:fs/promises';
 import { join } from 'node:path';
+import { constants } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
@@ -23,10 +24,17 @@ async function main() {
   }
 
   await mkdir(distDir, { recursive: true });
+  await mkdir(join(distDir, '.well-known'), { recursive: true });
 
   await copyFile(join(root, 'index.html'), join(distDir, 'index.html'));
   await copyFile(join(root, 'styles.css'), join(distDir, 'styles.css'));
   await copyFile(join(root, 'app.js'), join(distDir, 'app.js'));
+  try {
+    await access(join(root, '.well-known', 'assetlinks.json'), constants.R_OK);
+    await copyFile(join(root, '.well-known', 'assetlinks.json'), join(distDir, '.well-known', 'assetlinks.json'));
+  } catch (_) {
+    // App Links are optional during local builds.
+  }
 
   const config = {
     supabaseUrl: readEnv('SUPABASE_URL'),

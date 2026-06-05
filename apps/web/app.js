@@ -50,6 +50,11 @@ function showInbox() {
 
 function parseRoute() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/';
+  const joinMatch = path.match(/^\/join\/([^/]+)$/);
+  if (joinMatch) {
+    return { kind: 'join', token: joinMatch[1] };
+  }
+
   const openMatch = path.match(/^\/open\/([^/]+)$/);
   if (openMatch) {
     return { kind: 'open', token: openMatch[1] };

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/vibe_ui.dart';
 import '../data/safety_repository.dart';
 
 class HiddenWordsScreen extends ConsumerStatefulWidget {
@@ -51,160 +52,61 @@ class _HiddenWordsScreenState extends ConsumerState<HiddenWordsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text('Palabras ocultas'),
-      ),
+    return VibeScaffold(
+      appBar: AppBar(title: const Text('Palabras ocultas')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
-          const _IntroCard(
+          const SectionIntroCard(
             title: 'Filtra palabras que no quieras ver',
-            body:
-                'Cuando una palabra oculta coincida con un mensaje, VIBELOOP puede reemplazarlo por un aviso corto para que el chat se mantenga más cómodo para ti.',
+            body: 'Cuando una palabra oculta coincida con un mensaje, VIBELOOP puede reemplazarlo por un aviso corto para que el chat se mantenga más cómodo para ti.',
+            badge: SafetyBadge(label: 'Filtro personal'),
           ),
           const SizedBox(height: 16),
-          _AddWordCard(
-            controller: _controller,
-            onAdd: _addWord,
+          GlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Agregar palabra', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _controller,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _addWord(),
+                  decoration: const InputDecoration(hintText: 'Ej. spam, groseria, tema sensible...'),
+                ),
+                const SizedBox(height: 12),
+                GradientButton(
+                  onPressed: _addWord,
+                  label: 'Guardar palabra',
+                  icon: const Icon(Icons.add),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
           if (_loading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
-              child: Center(child: CircularProgressIndicator()),
-            )
+            const LoadingStateCard(label: 'Cargando palabras...')
           else if (_words.isEmpty)
-            const _EmptyState(
-              title: 'Aún no tienes palabras ocultas.',
+            const EmptyStateCard(
+              title: 'Aun no tienes palabras ocultas',
               body: 'Agrega una palabra para empezar a ocultar contenido en el chat y en el buzón anónimo.',
             )
           else
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: _words
-                  .map(
-                    (word) => InputChip(
-                      label: Text(word),
-                      onDeleted: () => _removeWord(word),
-                    ),
-                  )
-                  .toList(),
+            GlassCard(
+              child: Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: _words
+                    .map(
+                      (word) => InputChip(
+                        label: Text(word),
+                        onDeleted: () => _removeWord(word),
+                      ),
+                    )
+                    .toList(),
+              ),
             ),
-        ],
-      ),
-    );
-  }
-}
-
-class _IntroCard extends StatelessWidget {
-  const _IntroCard({required this.title, required this.body});
-
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF111827),
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            body,
-            style: const TextStyle(
-              height: 1.45,
-              color: Color(0xFF4B5563),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AddWordCard extends StatelessWidget {
-  const _AddWordCard({required this.controller, required this.onAdd});
-
-  final TextEditingController controller;
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.78),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Agregar palabra',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: controller,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => onAdd(),
-            decoration: const InputDecoration(
-              hintText: 'Ej. spam, grosería, tema sensible...',
-            ),
-          ),
-          const SizedBox(height: 12),
-          FilledButton.icon(
-            onPressed: onAdd,
-            icon: const Icon(Icons.add),
-            label: const Text('Guardar palabra'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.title, required this.body});
-
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 8),
-          Text(body, style: const TextStyle(height: 1.45, color: Color(0xFF4B5563))),
         ],
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/settings/app_preferences_repository.dart';
+import '../../../core/widgets/vibe_ui.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
@@ -11,33 +12,21 @@ class NotificationsScreen extends ConsumerWidget {
     final state = ref.watch(appPreferencesControllerProvider);
     final controller = ref.read(appPreferencesControllerProvider.notifier);
 
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text('Notificaciones'),
-      ),
+    return VibeScaffold(
+      appBar: AppBar(title: const Text('Notificaciones')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
-          const _IntroCard(
-            title: 'Define qué avisos quieres recibir',
-            body:
-                'Estas preferencias se guardan en el dispositivo y preparan la base para notificaciones más completas en el futuro. También ayudan a mantener una experiencia más tranquila en la app.',
+          const SectionIntroCard(
+            title: 'Define que avisos quieres recibir',
+            body: 'Estas preferencias se guardan en el dispositivo y dejan lista una experiencia más tranquila y personal.',
+            badge: SafetyBadge(label: 'Focus'),
           ),
           const SizedBox(height: 16),
           if (!state.loaded)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
-              child: Center(child: CircularProgressIndicator()),
-            )
+            const LoadingStateCard(label: 'Cargando preferencias...')
           else
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.78),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
-              ),
+            GlassCard(
               child: Column(
                 children: [
                   SwitchListTile.adaptive(
@@ -51,7 +40,7 @@ class NotificationsScreen extends ConsumerWidget {
                     title: const Text('Notificaciones activadas'),
                     subtitle: const Text('Permite recibir avisos relacionados con grupos y actividad general.'),
                   ),
-                  const Divider(height: 1),
+                  const Divider(),
                   SwitchListTile.adaptive(
                     contentPadding: EdgeInsets.zero,
                     value: state.notifications.showMessagePreviews,
@@ -65,7 +54,7 @@ class NotificationsScreen extends ConsumerWidget {
                     title: const Text('Mostrar vista previa'),
                     subtitle: const Text('Muestra un resumen corto del contenido en los avisos.'),
                   ),
-                  const Divider(height: 1),
+                  const Divider(),
                   SwitchListTile.adaptive(
                     contentPadding: EdgeInsets.zero,
                     value: state.notifications.soundsEnabled,
@@ -79,7 +68,7 @@ class NotificationsScreen extends ConsumerWidget {
                     title: const Text('Sonidos'),
                     subtitle: const Text('Reproduce un sonido suave cuando haya actividad.'),
                   ),
-                  const Divider(height: 1),
+                  const Divider(),
                   SwitchListTile.adaptive(
                     contentPadding: EdgeInsets.zero,
                     value: state.notifications.vibrationEnabled,
@@ -90,85 +79,17 @@ class NotificationsScreen extends ConsumerWidget {
                             );
                           }
                         : null,
-                    title: const Text('Vibración'),
+                    title: const Text('Vibracion'),
                     subtitle: const Text('Activa una vibración breve en alertas compatibles.'),
                   ),
                 ],
               ),
             ),
           const SizedBox(height: 16),
-          const _InfoCard(
-            title: 'Qué hace ahora',
-            body:
-                'Por ahora estas preferencias quedan listas y guardadas para usarse dentro de VIBELOOP. Más adelante pueden conectarse a push notifications o a avisos locales más visibles.',
+          const ModerationWarningCard(
+            title: 'Preparado para crecer',
+            body: 'Por ahora estas preferencias quedan guardadas y listas para futuras push notifications o avisos locales.',
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _IntroCard extends StatelessWidget {
-  const _IntroCard({required this.title, required this.body});
-
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF111827),
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            body,
-            style: const TextStyle(
-              height: 1.45,
-              color: Color(0xFF4B5563),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  const _InfoCard({required this.title, required this.body});
-
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 8),
-          Text(body, style: const TextStyle(height: 1.45, color: Color(0xFF4B5563))),
         ],
       ),
     );

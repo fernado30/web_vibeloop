@@ -32,6 +32,7 @@ class GroupsRepository {
   GroupsRepository(this._client);
 
   final SupabaseClient _client;
+  final Map<String, _GroupPhotoUrlCacheEntry> _groupPhotoUrlCache = {};
 
   SupabaseClient get _supabase => _client;
 
@@ -82,9 +83,7 @@ class GroupsRepository {
     );
 
     final groups = (rows as List<dynamic>).map((row) {
-      final json = Map<String, dynamic>.from(row as Map);
-      json['member_count'] = 0;
-      return GroupModel.fromJson(json);
+      return GroupModel.fromJson(_normalizeGroupJson(Map<String, dynamic>.from(row as Map)));
     }).toList();
 
     return Future.wait(groups.map((group) async {
@@ -122,7 +121,7 @@ class GroupsRepository {
 
     final groupJson = Map<String, dynamic>.from(inserted);
     groupJson['member_count'] = 1;
-    return GroupModel.fromJson(groupJson);
+    return GroupModel.fromJson(_normalizeGroupJson(groupJson));
   }
 
   Future<GroupModel> getGroupById(String id) async {
@@ -134,7 +133,7 @@ class GroupsRepository {
           .single(),
     );
 
-    final json = Map<String, dynamic>.from(row);
+    final json = _normalizeGroupJson(Map<String, dynamic>.from(row));
     json['member_count'] = await _countMembers(id);
     return GroupModel.fromJson(json);
   }
@@ -158,11 +157,13 @@ class GroupsRepository {
   Stream<List<GroupPhotoModel>> watchGroupPhotos(String groupId) {
     final controller = StreamController<List<GroupPhotoModel>>.broadcast();
     final channel = _supabase.channel('group-photos-$groupId');
+    Timer? refreshTimer;
     var cache = <GroupPhotoModel>[];
     var loaded = false;
 
     Future<void> emit() async {
       if (controller.isClosed) return;
+      await _refreshCachedGroupPhotoUrls();
       cache = await fetchGroupPhotos(groupId);
       loaded = true;
       controller.add(cache);
@@ -256,7 +257,14 @@ class GroupsRepository {
     channel.subscribe();
     emit();
 
+    refreshTimer = Timer.periodic(const Duration(minutes: 45), (_) {
+      if (!controller.isClosed) {
+        unawaited(emit());
+      }
+    });
+
     controller.onCancel = () async {
+      refreshTimer?.cancel();
       channel.unsubscribe();
       await controller.close();
     };
@@ -279,6 +287,10 @@ class GroupsRepository {
     final extension = _imageExtension(image.path);
     final storagePath = 'groups/$groupId/${user.id}/${DateTime.now().millisecondsSinceEpoch}.$extension';
     final file = File(image.path);
+    final fileSize = await file.length();
+    if (fileSize > 8 * 1024 * 1024) {
+      throw StateError('La foto debe pesar menos de 8 MB.');
+    }
 
     try {
       await _supabase.storage.from('group-photos').upload(
@@ -287,7 +299,10 @@ class GroupsRepository {
             fileOptions: FileOptions(contentType: _imageContentType(extension)),
           );
 
-      final publicUrl = _supabase.storage.from('group-photos').getPublicUrl(storagePath);
+      final displayUrl = await _resolveGroupPhotoDisplayUrl(
+        storagePath: storagePath,
+        fallbackUrl: _supabase.storage.from('group-photos').getPublicUrl(storagePath),
+      );
       final row = await _runWithSchemaCheck(
         () => _supabase
           .from('group_photos')
@@ -295,7 +310,7 @@ class GroupsRepository {
               'group_id': groupId,
               'uploaded_by': user.id,
               'uploader_emoji': uploaderEmoji,
-              'image_url': publicUrl,
+              'image_url': displayUrl,
               'storage_path': storagePath,
             })
             .select('id, group_id, uploaded_by, uploader_emoji, image_url, storage_path, created_at')
@@ -360,7 +375,7 @@ class GroupsRepository {
     final inviteNumber = 1000 + Random().nextInt(9000);
     final token = '${_safeSlug(displayName)}-$inviteNumber-$inviteCode';
     final normalizedWebUrl = config.webUrl.replaceAll(RegExp(r'/+$'), '');
-    final appLink = '$normalizedWebUrl/open/$token';
+    final appLink = '$normalizedWebUrl/join/$token';
     final webLink = '$normalizedWebUrl/invite/$token';
 
     return InviteLinks(appLink: appLink, webLink: webLink);
@@ -383,7 +398,7 @@ class GroupsRepository {
       throw StateError('La invitación no existe o ya no es válida.');
     }
 
-    final json = Map<String, dynamic>.from(row);
+    final json = _normalizeGroupJson(Map<String, dynamic>.from(row));
     json['member_count'] = await _countMembers(json['id'] as String);
     return GroupModel.fromJson(json);
   }
@@ -439,7 +454,7 @@ class GroupsRepository {
     );
   }
 
-  Future<void> joinGroup(String groupId) async {
+  Future<void> joinGroup(String groupId, {String? inviteCode}) async {
     final user = _supabase.auth.currentUser;
     if (user == null) {
       throw AuthException('No hay una sesion activa.');
@@ -447,7 +462,9 @@ class GroupsRepository {
 
     await _ensureUserProfile(user);
     await _runWithSchemaCheck(
-      () => _supabase.from('group_members').upsert(
+      () => _withInviteCodeHeader(
+        inviteCode ?? '',
+        () => _supabase.from('group_members').upsert(
             {
               'group_id': groupId,
               'user_id': user.id,
@@ -456,12 +473,69 @@ class GroupsRepository {
             onConflict: 'group_id,user_id',
             ignoreDuplicates: true,
           ),
+      ),
     );
   }
 
   Future<int> _countMembers(String groupId) async {
     final rows = await _runWithSchemaCheck(() => _supabase.from('group_members').select('id').eq('group_id', groupId));
     return (rows as List<dynamic>).length;
+  }
+
+  Future<String> _resolveGroupPhotoDisplayUrl({
+    required String storagePath,
+    required String fallbackUrl,
+  }) async {
+    final trimmedPath = storagePath.trim();
+    final trimmedFallbackUrl = fallbackUrl.trim();
+    if (trimmedPath.isEmpty) {
+      return trimmedFallbackUrl;
+    }
+
+    final cached = _groupPhotoUrlCache[trimmedPath];
+    final now = DateTime.now();
+    if (cached != null && cached.expiresAt.isAfter(now.add(const Duration(minutes: 10)))) {
+      return cached.url;
+    }
+
+    final signedUrl = await resolveGroupPhotoSignedUrl(trimmedPath);
+    if (signedUrl != null && signedUrl.isNotEmpty) {
+      _groupPhotoUrlCache[trimmedPath] = _GroupPhotoUrlCacheEntry(
+        url: signedUrl,
+        expiresAt: now.add(_groupPhotoSignedUrlTtl),
+      );
+      return signedUrl;
+    }
+
+    return trimmedFallbackUrl.isNotEmpty ? trimmedFallbackUrl : publicGroupPhotoUrl(trimmedPath);
+  }
+
+  Future<void> _refreshCachedGroupPhotoUrls() async {
+    if (_groupPhotoUrlCache.isEmpty) {
+      return;
+    }
+
+    final now = DateTime.now();
+    final expiredPaths = _groupPhotoUrlCache.entries
+        .where((entry) => entry.value.expiresAt.isBefore(now.add(const Duration(minutes: 10))))
+        .map((entry) => entry.key)
+        .toList();
+
+    if (expiredPaths.isEmpty) {
+      return;
+    }
+
+    for (final storagePath in expiredPaths) {
+      final signedUrl = await resolveGroupPhotoSignedUrl(storagePath);
+      if (signedUrl != null && signedUrl.isNotEmpty) {
+        _groupPhotoUrlCache[storagePath] = _GroupPhotoUrlCacheEntry(
+          url: signedUrl,
+          expiresAt: now.add(_groupPhotoSignedUrlTtl),
+        );
+      } else {
+        _groupPhotoUrlCache.remove(storagePath);
+      }
+    }
   }
 
   Future<void> _ensureUserProfile(User user) async {
@@ -484,6 +558,11 @@ class GroupsRepository {
         'emoji': existingProfile?['emoji']?.toString() ?? user.userMetadata?['emoji']?.toString() ?? emojiForSeed(user.id),
       }),
     );
+  }
+
+  Map<String, dynamic> _normalizeGroupJson(Map<String, dynamic> json) {
+    json['created_by'] = json['created_by']?.toString() ?? '';
+    return json;
   }
 
   Future<List<GroupPhotoModel>> _attachUploaderEmojis(List<GroupPhotoModel> photos) async {
@@ -525,8 +604,11 @@ class GroupsRepository {
           return photo;
         }
 
-        final publicUrl = publicGroupPhotoUrl(storagePath);
-        return photo.copyWith(imageUrl: publicUrl);
+        final displayUrl = await _resolveGroupPhotoDisplayUrl(
+          storagePath: storagePath,
+          fallbackUrl: photo.imageUrl,
+        );
+        return photo.copyWith(imageUrl: displayUrl);
       }),
     );
 
@@ -558,6 +640,8 @@ class GroupsRepository {
     }
   }
 
+  static const Duration _groupPhotoSignedUrlTtl = Duration(hours: 24);
+
   String _imageExtension(String path) {
     final cleanPath = path.split(RegExp(r'[\\/]+')).last.toLowerCase();
     if (cleanPath.endsWith('.png')) return 'png';
@@ -578,6 +662,16 @@ class GroupsRepository {
         return 'image/jpeg';
     }
   }
+}
+
+class _GroupPhotoUrlCacheEntry {
+  const _GroupPhotoUrlCacheEntry({
+    required this.url,
+    required this.expiresAt,
+  });
+
+  final String url;
+  final DateTime expiresAt;
 }
 
 class InviteLinks {

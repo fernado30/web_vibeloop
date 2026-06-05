@@ -6,6 +6,7 @@ import '../../features/auth/data/auth_repository.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/chat/presentation/chat_screen.dart';
+import '../settings/app_preferences_repository.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/legal/presentation/privacy_policy_screen.dart';
 import '../../features/legal/presentation/terms_of_use_screen.dart';
@@ -17,19 +18,25 @@ import '../../features/settings/presentation/pause_link_screen.dart';
 import '../../features/settings/presentation/message_filtering_screen.dart';
 import '../../features/settings/presentation/notifications_screen.dart';
 import '../../features/settings/presentation/appearance_screen.dart';
+import '../../features/settings/presentation/delete_account_screen.dart';
 import '../../features/groups/presentation/create_group_screen.dart';
 import '../../features/groups/presentation/invite_join_screen.dart';
 import '../../features/groups/presentation/groups_list_screen.dart';
 import '../../features/groups/presentation/group_photos_screen.dart';
 import '../../features/anonymous/presentation/anonymous_inbox_screen.dart';
+import '../../features/stitch/presentation/stitch_design_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
   final authRepo = ref.watch(authRepositoryProvider);
 
   return GoRouter(
-    initialLocation: '/groups',
+    initialLocation: StitchDesignScreen.routeName,
     routes: [
+      GoRoute(
+        path: StitchDesignScreen.routeName,
+        builder: (context, state) => const StitchDesignScreen(),
+      ),
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
@@ -44,6 +51,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/invite/:code',
+        builder: (context, state) {
+          final token = state.pathParameters['code']!;
+          final inviteCode = token.split('-').last;
+          return InviteJoinScreen(inviteCode: inviteCode);
+        },
+      ),
+      GoRoute(
+        path: '/join/:code',
         builder: (context, state) {
           final token = state.pathParameters['code']!;
           final inviteCode = token.split('-').last;
@@ -98,6 +113,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'message-filtering',
                 builder: (context, state) => const MessageFilteringScreen(),
               ),
+              GoRoute(
+                path: 'delete-account',
+                builder: (context, state) => const DeleteAccountScreen(),
+              ),
             ],
           ),
           GoRoute(
@@ -141,7 +160,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       final isLoading = authState.maybeWhen(loading: () => true, orElse: () => false);
+      final preferences = ref.watch(appPreferencesControllerProvider);
       if (isLoading) {
+        return null;
+      }
+
+      if (!preferences.loaded) {
         return null;
       }
 
@@ -152,9 +176,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isProtectedRoute = state.matchedLocation.contains('/chat') ||
           state.matchedLocation.contains('/anonymous') ||
           state.matchedLocation.contains('/photos');
+      final isInviteFlow = state.matchedLocation.startsWith('/invite/') || state.matchedLocation.startsWith('/join/');
+      final isAuthCallback = state.matchedLocation == '/auth-callback';
+      final isWelcome = state.matchedLocation == StitchDesignScreen.routeName;
 
       if (!isAuthed && isProtectedRoute) {
         return '/login';
+      }
+
+      if (!preferences.onboardingSeen && !isWelcome && !isInviteFlow && !isAuthCallback) {
+        return StitchDesignScreen.routeName;
       }
 
       if (state.matchedLocation.startsWith('/groups/create') && (isAnonymous || !isAuthed)) {

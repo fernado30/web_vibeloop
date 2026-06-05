@@ -90,6 +90,45 @@ class AuthRepository {
     return _supabase.auth.signOut();
   }
 
+  Future<void> deleteAccount({
+    required String confirmationText,
+  }) async {
+    final user = currentUser;
+    if (user == null) {
+      throw AuthException('No hay una sesion activa.');
+    }
+
+    if (confirmationText.trim().toUpperCase() != 'ELIMINAR') {
+      throw StateError('Debes escribir ELIMINAR para continuar.');
+    }
+
+    try {
+      final response = await _supabase.functions.invoke(
+        'delete-account',
+        body: {
+          'confirmationText': confirmationText.trim(),
+        },
+      );
+
+      if (response.status < 200 || response.status >= 300) {
+        final payload = response.data;
+        final message = payload is Map<String, dynamic> && payload['error'] != null
+            ? payload['error'].toString()
+            : 'No se pudo eliminar la cuenta.';
+        throw StateError(message);
+      }
+
+      await signOut();
+    } on FunctionException catch (error) {
+      if (error.status != 404) {
+        rethrow;
+      }
+
+      await _softDeleteCurrentAccount(user);
+      await signOut();
+    }
+  }
+
   User? get currentUser => _supabase.auth.currentUser;
 
   Future<void> upsertProfile({
@@ -138,6 +177,65 @@ class AuthRepository {
       avatarUrl: profile?['avatar_url']?.toString(),
       emoji: emoji,
     );
+  }
+
+  Future<void> _softDeleteCurrentAccount(User user) async {
+    await Future.wait([
+      _bestEffort(() => _supabase.from('user_hidden_words').delete().eq('user_id', user.id)),
+      _bestEffort(() => _supabase.from('user_blocked_users').delete().eq('user_id', user.id)),
+      _bestEffort(() => _supabase.from('user_message_filter_settings').delete().eq('user_id', user.id)),
+      _bestEffort(() => _supabase.from('notifications').delete().eq('user_id', user.id)),
+      _bestEffort(() => _supabase.from('reactions').delete().eq('user_id', user.id)),
+      _bestEffort(() => _supabase.from('group_members').delete().eq('user_id', user.id)),
+      _bestEffort(() => _supabase.from('group_photos').delete().eq('uploaded_by', user.id)),
+      _bestEffort(() => _supabase.from('users').update({
+            'username': 'deleted_${user.id.substring(0, 8)}',
+            'display_name': 'Cuenta eliminada',
+            'avatar_url': null,
+            'emoji': '🙂',
+          }).eq('id', user.id)),
+      _bestEffort(() async {
+        final avatarFiles = await _supabase.storage.from('avatars').list(
+              path: user.id,
+              searchOptions: const SearchOptions(
+                limit: 1000,
+                offset: 0,
+              ),
+            );
+        final avatarPaths = avatarFiles
+            .map((file) => '${user.id}/${file.name}')
+            .where((path) => path.trim().isNotEmpty)
+            .toSet()
+            .toList();
+        if (avatarPaths.isNotEmpty) {
+          await _supabase.storage.from('avatars').remove(avatarPaths);
+        }
+      }),
+      _bestEffort(() async {
+        final photoRows = await _supabase
+            .from('group_photos')
+            .select('storage_path')
+            .eq('uploaded_by', user.id);
+        final photoPaths = (photoRows as List<dynamic>)
+            .whereType<Map<String, dynamic>>()
+            .map((row) => row['storage_path']?.toString().trim())
+            .whereType<String>()
+            .where((path) => path.isNotEmpty)
+            .toSet()
+            .toList();
+        if (photoPaths.isNotEmpty) {
+          await _supabase.storage.from('group-photos').remove(photoPaths);
+        }
+      }),
+    ]);
+  }
+
+  Future<void> _bestEffort(Future<void> Function() action) async {
+    try {
+      await action();
+    } catch (_) {
+      // Best-effort cleanup to keep the flow usable if the backend function is unavailable.
+    }
   }
 
   Future<void> _ensureProfile(

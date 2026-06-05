@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/widgets/vibe_ui.dart';
+
 class TermsOfUseScreen extends StatelessWidget {
   const TermsOfUseScreen({super.key});
 
@@ -57,10 +59,9 @@ Si tienes preguntas sobre estos términos, contáctanos en soporte@vibeloop.app 
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return VibeScaffold(
       appBar: AppBar(
-        centerTitle: true,
-        title: const Text('Términos de uso'),
+        title: const Text('Terminos de uso'),
         actions: [
           IconButton(
             tooltip: 'Copiar',
@@ -69,7 +70,7 @@ Si tienes preguntas sobre estos términos, contáctanos en soporte@vibeloop.app 
               await Clipboard.setData(const ClipboardData(text: _termsText));
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Términos copiados al portapapeles')),
+                const SnackBar(content: Text('Terminos copiados al portapapeles')),
               );
             },
           ),
@@ -77,45 +78,30 @@ Si tienes preguntas sobre estos términos, contáctanos en soporte@vibeloop.app 
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.80),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            child: const Text(
-              'Estos términos están redactados para reflejar el uso real de VIBELOOP. Antes de publicarlos en Play Store, revísalos con asesoría legal y reemplaza el contacto por el canal oficial de soporte.',
-              style: TextStyle(
-                color: Color(0xFF4B5563),
-                height: 1.45,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+        children: const [
+          SectionIntroCard(
+            title: 'Marco de uso y convivencia',
+            body: 'Estos términos están redactados para reflejar el uso real de VIBELOOP. Antes de publicarlos, conviene revisarlos con asesoría legal.',
+            badge: SafetyBadge(label: 'Condiciones'),
           ),
-          const SizedBox(height: 16),
-          const _PolicySection(
+          SizedBox(height: 16),
+          _PolicySection(
             title: 'Resumen',
-            body:
-                'VIBELOOP es una app social para grupos, chat, fotos, reacciones, invitaciones y buzón anónimo. El uso indebido, abusivo o ilegal puede terminar en restricciones o suspensión de acceso.',
+            body: 'VIBELOOP es una app social para grupos, chat, fotos, reacciones, invitaciones y buzón anónimo. El uso indebido, abusivo o ilegal puede terminar en restricciones o suspensión de acceso.',
           ),
-          const _PolicySection(
+          _PolicySection(
             title: 'Uso permitido',
-            body:
-                'Debes usar la app de manera legal y respetuosa. No se permite spam, fraude, acoso, contenido ilegal, intentos de acceso no autorizado ni acciones que comprometan la seguridad o estabilidad del servicio.',
+            body: 'Debes usar la app de manera legal y respetuosa. No se permite spam, fraude, acoso, contenido ilegal, intentos de acceso no autorizado ni acciones que comprometan la seguridad o estabilidad del servicio.',
           ),
-          const _PolicySection(
+          _PolicySection(
             title: 'Contenido y responsabilidad',
-            body:
-                'Eres responsable del contenido que publicas. Debes tener derechos para compartir textos, fotos, nombres, descripciones y otros materiales dentro de grupos o mensajes anónimos.',
+            body: 'Eres responsable del contenido que publicas. Debes tener derechos para compartir textos, fotos, nombres, descripciones y otros materiales dentro de grupos o mensajes anónimos.',
           ),
-          const _PolicySection(
+          _PolicySection(
             title: 'Servicios de terceros',
-            body:
-                'La app puede usar Supabase para autenticación, base de datos, almacenamiento y tiempo real, y Google AdMob para anuncios cuando la monetización esté activa.',
+            body: 'La app puede usar Supabase para autenticación, base de datos, almacenamiento y tiempo real, y Google AdMob para anuncios cuando la monetización esté activa.',
           ),
-          const _PolicySection(
+          _PolicySection(
             title: 'Texto completo',
             body: _termsText,
             monospace: true,
@@ -140,36 +126,17 @@ class _PolicySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textStyle = monospace
-        ? const TextStyle(
-            fontFamily: 'monospace',
-            height: 1.45,
-            color: Color(0xFF111827),
-          )
-        : const TextStyle(
-            height: 1.45,
-            color: Color(0xFF111827),
-            fontWeight: FontWeight.w500,
-          );
+        ? const TextStyle(fontFamily: 'monospace', height: 1.45)
+        : Theme.of(context).textTheme.bodyMedium;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.78),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
+      child: GlassCard(
+        borderRadius: 24,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF111827),
-                  ),
-            ),
+            Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
             Text(body, style: textStyle),
           ],

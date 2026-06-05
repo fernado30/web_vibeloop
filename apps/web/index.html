@@ -1,68 +1,156 @@
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VIBELOOP</title>
-    <meta name="description" content="Mensajes anónimos y acceso al grupo de VIBELOOP." />
-    <link rel="stylesheet" href="/styles.css" />
-    <script src="/config.js"></script>
-  </head>
-  <body>
-    <main class="shell">
-      <section id="landingView" class="landing card hidden">
-        <div class="landing-brand">VIBELOOP</div>
-        <div class="landing-avatar">?</div>
-        <h1>Abriendo tu grupo...</h1>
-        <p class="landing-copy">
-          Estamos intentando abrir la app. Si no está instalada, puedes seguir en la web anónima.
-        </p>
-        <div class="landing-actions">
-          <button id="openNativeButton" class="primary-button" type="button">Abrir la app</button>
-        </div>
-        <p id="landingHint" class="landing-hint">
-          Si la app no se abre en unos segundos, instala la app para entrar al chat del grupo.
-        </p>
-      </section>
+<!DOCTYPE html>
+<html lang="es" style="">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>Buzón Seguro - Anónimo</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .vibrant-gradient {
+            background: linear-gradient(135deg, #005ab3 0%, #9026c3 100%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .ios-shadow {
+            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.06);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#fcf8fb",
+                        "error": "#ba1a1a",
+                        "primary": "#005ab3",
+                        "secondary": "#9026c3",
+                        "on-surface": "#1b1b1d",
+                        "on-surface-variant": "#414754",
+                        "outline": "#717786"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "1rem",
+                        "2xl": "1.5rem",
+                        "3xl": "2rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-gap-lg": "1.5rem",
+                        "stack-gap-sm": "0.5rem",
+                        "stack-gap-md": "1rem",
+                        "gutter-card": "1.25rem",
+                        "margin-page": "1rem",
+                        "safe-area-bottom": "34px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-surface-bright text-on-surface min-h-screen selection:bg-primary/20">
+<!-- Keep hidden landing/error elements that app.js expects -->
+<div id="landingView" class="hidden"></div>
+<div id="errorView" class="hidden"></div>
 
-      <section id="inboxView" class="inbox card hidden">
-        <div id="status" class="status">Cargando buzón anónimo...</div>
+<main id="inboxView" class="max-w-md mx-auto px-margin-page pt-8 pb-32">
+<!-- Target Info Card (contains `groupName` and `groupDescription` for app.js) -->
+<section class="mb-8">
+<div class="glass-card ios-shadow rounded-3xl p-gutter-card flex items-center gap-4 border border-white/40">
+<div class="w-14 h-14 rounded-full vibrant-gradient flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-white text-[32px]" data-icon="account_circle" style="font-variation-settings: &quot;FILL&quot; 1;">account_circle</span>
+</div>
+<div>
+<span class="font-label-md text-label-md text-primary font-semibold">Anónimo para:</span>
+<p id="groupName" class="font-headline-sm text-headline-sm-mobile text-on-surface">@emotiva</p>
+<p id="groupDescription" class="text-on-surface-variant/60 text-sm">Escribe algo anónimo para este grupo. Sin login, sin nombre y sin perfil.</p>
+</div>
+</div>
+</section>
 
-        <div class="inbox-head">
-          <div class="inbox-avatar">?</div>
-          <div class="inbox-copy">
-            <p class="eyebrow">Mensajes anónimos</p>
-            <h1 id="groupName">Mándame mensajes anónimos</h1>
-            <p id="groupDescription" class="subtitle"></p>
-          </div>
-        </div>
+<!-- Message Input Section -->
+<section class="mb-stack-gap-lg">
+<form id="messageForm">
+<div class="glass-card ios-shadow rounded-3xl p-6 border border-white/40 relative overflow-hidden group focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+<div class="absolute -top-10 -right-10 w-32 h-32 bg-secondary/10 rounded-full blur-3xl pointer-events-none"></div>
+<textarea id="messageInput" maxlength="500" oninput="updateCounter(this)" placeholder="¿Qué quieres decir?" rows="6" class="w-full bg-transparent border-none focus:ring-0 p-0 text-body-lg font-body-lg text-on-surface placeholder:text-on-surface-variant/40 resize-none"></textarea>
+<div class="flex items-center justify-between mt-4">
+<span id="charCount" class="font-label-md text-label-md text-on-surface-variant/60">0/500</span>
+<div class="flex gap-2">
+<button id="diceButton" type="button" class="p-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant" title="Añadir dado">
+<span class="material-symbols-outlined" data-icon="casino">casino</span>
+</button>
+</div>
+</div>
+</div>
+</form>
+</section>
 
-        <form id="messageForm" class="composer">
-          <label class="sr-only" for="messageInput">Mensaje anónimo</label>
-          <textarea
-            id="messageInput"
-            class="message-input"
-            maxlength="500"
-            placeholder="¿Qué quieres decir?"
-          ></textarea>
+<!-- Primary Action Button -->
+<section class="mb-stack-gap-lg">
+<button id="sendButton" class="w-full vibrant-gradient text-white py-5 rounded-3xl font-headline-sm flex items-center justify-center gap-3 shadow-[0_10px_30px_-5px_rgba(0,90,179,0.3)] active:scale-95 transition-all duration-150" type="button">
+<span>Enviar</span>
+<span class="material-symbols-outlined" data-icon="send">send</span>
+</button>
+</section>
 
-          <div class="composer-footer">
-            <span id="charCount" class="counter">0/500</span>
-            <button id="sendButton" class="send-button" type="submit">¡Enviar!</button>
-          </div>
-        </form>
+<!-- Trust/Security Footer -->
+<section class="mt-12 space-y-4">
+<div class="flex flex-col items-center justify-center gap-4 py-6 border-t border-outline-variant/20">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 opacity-60">
+<span class="material-symbols-outlined text-[18px]" data-icon="verified_user">verified_user</span>
+<span class="font-label-sm text-label-sm">100% Confidencial</span>
+</div>
+<div class="flex items-center gap-2 opacity-60">
+<span class="material-symbols-outlined text-[18px]" data-icon="encrypted">encrypted</span>
+<span class="font-label-sm text-label-sm">Cifrado E2EE</span>
+</div>
+</div>
+<p class="text-center font-label-sm text-label-sm text-on-surface-variant/50 max-w-[280px]">
+Tu identidad permanece oculta. El receptor no podrá saber quién eres.
+</p>
+</div>
+</section>
+</main>
 
-        <p id="feedback" class="feedback hidden"></p>
+<!-- Hidden elements app.js may reference for landing/native flow -->
+<button id="openNativeButton" class="hidden">Abrir</button>
+<p id="landingHint" class="hidden"></p>
+<p id="status" class="hidden"></p>
+<p id="feedback" class="hidden"></p>
 
-        <div class="prompts">
-          <span>🔒 mensajes anónimos para el grupo</span>
-          <span>✨ sin login, sin nombre y sin perfil</span>
-        </div>
-      </section>
+<!-- Visual Atmosphere: Background Floats -->
+<div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+<div class="absolute top-[15%] -left-20 w-80 h-80 bg-primary/5 rounded-full blur-3xl animate-float"></div>
+<div class="absolute bottom-[20%] -right-20 w-96 h-96 bg-secondary/5 rounded-full blur-3xl animate-float" style="animation-delay: -3s"></div>
+</div>
 
-      <div id="errorView" class="error hidden"></div>
-    </main>
-
-    <script type="module" src="/app.js"></script>
-  </body>
+<script src="/config.js"></script>
+<script type="module" src="/app.js"></script>
+</body>
 </html>

@@ -1,14 +1,22 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-});
+const authHeader = (req: Request) => req.headers.get('Authorization') ?? '';
+
+const createSupabase = (req: Request) =>
+  createClient(supabaseUrl, anonKey, {
+    global: {
+      headers: {
+        Authorization: authHeader(req),
+      },
+    },
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,6 +41,11 @@ Deno.serve(async (req) => {
   }
 
   try {
+    if (!supabaseUrl || !anonKey) {
+      throw new Error('Missing Supabase configuration');
+    }
+
+    const authedSupabase = createSupabase(req);
     const body = await req.json();
     const groupId = String(body.groupId ?? '').trim();
     const content = String(body.content ?? '').trim();
@@ -58,7 +71,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await authedSupabase
       .from('anonymous_messages')
       .insert({
         group_id: groupId,

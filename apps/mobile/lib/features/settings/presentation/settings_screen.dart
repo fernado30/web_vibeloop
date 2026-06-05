@@ -1,93 +1,147 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/vibe_tokens.dart';
+import '../../../core/widgets/vibe_svg_icon.dart';
+import '../../../core/widgets/vibe_ui.dart';
+
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final surface = Theme.of(context).colorScheme.surface;
+    final text = Theme.of(context).colorScheme.onSurface;
+
+    return VibeScaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Ajustes'),
+        title: const Text(
+          'Ajustes',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Material(
+            color: surface,
+            elevation: 0,
+            shape: const CircleBorder(),
+            child: IconButton(
+              tooltip: 'Volver',
+              onPressed: () => context.pop(),
+              icon: VibeSvgIcon(
+                VibeAssetIcons.arrowBack,
+                size: 20,
+                color: text,
+              ),
+            ),
+          ),
+        ),
+        leadingWidth: 64,
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
-          _SectionTitle(icon: Icons.star_rounded, label: 'Preferencias'),
-          const SizedBox(height: 12),
-          _SettingsCard(
+          const SizedBox(height: 8),
+          const _SectionHeader(
+            icon: Icons.tune_rounded,
+            label: 'Preferencias',
+          ),
+          const SizedBox(height: 14),
+          _SettingsGroup(
             children: [
-              _SettingsTile(
-                icon: Icons.notifications_none_rounded,
+              _SettingsRow(
+                iconAsset: VibeAssetIcons.bell,
                 title: 'Notificaciones',
+                subtitle: 'Decide qué actividad te interrumpe',
                 onTap: () => context.push('/groups/settings/notifications'),
               ),
-              _SettingsTile(
-                icon: Icons.dark_mode_outlined,
+              _SettingsRow(
+                iconAsset: VibeAssetIcons.moon,
                 title: 'Apariencia',
+                subtitle: 'Modo claro, oscuro o seguir sistema',
                 onTap: () => context.push('/groups/settings/appearance'),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          _SectionTitle(icon: Icons.warning_amber_rounded, label: 'Controles de seguridad'),
-          const SizedBox(height: 12),
-          _SettingsCard(
+          const SizedBox(height: 30),
+          const _SectionHeader(
+            icon: Icons.shield_outlined,
+            label: 'Controles de seguridad',
+          ),
+          const SizedBox(height: 14),
+          _SettingsGroup(
             children: [
-              _SettingsTile(
+              _SettingsRow(
                 icon: Icons.text_fields_rounded,
                 title: 'Palabras ocultas',
+                subtitle: 'Filtra contenido que no quieras ver',
                 onTap: () => context.push('/groups/settings/hidden-words'),
               ),
-              _SettingsTile(
-                icon: Icons.block_rounded,
+              _SettingsRow(
+                iconAsset: VibeAssetIcons.blocked,
                 title: 'Usuarios bloqueados',
+                subtitle: 'Gestiona tu espacio con más calma',
                 onTap: () => context.push('/groups/settings/blocked-users'),
               ),
-              _SettingsTile(
-                icon: Icons.pause_circle_outline_rounded,
+              _SettingsRow(
+                iconAsset: VibeAssetIcons.pause,
                 title: 'Pausa mi enlace',
+                subtitle: 'Detén nuevas entradas por invitación',
                 onTap: () => context.push('/groups/settings/pause-link'),
               ),
-              _SettingsTile(
-                icon: Icons.filter_alt_outlined,
-                title: 'Filtrado avanzado de mensajes',
+              _SettingsRow(
+                iconAsset: VibeAssetIcons.filter,
+                title: 'Filtrado avanzado',
+                subtitle: 'Oculta mensajes sensibles o no deseados',
                 onTap: () => context.push('/groups/settings/message-filtering'),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          _SectionTitle(icon: Icons.home_rounded, label: 'Más'),
-          const SizedBox(height: 12),
-          _SettingsCard(
+          const SizedBox(height: 30),
+          const _SectionHeader(
+            icon: Icons.info_outline_rounded,
+            label: 'Ayuda y legal',
+          ),
+          const SizedBox(height: 14),
+          _SettingsGroup(
             children: [
-              _SettingsTile(
-                icon: Icons.help_outline_rounded,
+              _SettingsRow(
+                icon: Icons.question_mark_rounded,
                 title: 'I need help',
+                subtitle: null,
                 onTap: () => context.push('/groups/settings/help'),
               ),
-              _SettingsTile(
-                icon: Icons.verified_user_outlined,
+            ],
+          ),
+          const SizedBox(height: 14),
+          _SettingsGroup(
+            children: [
+              _SettingsRow(
+                iconAsset: VibeAssetIcons.shield,
                 title: 'Recursos de seguridad',
+                subtitle: 'Buenas prácticas y acciones recomendadas',
                 onTap: () => context.push('/groups/settings/security-resources'),
               ),
-              _SettingsTile(
-                icon: Icons.description_outlined,
+              _SettingsRow(
+                iconAsset: VibeAssetIcons.settings,
                 title: 'Términos de uso',
+                subtitle: 'Condiciones y límites del servicio',
                 onTap: () => context.push('/groups/settings/terms-of-use'),
               ),
-              _SettingsTile(
-                icon: Icons.policy_outlined,
+              _SettingsRow(
+                iconAsset: VibeAssetIcons.shield,
                 title: 'Política de privacidad',
+                subtitle: 'Cómo usamos y protegemos tus datos',
                 onTap: () => context.push('/groups/settings/privacy-policy'),
               ),
-              _SettingsTile(
-                icon: Icons.delete_outline_rounded,
+              _SettingsRow(
+                iconAsset: VibeAssetIcons.blocked,
                 title: 'Eliminar cuenta',
-                titleColor: Colors.redAccent,
-                iconColor: Colors.redAccent,
-                onTap: () => _confirmDeleteAccount(context),
+                subtitle: 'Salida definitiva y segura',
+                titleColor: VibeColors.dangerRed,
+                iconColor: VibeColors.dangerRed,
+                onTap: () => context.push('/groups/settings/delete-account'),
               ),
             ],
           ),
@@ -95,38 +149,10 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
-
-  Future<void> _confirmDeleteAccount(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Eliminar cuenta'),
-          content: const Text('Esta acción se implementará con un flujo seguro de confirmación.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Entendido'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed == true && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Eliminación de cuenta pendiente de implementación segura.')),
-      );
-    }
-  }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
     required this.icon,
     required this.label,
   });
@@ -136,16 +162,16 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
     return Row(
       children: [
-        Icon(icon, color: colorScheme.onSurfaceVariant, size: 20),
-        const SizedBox(width: 8),
+        Icon(icon, size: 22, color: color),
+        const SizedBox(width: 12),
         Text(
           label,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: color,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF4B5563),
               ),
         ),
       ],
@@ -153,72 +179,134 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-class _SettingsCard extends StatelessWidget {
-  const _SettingsCard({required this.children});
+class _SettingsGroup extends StatelessWidget {
+  const _SettingsGroup({required this.children});
 
   final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
+    final background = Theme.of(context).colorScheme.surface;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.72),
+        color: background,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [
+          BoxShadow(
+            color: VibeColors.primaryDeepBlue.withValues(alpha: 0.06),
+            blurRadius: 28,
+            offset: const Offset(0, 12),
+          ),
+        ],
       ),
-      child: Column(children: children),
+      child: Column(
+        children: List.generate(children.length, (index) {
+          final showDivider = index != children.length - 1;
+          return Column(
+            children: [
+              children[index],
+              if (showDivider)
+                Padding(
+                  padding: const EdgeInsets.only(left: 156, right: 22),
+                  child: Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+                  ),
+                ),
+            ],
+          );
+        }),
+      ),
     );
   }
 }
 
-class _SettingsTile extends StatelessWidget {
-  const _SettingsTile({
-    required this.icon,
+class _SettingsRow extends StatelessWidget {
+  const _SettingsRow({
+    this.icon,
+    this.iconAsset,
     required this.title,
+    required this.subtitle,
     required this.onTap,
     this.titleColor,
     this.iconColor,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String title;
+  final String? subtitle;
   final VoidCallback onTap;
   final Color? titleColor;
   final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
-    final effectiveIconColor = iconColor ?? const Color(0xFF111827);
-    final effectiveTitleColor = titleColor ?? const Color(0xFF111827);
+    final defaultIcon = iconColor ?? VibeColors.primaryViolet;
+    final defaultTitle = titleColor ?? Theme.of(context).colorScheme.onSurface;
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(28),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
           child: Row(
             children: [
               Container(
-                width: 42,
-                height: 42,
+                width: 58,
+                height: 58,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(21),
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: LinearGradient(
+                    colors: [
+                      defaultIcon.withValues(alpha: 0.12),
+                      defaultIcon.withValues(alpha: 0.06),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                 ),
-                child: Icon(icon, size: 20, color: effectiveIconColor),
+                child: Center(
+                  child: iconAsset != null
+                      ? VibeSvgIcon(iconAsset!, size: 27, color: defaultIcon)
+                      : Icon(icon, size: 31, color: defaultIcon),
+                ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 18),
               Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: effectiveTitleColor,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: defaultTitle,
+                          ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle!,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: muted,
+                              fontWeight: FontWeight.w500,
+                            ),
                       ),
+                    ],
+                  ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF)),
+              const SizedBox(width: 12),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 30,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ],
           ),
         ),

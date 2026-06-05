@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/vibe_ui.dart';
 import '../data/safety_repository.dart';
 
 class MessageFilteringScreen extends ConsumerStatefulWidget {
@@ -45,33 +46,21 @@ class _MessageFilteringScreenState extends ConsumerState<MessageFilteringScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text('Filtrado avanzado de mensajes'),
-      ),
+    return VibeScaffold(
+      appBar: AppBar(title: const Text('Filtrado avanzado')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
-          const _IntroCard(
-            title: 'Define cómo quieres ver el chat',
-            body:
-                'Esta sección controla cómo VIBELOOP oculta contenido sensible o mensajes de personas que ya bloqueaste. Tus cambios afectan el chat y el buzón anónimo cuando la app vuelve a cargar los mensajes.',
+          const SectionIntroCard(
+            title: 'Define como quieres ver el chat',
+            body: 'Estos controles ayudan a mantener el entorno más cómodo para ti sin alterar la lógica de mensajes del grupo.',
+            badge: SafetyBadge(label: 'Moderacion'),
           ),
           const SizedBox(height: 16),
           if (_loading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
-              child: Center(child: CircularProgressIndicator()),
-            )
+            const LoadingStateCard(label: 'Cargando filtros...')
           else
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.78),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
-              ),
+            GlassCard(
               child: Column(
                 children: [
                   SwitchListTile.adaptive(
@@ -81,7 +70,7 @@ class _MessageFilteringScreenState extends ConsumerState<MessageFilteringScreen>
                     title: const Text('Ocultar mensajes con palabras filtradas'),
                     subtitle: const Text('Reemplaza los mensajes que coincidan con tu lista de palabras ocultas.'),
                   ),
-                  const Divider(height: 1),
+                  const Divider(),
                   SwitchListTile.adaptive(
                     contentPadding: EdgeInsets.zero,
                     value: _hideBlockedUsers,
@@ -93,50 +82,10 @@ class _MessageFilteringScreenState extends ConsumerState<MessageFilteringScreen>
               ),
             ),
           const SizedBox(height: 16),
-          FilledButton.icon(
+          GradientButton(
             onPressed: _loading ? null : _save,
+            label: 'Guardar preferencias',
             icon: const Icon(Icons.save_outlined),
-            label: const Text('Guardar preferencias'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _IntroCard extends StatelessWidget {
-  const _IntroCard({required this.title, required this.body});
-
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF111827),
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            body,
-            style: const TextStyle(
-              height: 1.45,
-              color: Color(0xFF4B5563),
-              fontWeight: FontWeight.w500,
-            ),
           ),
         ],
       ),
