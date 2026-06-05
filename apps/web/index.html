@@ -74,7 +74,17 @@
 </head>
 <body class="bg-surface-bright text-on-surface min-h-screen selection:bg-primary/20">
 <!-- Keep hidden landing/error elements that app.js expects -->
-<div id="landingView" class="hidden"></div>
+<section id="landingView" class="hidden max-w-md mx-auto px-margin-page pt-8 pb-32">
+  <div class="glass-card ios-shadow rounded-3xl p-gutter-card border border-white/40 text-center">
+    <div class="mb-6">
+      <span class="material-symbols-outlined text-[64px] text-primary">launch</span>
+    </div>
+    <h1 class="text-headline-sm font-semibold text-on-surface mb-3">Abrir el grupo en la app</h1>
+    <p class="text-on-surface-variant mb-6">Si tienes la app instalada, te llevaremos directo al grupo. Si no, te daremos la opción de instalarla.</p>
+    <button id="openNativeButton" class="w-full vibrant-gradient text-white py-4 rounded-3xl font-semibold transition-all duration-150">Abrir la app</button>
+    <p id="landingHint" class="mt-4 text-sm text-on-surface-variant/70">Si la app no responde, puedes instalarla desde Play Store.</p>
+  </div>
+</section>
 <div id="errorView" class="hidden"></div>
 
 <main id="inboxView" class="max-w-md mx-auto px-margin-page pt-8 pb-32">
@@ -97,7 +107,7 @@
 <form id="messageForm">
 <div class="glass-card ios-shadow rounded-3xl p-6 border border-white/40 relative overflow-hidden group focus-within:ring-2 focus-within:ring-primary/20 transition-all">
 <div class="absolute -top-10 -right-10 w-32 h-32 bg-secondary/10 rounded-full blur-3xl pointer-events-none"></div>
-<textarea id="messageInput" maxlength="500" oninput="updateCounter(this)" placeholder="¿Qué quieres decir?" rows="6" class="w-full bg-transparent border-none focus:ring-0 p-0 text-body-lg font-body-lg text-on-surface placeholder:text-on-surface-variant/40 resize-none"></textarea>
+<textarea id="messageInput" maxlength="500" oninput="updateCharacterCount()" placeholder="¿Qué quieres decir?" rows="6" class="w-full bg-transparent border-none focus:ring-0 p-0 text-body-lg font-body-lg text-on-surface placeholder:text-on-surface-variant/40 resize-none"></textarea>
 <div class="flex items-center justify-between mt-4">
 <span id="charCount" class="font-label-md text-label-md text-on-surface-variant/60">0/500</span>
 <div class="flex gap-2">
@@ -107,15 +117,15 @@
 </div>
 </div>
 </div>
-</form>
-</section>
 
 <!-- Primary Action Button -->
 <section class="mb-stack-gap-lg">
-<button id="sendButton" class="w-full vibrant-gradient text-white py-5 rounded-3xl font-headline-sm flex items-center justify-center gap-3 shadow-[0_10px_30px_-5px_rgba(0,90,179,0.3)] active:scale-95 transition-all duration-150" type="button">
+<button id="sendButton" class="w-full vibrant-gradient text-white py-5 rounded-3xl font-headline-sm flex items-center justify-center gap-3 shadow-[0_10px_30px_-5px_rgba(0,90,179,0.3)] active:scale-95 transition-all duration-150" type="submit">
 <span>Enviar</span>
 <span class="material-symbols-outlined" data-icon="send">send</span>
 </button>
+</section>
+</form>
 </section>
 
 <!-- Trust/Security Footer -->
@@ -139,8 +149,6 @@ Tu identidad permanece oculta. El receptor no podrá saber quién eres.
 </main>
 
 <!-- Hidden elements app.js may reference for landing/native flow -->
-<button id="openNativeButton" class="hidden">Abrir</button>
-<p id="landingHint" class="hidden"></p>
 <p id="status" class="hidden"></p>
 <p id="feedback" class="hidden"></p>
 
