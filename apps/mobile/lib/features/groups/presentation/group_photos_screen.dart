@@ -27,7 +27,7 @@ class GroupPhotosScreen extends ConsumerStatefulWidget {
 }
 
 class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
-  late final Stream<List<GroupPhotoModel>> _photosStream;
+  late Stream<List<GroupPhotoModel>> _photosStream;
   late final Future<InviteLinks> _inviteLinksFuture;
   late final Future<GroupModel> _groupFuture;
   final GlobalKey _coverKey = GlobalKey();
@@ -38,9 +38,24 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
   @override
   void initState() {
     super.initState();
-    _photosStream = ref.read(groupsRepositoryProvider).watchGroupPhotos(widget.groupId);
+    _photosStream = _buildPhotosStream();
     _inviteLinksFuture = ref.read(groupsRepositoryProvider).generateInviteLinks(widget.groupId);
     _groupFuture = ref.read(groupsRepositoryProvider).getGroupById(widget.groupId);
+  }
+
+  Stream<List<GroupPhotoModel>> _buildPhotosStream() {
+    final repository = ref.read(groupsRepositoryProvider);
+    return Stream.fromFuture(repository.fetchGroupPhotos(widget.groupId)).asyncExpand((initialPhotos) async* {
+      yield initialPhotos;
+      yield* repository.watchGroupPhotos(widget.groupId);
+    });
+  }
+
+  void _reloadPhotos() {
+    if (!mounted) return;
+    setState(() {
+      _photosStream = _buildPhotosStream();
+    });
   }
 
   Future<void> _addPhoto() async {
@@ -55,6 +70,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
 
     try {
       await ref.read(groupsRepositoryProvider).addGroupPhoto(widget.groupId, image);
+      _reloadPhotos();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Foto agregada al collage')),
@@ -97,6 +113,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
 
     try {
       await ref.read(groupsRepositoryProvider).deleteGroupPhoto(photo.id);
+      _reloadPhotos();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Foto eliminada del collage')),
@@ -120,12 +137,23 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
     }
   }
 
-  Future<void> _copyWebLink() async {
+  Future<void> _copyInviteLink() async {
     final links = await _inviteLinksFuture;
     await Clipboard.setData(ClipboardData(text: links.webLink));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Link web copiado')),
+      const SnackBar(content: Text('Link de invitación copiado')),
+    );
+  }
+
+  /// Opens the native Android/iOS share sheet with the HTTPS invite link.
+  Future<void> _shareInviteLink() async {
+    final links = await _inviteLinksFuture;
+    await SharePlus.instance.share(
+      ShareParams(
+        text: links.webLink,
+        subject: 'Únete a mi grupo en VIBELOOP',
+      ),
     );
   }
 
@@ -168,38 +196,59 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
     final resolvedUrl = photo.imageUrl.trim().isNotEmpty
         ? photo.imageUrl.trim()
         : repository.publicGroupPhotoUrl(photo.storagePath).trim();
-    final uri = Uri.tryParse(resolvedUrl);
+    return ColoredBox(
+      color: const Color(0xFFF6F9FC),
+      child: FutureBuilder<Uint8List?>(
+        future: repository.resolveGroupPhotoBytes(photo.storagePath),
+        builder: (context, snapshot) {
+          final bytes = snapshot.data;
+          if (bytes != null && bytes.isNotEmpty) {
+            return Image.memory(
+              bytes,
+              fit: BoxFit.contain,
+              alignment: Alignment.center,
+              filterQuality: FilterQuality.high,
+              gaplessPlayback: true,
+            );
+          }
 
-    if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
-      return Image.network(
-        resolvedUrl,
-        fit: BoxFit.cover,
-        alignment: Alignment.center,
-        filterQuality: FilterQuality.high,
-        gaplessPlayback: true,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return const Center(
-            child: SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          );
+          final uri = Uri.tryParse(resolvedUrl);
+          if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+            return Image.network(
+              resolvedUrl,
+              fit: BoxFit.contain,
+              alignment: Alignment.center,
+              filterQuality: FilterQuality.high,
+              gaplessPlayback: true,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return const Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) => _buildPhotoPlaceholder(),
+            );
+          }
+
+          return _buildPhotoPlaceholder();
         },
-        errorBuilder: (context, error, stackTrace) => _buildPhotoPlaceholder(),
-      );
-    }
-
-    return _buildPhotoPlaceholder();
+      ),
+    );
   }
 
   Widget _buildPhotoPlaceholder() {
-    return const Center(
-      child: Icon(
-        Icons.broken_image_outlined,
-        size: 34,
-        color: Color(0xFF94A3B8),
+    return Container(
+      color: Colors.white.withValues(alpha: 0.55),
+      child: const Center(
+        child: Icon(
+          Icons.broken_image_outlined,
+          size: 34,
+          color: Color(0xFF94A3B8),
+        ),
       ),
     );
   }
@@ -208,6 +257,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
     required BuildContext context,
     required GroupPhotoModel? photo,
     required bool showControls,
+    required bool showEmoji,
   }) {
     if (photo == null) {
       return Material(
@@ -272,31 +322,32 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
                   ),
                 ),
               ),
-              Positioned(
-                left: 10,
-                top: 10,
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.78),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.10),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+              if (showEmoji)
+                Positioned(
+                  left: 10,
+                  top: 10,
+                  child: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.78),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.10),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        photo.uploaderEmoji,
+                        style: const TextStyle(fontSize: 15),
                       ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      photo.uploaderEmoji,
-                      style: const TextStyle(fontSize: 15),
                     ),
                   ),
                 ),
-              ),
               if (showControls)
                 Positioned(
                   right: 8,
@@ -340,7 +391,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
     if (photos.isEmpty) {
       return AspectRatio(
         aspectRatio: 1.06,
-        child: _buildCoverTile(context: context, photo: null, showControls: false),
+        child: _buildCoverTile(context: context, photo: null, showControls: false, showEmoji: !_isPreparingShare),
       );
     }
 
@@ -349,7 +400,12 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
       final canDeletePhoto = currentUserId != null && (photo.uploadedBy == currentUserId || canDeleteAnyPhoto);
       return AspectRatio(
         aspectRatio: 0.84,
-        child: _buildCoverTile(context: context, photo: photo, showControls: !_isPreparingShare && canDeletePhoto),
+        child: _buildCoverTile(
+          context: context,
+          photo: photo,
+          showControls: !_isPreparingShare && canDeletePhoto,
+          showEmoji: !_isPreparingShare,
+        ),
       );
     }
 
@@ -366,7 +422,12 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
       itemBuilder: (context, index) {
         final photo = photos[index];
         final canDeletePhoto = currentUserId != null && (photo.uploadedBy == currentUserId || canDeleteAnyPhoto);
-        return _buildCoverTile(context: context, photo: photo, showControls: !_isPreparingShare && canDeletePhoto);
+        return _buildCoverTile(
+          context: context,
+          photo: photo,
+          showControls: !_isPreparingShare && canDeletePhoto,
+          showEmoji: !_isPreparingShare,
+        );
       },
     );
   }
@@ -481,7 +542,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
               return FutureBuilder<InviteLinks>(
                 future: _inviteLinksFuture,
                 builder: (context, linksSnapshot) {
-                  final webLink = linksSnapshot.data?.webLink;
+                  final inviteLink = linksSnapshot.data?.webLink;
 
                   return SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
@@ -510,6 +571,42 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
                           ],
                         ),
                         const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: _addPhoto,
+                                icon: const Icon(Icons.add_a_photo_outlined, size: 18),
+                                label: const Text('Agregar foto'),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2EA8FF),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: _isPreparingShare ? null : _shareCover,
+                                icon: const Icon(Icons.ios_share_rounded, size: 18),
+                                label: const Text('Compartir portada'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFF0F172A),
+                                  side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
                         RepaintBoundary(
                           key: _coverKey,
                           child: _buildCollage(
@@ -521,27 +618,91 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
                         ),
                         if (!_isPreparingShare) ...[
                           const SizedBox(height: 14),
+                          // ── Invite card ─────────────────────────────────
                           GlassCard(
                             borderRadius: 22,
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            child: Row(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                const VibeSvgIcon(VibeAssetIcons.share, size: 18, color: Color(0xFF2EA8FF)),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    webLink ?? 'Link web',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Color(0xFF0F172A),
-                                      fontWeight: FontWeight.w700,
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF2EA8FF).withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: const Center(
+                                        child: VibeSvgIcon(
+                                          VibeAssetIcons.share,
+                                          size: 18,
+                                          color: Color(0xFF2EA8FF),
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Invitar al grupo',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 14,
+                                              color: Color(0xFF0F172A),
+                                            ),
+                                          ),
+                                          Text(
+                                            inviteLink ?? 'Generando link...',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              color: Color(0xFF64748B),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                TextButton(
-                                  onPressed: webLink == null ? null : _copyWebLink,
-                                  child: const Text('Copiar'),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: FilledButton.icon(
+                                        onPressed: inviteLink == null ? null : _shareInviteLink,
+                                        icon: const Icon(Icons.ios_share_rounded, size: 18),
+                                        label: const Text('Invitar'),
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: const Color(0xFF2EA8FF),
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    OutlinedButton.icon(
+                                      onPressed: inviteLink == null ? null : _copyInviteLink,
+                                      icon: const Icon(Icons.copy_rounded, size: 16),
+                                      label: const Text('Copiar'),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: const Color(0xFF0F172A),
+                                        side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -586,5 +747,4 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
       },
     );
   }
-
 }

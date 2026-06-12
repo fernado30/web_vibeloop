@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/ads/vibe_loop_banner_ad.dart';
 import '../../../core/utils/profile_emojis.dart';
-import '../../../core/widgets/vibe_ui.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/groups_repository.dart';
 
@@ -73,10 +72,10 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
       return 'Activa Anonymous Sign-ins en Supabase para permitir invitados sin correo.';
     }
     if (message.contains('over_email_send_rate_limit')) {
-      return 'El acceso de invitado ya no usa correo. Revisa que Anonymous Sign-ins este activado.';
+      return 'El acceso de invitado ya no usa correo. Revisa que Anonymous Sign-ins esté activado.';
     }
     if (message.contains('invite_paused')) {
-      return 'Este enlace de invitacion esta pausado por el creador del grupo.';
+      return 'Este enlace de invitación está pausado por el creador del grupo.';
     }
     if (message.contains('rate_limited_cooldown')) {
       return 'Espera un momento antes de volver a intentar.';
@@ -89,42 +88,49 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return VibeScaffold(
-      appBar: AppBar(title: const Text('Uniendote al grupo')),
-      bottomNavigationBar: const GlassBottomNavigation(child: VibeLoopBannerAd()),
-      body: SafeArea(
+    return Scaffold(
+      appBar: AppBar(title: const Text('Accediendo al grupo')),
+      bottomNavigationBar: const SafeArea(
+        top: false,
         child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const StoryPreviewCard(
-                    title: 'Un enlace, una entrada',
-                    subtitle: 'El flujo guest sigue intacto. Solo lo envolvimos en una experiencia más cálida y clara.',
-                    icon: Icons.auto_awesome_rounded,
-                  ),
-                  const SizedBox(height: 16),
-                  if (_loading)
-                    const LoadingStateCard(label: 'Preparando tu acceso al chat...')
-                  else if (_error != null)
-                    ErrorStateCard(
-                      title: 'No pudimos abrir la invitacion',
-                      body: _error!,
-                      onRetry: _bootstrap,
-                    )
-                  else
-                    const EmptyStateCard(
-                      title: 'Redirigiendo',
-                      body: 'Todo salió bien. Te estamos llevando al chat.',
-                    ),
-                ],
-              ),
-            ),
-          ),
+          padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
+          child: VibeLoopBannerAd(),
         ),
+      ),
+      body: SafeArea(
+        child: _loading
+            ? const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Abriendo el chat...'),
+                  ],
+                ),
+              )
+            : Padding(
+                padding: const EdgeInsets.all(24),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_error != null) ...[
+                          Text(_error!, style: const TextStyle(color: Colors.redAccent)),
+                          const SizedBox(height: 16),
+                          FilledButton(
+                            onPressed: () => _bootstrap(),
+                            child: const Text('Reintentar'),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
       ),
     );
   }

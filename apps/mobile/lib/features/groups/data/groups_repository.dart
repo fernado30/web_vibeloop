@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/config/invite_link_config.dart';
+import '../../../core/supabase/supabase_config.dart';
 import '../../../core/utils/profile_emojis.dart';
 import '../domain/group_photo_model.dart';
 import '../domain/group_model.dart';
@@ -33,22 +35,29 @@ class GroupsRepository {
 
   final SupabaseClient _client;
   final Map<String, _GroupPhotoUrlCacheEntry> _groupPhotoUrlCache = {};
+  final Map<String, Future<Uint8List?>> _groupPhotoBytesCache = {};
 
   SupabaseClient get _supabase => _client;
 
   Future<T> _withInviteCodeHeader<T>(
     String inviteCode,
-    Future<T> Function() action,
+    Future<T> Function(SupabaseClient client) action,
   ) async {
-    final previousHeaders = Map<String, String>.from(_supabase.headers);
+    final config = await SupabaseConfig.load();
+    final currentSession = _supabase.auth.currentSession;
+    final headers = <String, String>{
+      'x-invite-code': inviteCode,
+      if (currentSession != null) 'Authorization': 'Bearer ${currentSession.accessToken}',
+    };
+    final inviteScopedClient = SupabaseClient(
+      config.url,
+      config.anonKey,
+      headers: headers,
+    );
     try {
-      _supabase.headers = {
-        ...previousHeaders,
-        'x-invite-code': inviteCode,
-      };
-      return await action();
+      return await action(inviteScopedClient);
     } finally {
-      _supabase.headers = previousHeaders;
+      await inviteScopedClient.dispose();
     }
   }
 
@@ -375,8 +384,8 @@ class GroupsRepository {
     final inviteNumber = 1000 + Random().nextInt(9000);
     final token = '${_safeSlug(displayName)}-$inviteNumber-$inviteCode';
     final normalizedWebUrl = config.webUrl.replaceAll(RegExp(r'/+$'), '');
-    final appLink = '$normalizedWebUrl/join/$token';
-    final webLink = '$normalizedWebUrl/invite/$token';
+    final appLink = 'vibeloop://invite/$token';
+    final webLink = '$normalizedWebUrl/buzon/$token';
 
     return InviteLinks(appLink: appLink, webLink: webLink);
   }
@@ -385,7 +394,7 @@ class GroupsRepository {
     final row = await _runWithSchemaCheck(
       () => _withInviteCodeHeader(
         inviteCode,
-        () => _supabase
+        (client) => client
             .from('groups')
             .select('id, name, description, image_url, created_by, invite_code, created_at')
             .eq('invite_code', inviteCode)
@@ -407,7 +416,7 @@ class GroupsRepository {
     final row = await _runWithSchemaCheck(
       () => _withInviteCodeHeader(
         inviteCode,
-        () => _supabase
+        (client) => client
             .from('groups')
             .select('invite_paused')
             .eq('invite_code', inviteCode)
@@ -464,7 +473,7 @@ class GroupsRepository {
     await _runWithSchemaCheck(
       () => _withInviteCodeHeader(
         inviteCode ?? '',
-        () => _supabase.from('group_members').upsert(
+        (client) => client.from('group_members').upsert(
             {
               'group_id': groupId,
               'user_id': user.id,
@@ -638,6 +647,22 @@ class GroupsRepository {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<Uint8List?> resolveGroupPhotoBytes(String storagePath) {
+    final trimmedPath = storagePath.trim();
+    if (trimmedPath.isEmpty) {
+      return Future.value(null);
+    }
+
+    return _groupPhotoBytesCache.putIfAbsent(trimmedPath, () async {
+      try {
+        final bytes = await _supabase.storage.from('group-photos').download(trimmedPath);
+        return Uint8List.fromList(bytes);
+      } catch (_) {
+        return null;
+      }
+    });
   }
 
   static const Duration _groupPhotoSignedUrlTtl = Duration(hours: 24);

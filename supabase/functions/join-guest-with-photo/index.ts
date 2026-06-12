@@ -16,6 +16,8 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 function hasUrl(content: string) {
   return /(https?:\/\/|www\.)/i.test(content);
 }
@@ -52,11 +54,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const inviteCode = String(body.inviteCode ?? '').trim();
     const imageBase64 = String(body.imageBase64 ?? '').trim();
     const contentType = String(body.contentType ?? 'image/jpeg').trim();
-    const filename = String(body.filename ?? 'guest.jpg').trim();
+    const filename = String(body.filename ?? 'guest.jpg').trim().slice(0, 80);
 
     if (!inviteCode) {
       return new Response(JSON.stringify({ error: 'inviteCode is required' }), {
@@ -65,9 +67,23 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (inviteCode.length < 6 || inviteCode.length > 64 || !/^[a-zA-Z0-9_-]+$/.test(inviteCode)) {
+      return new Response(JSON.stringify({ error: 'inviteCode is invalid' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (!imageBase64) {
       return new Response(JSON.stringify({ error: 'imageBase64 is required' }), {
         status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (imageBase64.length > 7 * 1024 * 1024) {
+      return new Response(JSON.stringify({ error: 'imageBase64 is too large' }), {
+        status: 413,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -147,6 +163,8 @@ Deno.serve(async (req) => {
       group_id: group.id,
       user_id: userId,
       role: 'member',
+    }, {
+      onConflict: 'group_id,user_id',
     });
 
     if (membershipError) {

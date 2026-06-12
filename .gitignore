@@ -13,6 +13,7 @@ apps/web/dist/
 headers.txt
 response.json
 apps/mobile/tmp_decode.py
+supabase/.temp/
 # Android release signing
 apps/mobile/android/key.properties
 apps/mobile/android/app/upload-keystore.jks

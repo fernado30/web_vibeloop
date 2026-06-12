@@ -16,6 +16,8 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function safeSlug(value: string) {
   return value
     .toLowerCase()
@@ -39,12 +41,12 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const body = await req.json();
-    const email = String(body.email ?? '').trim();
+    const body = await req.json().catch(() => ({}));
+    const email = String(body.email ?? '').trim().toLowerCase();
     const password = String(body.password ?? '').trim();
-    const displayName = String(body.displayName ?? '').trim() || 'Usuario';
+    const displayName = String(body.displayName ?? '').trim().slice(0, 60) || 'Usuario';
 
-    if (!email || !email.includes('@')) {
+    if (!email || !emailPattern.test(email) || email.length > 254) {
       return new Response(JSON.stringify({ error: 'email is required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

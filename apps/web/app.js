@@ -1,5 +1,3 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
 const config = window.VIBELOOP_WEB_CONFIG ?? {};
 const landingViewEl = document.getElementById('landingView');
 const inboxViewEl = document.getElementById('inboxView');
@@ -51,19 +49,16 @@ function showInbox() {
 function parseRoute() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/';
   const joinMatch = path.match(/^\/join\/([^/]+)$/);
-  if (joinMatch) {
-    return { kind: 'join', token: joinMatch[1] };
-  }
+  if (joinMatch) return { kind: 'join', token: joinMatch[1] };
 
   const openMatch = path.match(/^\/open\/([^/]+)$/);
-  if (openMatch) {
-    return { kind: 'open', token: openMatch[1] };
-  }
+  if (openMatch) return { kind: 'open', token: openMatch[1] };
 
   const inviteMatch = path.match(/^\/invite\/([^/]+)$/);
-  if (inviteMatch) {
-    return { kind: 'invite', token: inviteMatch[1] };
-  }
+  if (inviteMatch) return { kind: 'invite', token: inviteMatch[1] };
+
+  const buzonMatch = path.match(/^\/buzon\/([^/]+)$/);
+  if (buzonMatch) return { kind: 'buzon', token: buzonMatch[1] };
 
   return { kind: 'invalid', token: null };
 }
@@ -73,71 +68,8 @@ function getInviteCode(token) {
   return parts[parts.length - 1] ?? null;
 }
 
-function emojiForSeed(seed) {
-  const emojis = ['🙂', '✨', '🌙', '💙', '🫶', '🔥', '🌊', '🍀', '⚡', '🎧'];
-  let hash = 0;
-  for (let index = 0; index < seed.length; index += 1) {
-    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
-  }
-  return emojis[hash % emojis.length];
-}
-
-async function ensureGuestMembership(client, groupId, inviteCode) {
-  const { data: sessionData, error: sessionError } = await client.auth.getSession();
-  if (sessionError) {
-    throw new Error(`No pudimos iniciar la sesión anónima: ${sessionError.message}`);
-  }
-
-  if (!sessionData.session) {
-    const { error: signInError } = await client.auth.signInAnonymously();
-    if (signInError) {
-      throw new Error(`No pudimos iniciar la sesión anónima: ${signInError.message}`);
-    }
-  }
-
-  const { data: userData, error: userError } = await client.auth.getUser();
-  if (userError || !userData.user) {
-    throw new Error('No pudimos identificar la sesión invitada.');
-  }
-
-  const user = userData.user;
-  const username = `invitado_${user.id.replace(/-/g, '').slice(0, 8)}`;
-  const displayName = 'Invitado';
-
-  const { error: profileError } = await client.from('users').upsert({
-    id: user.id,
-    username,
-    display_name: displayName,
-    avatar_url: null,
-    emoji: emojiForSeed(inviteCode ?? user.id),
-  });
-
-  if (profileError) {
-    throw new Error(`No pudimos preparar tu perfil invitado: ${profileError.message}`);
-  }
-
-  const { error: memberError } = await client.from('group_members').upsert(
-    {
-      group_id: groupId,
-      user_id: user.id,
-      role: 'member',
-    },
-    {
-      onConflict: 'group_id,user_id',
-    },
-  );
-
-  if (memberError) {
-    throw new Error(`No pudimos unir tu sesión al grupo: ${memberError.message}`);
-  }
-}
-
-function hasUrl(content) {
-  return /(https?:\/\/|www\.)/i.test(content);
-}
-
 function buildNativeIntentUrl(token) {
-  const fallbackUrl = `${window.location.origin}/invite/${token}`;
+  const fallbackUrl = `${window.location.origin}/invite/${token}?no_redirect=true`;
   return `intent://invite/${token}#Intent;scheme=vibeloop;package=${ANDROID_PACKAGE};S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
 }
 
@@ -148,7 +80,7 @@ function updateCharacterCount() {
 function setSendingState(isSending) {
   sendButtonEl.disabled = isSending;
   messageInputEl.disabled = isSending;
-  sendButtonEl.textContent = isSending ? 'Enviando...' : '¡Enviar!';
+  sendButtonEl.textContent = isSending ? 'Enviando...' : 'Â¡Enviar!';
 }
 
 function flashFeedback(message, kind = 'success') {
@@ -157,45 +89,46 @@ function flashFeedback(message, kind = 'success') {
   feedbackEl.classList.remove('hidden');
 }
 
+function hasUrl(content) {
+  return /(https?:\/\/|www\.)/i.test(content);
+}
+
+async function callResolveInvite(inviteCode) {
+  const functionsUrl = `${config.supabaseUrl}/functions/v1/resolve-invite`;
+
+  const response = await fetch(functionsUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: config.supabaseAnonKey,
+    },
+    body: JSON.stringify({ inviteCode }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error ?? 'No se pudo resolver la invitacion.');
+  }
+
+  return data;
+}
+
 async function loadAnonymousInbox(token) {
   const inviteCode = getInviteCode(token);
   if (!inviteCode) {
-    throw new Error('No pudimos leer el código del enlace.');
+    throw new Error('No pudimos leer el codigo del enlace.');
   }
 
-  const client = createClient(config.supabaseUrl, config.supabaseAnonKey, {
-    global: {
-      headers: {
-        'x-invite-code': inviteCode,
-      },
-    },
-  });
-
-  const { data: groups, error } = await client
-    .from('groups')
-    .select('id, name, description, created_at')
-    .eq('invite_code', inviteCode)
-    .limit(1);
-
-  if (error) {
-    throw new Error(`No se pudo cargar el buzón anónimo: ${error.message}`);
-  }
-
-  const group = Array.isArray(groups) ? groups[0] : null;
-  if (!group) {
-    throw new Error('La invitación no existe o ya no es válida.');
-  }
-
-  await ensureGuestMembership(client, group.id, inviteCode);
+  const { groupId, groupName, groupDescription } = await callResolveInvite(inviteCode);
 
   showInbox();
-  groupNameEl.textContent = group.name ?? 'Mensajes anónimos';
-  groupDescriptionEl.textContent = group.description || 'Escribe algo anónimo para este grupo. Sin login, sin nombre y sin perfil.';
+  groupNameEl.textContent = groupName ?? 'Mensajes anonimos';
+  groupDescriptionEl.textContent =
+    groupDescription || 'Escribe algo anonimo para este grupo. Sin login, sin nombre y sin perfil.';
 
   updateCharacterCount();
-  messageInputEl.addEventListener('input', updateCharacterCount);
 
-  messageFormEl.addEventListener('submit', async (event) => {
+  messageFormEl.onsubmit = async (event) => {
     event.preventDefault();
 
     const content = messageInputEl.value.trim();
@@ -218,18 +151,24 @@ async function loadAnonymousInbox(token) {
     feedbackEl.classList.add('hidden');
 
     try {
-      const { error: insertError } = await client.from('anonymous_messages').insert({
-        group_id: group.id,
-        content,
+      const functionsUrl = `${config.supabaseUrl}/functions/v1/send-anonymous-message`;
+      const response = await fetch(functionsUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: config.supabaseAnonKey,
+        },
+        body: JSON.stringify({ inviteCode, content }),
       });
 
-      if (insertError) {
-        throw new Error(insertError.message);
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error ?? 'No se pudo enviar el mensaje.');
       }
 
       messageInputEl.value = '';
       updateCharacterCount();
-      flashFeedback('Mensaje enviado de forma anónima.', 'success');
+      flashFeedback('Mensaje enviado de forma anonima.', 'success');
     } catch (err) {
       flashFeedback(
         err instanceof Error ? `No se pudo enviar el mensaje: ${err.message}` : 'No se pudo enviar el mensaje.',
@@ -238,7 +177,7 @@ async function loadAnonymousInbox(token) {
     } finally {
       setSendingState(false);
     }
-  });
+  };
 }
 
 function attemptNativeOpen(token) {
@@ -247,7 +186,7 @@ function attemptNativeOpen(token) {
 
   window.setTimeout(() => {
     if (document.visibilityState === 'visible') {
-      landingHintEl.textContent = 'No detectamos la app. Si quieres entrar al chat del grupo, instálala primero.';
+      landingHintEl.textContent = 'No detectamos la app. Si quieres entrar al chat del grupo, instalala primero.';
       openNativeButtonEl.textContent = 'Instalar la app';
       openNativeButtonEl.onclick = () => {
         window.location.href = ANDROID_PLAY_STORE_URL;
@@ -262,18 +201,24 @@ async function bootstrap() {
 
     const route = parseRoute();
     if (route.kind === 'invalid') {
-      showError('La ruta no es válida. Usa /open/:token o /invite/:token.');
+      showError('La ruta no es valida. Usa /open/:token o /invite/:token.');
       return;
     }
 
-    if (route.kind === 'open') {
+    const urlParams = new URLSearchParams(window.location.search);
+    const noRedirect = urlParams.get('no_redirect') === 'true';
+
+    if (route.kind === 'open' || route.kind === 'join') {
       showLanding();
       openNativeButtonEl.onclick = () => attemptNativeOpen(route.token);
       attemptNativeOpen(route.token);
       return;
     }
 
-    await loadAnonymousInbox(route.token);
+    if (route.kind === 'invite' || route.kind === 'buzon') {
+      await loadAnonymousInbox(route.token);
+      return;
+    }
   } catch (err) {
     showError(err instanceof Error ? err.message : 'No se pudo iniciar la web.');
   }

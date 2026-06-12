@@ -734,22 +734,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Future<void> _shareInviteLink() async {
     final links = await _inviteLinksFuture;
+    final webLinkUri = Uri.parse(links.webLink);
+    final inviteLink = webLinkUri.replace(
+      pathSegments: <String>[
+        'open',
+        ...webLinkUri.pathSegments.skip(1),
+      ],
+    ).toString();
     await SharePlus.instance.share(
       ShareParams(
-        text: 'Únete a mi grupo en VIBELOOP: ${links.appLink}',
+        text: 'Únete a mi grupo en VIBELOOP: $inviteLink',
       ),
     );
     unawaited(AdService.instance.showInterstitialAfterInviteShared());
   }
 
   Future<void> _shareWebInviteLink() async {
-    final links = await _inviteLinksFuture;
-    await SharePlus.instance.share(
-      ShareParams(
-        text: 'Únete a mi grupo en VIBELOOP: ${links.webLink}',
-      ),
-    );
-    unawaited(AdService.instance.showInterstitialAfterInviteShared());
+    try {
+      final links = await _inviteLinksFuture;
+      await SharePlus.instance.share(
+        ShareParams(
+          text: links.webLink,
+        ),
+      );
+      unawaited(AdService.instance.showInterstitialAfterInviteShared());
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al generar el link web: $e')),
+        );
+      }
+    }
   }
 
   void _scrollToBottom() {

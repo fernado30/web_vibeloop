@@ -437,7 +437,6 @@ using (
   auth.uid() = created_by
   or private.is_group_member(groups.id)
   or groups.invite_code = coalesce(coalesce(current_setting('request.headers', true), '{}')::jsonb ->> 'x-invite-code', '')
-  or groups.id::text = coalesce(coalesce(current_setting('request.headers', true), '{}')::jsonb ->> 'x-group-id', '')
 );
 
 drop policy if exists "groups_insert_by_owner" on public.groups;

@@ -152,13 +152,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         }
       }
 
-      if (uri.hasScheme && uri.path.isNotEmpty) {
-        final normalizedLocation = uri.path + (uri.hasQuery ? '?${uri.query}' : '');
-        if (normalizedLocation != state.uri.toString()) {
-          return normalizedLocation;
-        }
-      }
-
       final isLoading = authState.maybeWhen(loading: () => true, orElse: () => false);
       final preferences = ref.watch(appPreferencesControllerProvider);
       if (isLoading) {

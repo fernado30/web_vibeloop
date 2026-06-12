@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/ads/ad_service.dart';
 import 'core/router/app_router.dart';
+import 'core/router/deep_link_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/supabase/supabase_config.dart';
 import 'core/settings/app_preferences_repository.dart';
@@ -35,13 +36,27 @@ Future<void> main() async {
   }
 }
 
-class VibeloopApp extends ConsumerWidget {
+class VibeloopApp extends ConsumerStatefulWidget {
   const VibeloopApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<VibeloopApp> createState() => _VibeloopAppState();
+}
+
+class _VibeloopAppState extends ConsumerState<VibeloopApp> {
+  bool _deepLinkInitialized = false;
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final preferences = ref.watch(appPreferencesControllerProvider);
+
+    // Initialize the deep link service once the router is available.
+    if (!_deepLinkInitialized) {
+      _deepLinkInitialized = true;
+      DeepLinkService.instance.init(router);
+    }
+
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'VIBELOOP',
@@ -50,6 +65,12 @@ class VibeloopApp extends ConsumerWidget {
       themeMode: preferences.themeMode,
       routerConfig: router,
     );
+  }
+
+  @override
+  void dispose() {
+    DeepLinkService.instance.dispose();
+    super.dispose();
   }
 }
 
