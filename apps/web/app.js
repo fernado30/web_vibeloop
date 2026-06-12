@@ -93,38 +93,15 @@ function hasUrl(content) {
   return /(https?:\/\/|www\.)/i.test(content);
 }
 
-async function callResolveInvite(inviteCode) {
-  const functionsUrl = `${config.supabaseUrl}/functions/v1/resolve-invite`;
-
-  const response = await fetch(functionsUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: config.supabaseAnonKey,
-    },
-    body: JSON.stringify({ inviteCode }),
-  });
-
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(data.error ?? 'No se pudo resolver la invitacion.');
-  }
-
-  return data;
-}
-
 async function loadAnonymousInbox(token) {
   const inviteCode = getInviteCode(token);
   if (!inviteCode) {
     throw new Error('No pudimos leer el codigo del enlace.');
   }
 
-  const { groupId, groupName, groupDescription } = await callResolveInvite(inviteCode);
-
   showInbox();
-  groupNameEl.textContent = groupName ?? 'Mensajes anonimos';
-  groupDescriptionEl.textContent =
-    groupDescription || 'Escribe algo anonimo para este grupo. Sin login, sin nombre y sin perfil.';
+  groupNameEl.textContent = 'Buzón anónimo';
+  groupDescriptionEl.textContent = 'Escribe algo anónimo para este grupo. Sin login, sin nombre y sin perfil.';
 
   updateCharacterCount();
 
@@ -157,6 +134,7 @@ async function loadAnonymousInbox(token) {
         headers: {
           'Content-Type': 'application/json',
           apikey: config.supabaseAnonKey,
+          Authorization: `Bearer ${config.supabaseAnonKey}`,
         },
         body: JSON.stringify({ inviteCode, content }),
       });
@@ -204,9 +182,6 @@ async function bootstrap() {
       showError('La ruta no es valida. Usa /open/:token o /invite/:token.');
       return;
     }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const noRedirect = urlParams.get('no_redirect') === 'true';
 
     if (route.kind === 'open' || route.kind === 'join') {
       showLanding();
