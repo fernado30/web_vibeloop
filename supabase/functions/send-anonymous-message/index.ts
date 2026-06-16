@@ -1,7 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 const corsHeaders = {
@@ -33,7 +32,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    if (!supabaseUrl || !anonKey || !serviceRoleKey) {
+    if (!supabaseUrl || !serviceRoleKey) {
       throw new Error('Missing Supabase configuration');
     }
 
