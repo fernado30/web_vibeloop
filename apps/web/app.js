@@ -80,7 +80,7 @@ function updateCharacterCount() {
 function setSendingState(isSending) {
   sendButtonEl.disabled = isSending;
   messageInputEl.disabled = isSending;
-  sendButtonEl.textContent = isSending ? 'Enviando...' : 'Â¡Enviar!';
+  sendButtonEl.textContent = isSending ? 'Enviando...' : '\u00a1Enviar!';
 }
 
 function flashFeedback(message, kind = 'success') {
@@ -100,7 +100,7 @@ async function loadAnonymousInbox(token) {
   }
 
   showInbox();
-  groupNameEl.textContent = 'Buzón anónimo';
+  groupNameEl.textContent = 'Buz\u00f3n an\u00f3nimo';
   groupDescriptionEl.textContent = 'Escribe algo anónimo para este grupo. Sin login, sin nombre y sin perfil.';
 
   updateCharacterCount();
