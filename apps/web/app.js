@@ -101,7 +101,7 @@ async function loadAnonymousInbox(token) {
 
   showInbox();
   groupNameEl.textContent = 'Buz\u00f3n an\u00f3nimo';
-  groupDescriptionEl.textContent = 'Escribe algo anónimo para este grupo. Sin login, sin nombre y sin perfil.';
+  groupDescriptionEl.textContent = 'Escribe algo an\u00f3nimo para este grupo. Sin login, sin nombre y sin perfil.';
 
   updateCharacterCount();
 
