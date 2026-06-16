@@ -13,8 +13,8 @@ void main() {
 
     expect(migration.contains("x-group-id"), isFalse);
     expect(schema.contains("x-group-id"), isFalse);
-    expect(sendAnonymous.contains('uuidPattern'), isTrue);
-    expect(sendAnonymous.contains('groupId is invalid'), isTrue);
+    expect(sendAnonymous.contains('inviteCodePattern'), isTrue);
+    expect(sendAnonymous.contains('inviteCode has invalid format'), isTrue);
     expect(registerUser.contains('emailPattern'), isTrue);
     expect(joinGuest.contains('inviteCode is invalid'), isTrue);
   });

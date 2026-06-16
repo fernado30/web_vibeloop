@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+const serviceRoleKey = resolveServiceRoleKey();
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,6 +13,52 @@ const inviteCodePattern = /^[a-zA-Z0-9_-]{4,64}$/;
 
 function hasUrl(content: string) {
   return /(https?:\/\/|www\.)/i.test(content);
+}
+
+function resolveServiceRoleKey() {
+  const legacyKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim() ?? '';
+  if (legacyKey) {
+    return legacyKey;
+  }
+
+  const secretKeys = Deno.env.get('SUPABASE_SECRET_KEYS')?.trim() ?? '';
+  if (!secretKeys) {
+    return '';
+  }
+
+  try {
+    const parsed = JSON.parse(secretKeys);
+    if (!parsed || typeof parsed !== 'object') {
+      return '';
+    }
+
+    const candidates = [
+      'service_role',
+      'serviceRole',
+      'service_role_key',
+      'serviceRoleKey',
+      'service-role',
+      'secret',
+      'default',
+    ];
+
+    for (const candidate of candidates) {
+      const value = (parsed as Record<string, unknown>)[candidate];
+      if (typeof value === 'string' && value.trim()) {
+        return value.trim();
+      }
+    }
+
+    for (const value of Object.values(parsed as Record<string, unknown>)) {
+      if (typeof value === 'string' && value.trim()) {
+        return value.trim();
+      }
+    }
+  } catch (_) {
+    // Fall through to the empty-string error path below.
+  }
+
+  return '';
 }
 
 function jsonResponse(body: unknown, status = 200) {
@@ -33,7 +79,7 @@ Deno.serve(async (req) => {
 
   try {
     if (!supabaseUrl || !serviceRoleKey) {
-      throw new Error('Missing Supabase configuration');
+      throw new Error('Missing Supabase configuration. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, or provide SUPABASE_SECRET_KEYS.');
     }
 
     const body = await req.json().catch(() => ({}));

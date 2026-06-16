@@ -19,7 +19,7 @@ void main() {
     ).readAsStringSync();
 
     expect(groupsRepository.contains("final appLink = 'vibeloop://invite/\$token';"), isTrue);
-    expect(groupsRepository.contains("final webLink = '\$normalizedWebUrl/invite/\$token';"), isTrue);
+    expect(groupsRepository.contains("final webLink = '\$normalizedWebUrl/buzon/\$token';"), isTrue);
 
     expect(appRouter.contains("path: '/join/:code'"), isTrue);
     expect(appRouter.contains("return InviteJoinScreen(inviteCode: inviteCode);"), isTrue);
@@ -30,7 +30,7 @@ void main() {
     expect(inviteJoinScreen.contains("joinGroup(group.id, inviteCode: widget.inviteCode)"), isTrue);
     expect(inviteJoinScreen.contains("context.go('/groups/\${group.id}/chat');"), isTrue);
 
-        expect(chatScreen.contains("text: links.appLink,"), isTrue);
-    expect(chatScreen.contains("text: 'Ãšnete a mi grupo en VIBELOOP: \${links.webLink}'"), isTrue);
+        expect(chatScreen.contains("final webLinkUri = Uri.parse(links.webLink);"), isTrue);
+    expect(chatScreen.contains("text: 'Únete a mi grupo en VIBELOOP: \$inviteLink'"), isTrue);
   });
 }
