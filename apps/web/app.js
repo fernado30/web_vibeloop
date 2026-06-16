@@ -131,11 +131,6 @@ async function loadAnonymousInbox(token) {
       const functionsUrl = `${config.supabaseUrl}/functions/v1/send-anonymous-message`;
       const response = await fetch(functionsUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: config.supabaseAnonKey,
-          Authorization: `Bearer ${config.supabaseAnonKey}`,
-        },
         body: JSON.stringify({ inviteCode, content }),
       });
 

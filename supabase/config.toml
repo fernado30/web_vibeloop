@@ -263,7 +263,7 @@ max_frequency = "5s"
 verify_jwt = false
 
 [functions.send-anonymous-message]
-verify_jwt = true
+verify_jwt = false
 
 [functions.join-guest-with-photo]
 verify_jwt = true
