@@ -20,6 +20,7 @@ import '../../auth/data/auth_repository.dart';
 import '../../anonymous/data/anonymous_repository.dart';
 import '../../anonymous/domain/anonymous_message_model.dart';
 import '../../groups/data/groups_repository.dart';
+import '../../groups/domain/group_model.dart';
 import '../data/chat_repository.dart';
 import '../domain/message_model.dart';
 
@@ -49,6 +50,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   late Stream<List<AnonymousMessageModel>> _anonymousMessagesStream;
   late final RealtimeChannel _presenceChannel;
   late final Future<InviteLinks> _inviteLinksFuture;
+  late final Future<GroupModel> _groupFuture;
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
@@ -65,6 +67,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _messagesStream = ref.read(chatRepositoryProvider).watchMessages(widget.groupId);
     _anonymousMessagesStream = ref.read(anonymousRepositoryProvider).watchAnonymousMessages(widget.groupId);
     _inviteLinksFuture = ref.read(groupsRepositoryProvider).generateInviteLinks(widget.groupId);
+    _groupFuture = ref.read(groupsRepositoryProvider).getGroupById(widget.groupId);
     _presenceChannel = Supabase.instance.client.channel('chat-presence-${widget.groupId}');
     _loadCurrentEmoji();
     _setupPresence();
@@ -814,28 +817,41 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           title: Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Grupo ${widget.groupId.substring(0, 6)}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 17,
-                          ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      '12 miembros',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            fontSize: 11,
-                          ),
-                    ),
-                  ],
+                child: FutureBuilder<GroupModel>(
+                  future: _groupFuture,
+                  builder: (context, snapshot) {
+                    final groupName = snapshot.data?.name ?? 'Grupo ${widget.groupId.substring(0, 6)}';
+                    final memberCount = snapshot.data?.memberCount;
+                    final memberLabel = memberCount == null
+                        ? 'Miembros'
+                        : memberCount == 1
+                            ? '1 miembro'
+                            : '$memberCount miembros';
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          groupName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 17,
+                              ),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          memberLabel,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                fontSize: 11,
+                              ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
               const SizedBox(width: 8),

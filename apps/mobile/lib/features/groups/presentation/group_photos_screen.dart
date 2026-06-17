@@ -35,6 +35,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
   final Set<String> _hiddenPhotoIds = <String>{};
   final List<GroupPhotoModel> _optimisticPhotos = <GroupPhotoModel>[];
   final Map<String, String> _localPreviewPaths = <String, String>{};
+  bool _isPreparingShare = false;
 
   @override
   void initState() {
@@ -172,52 +173,71 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
 
 
   Future<void> _shareCover() async {
-    await WidgetsBinding.instance.endOfFrame;
-    final boundary = _coverKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary == null) return;
+    if (!mounted) return;
+    setState(() {
+      _isPreparingShare = true;
+    });
 
-    final image = await boundary.toImage(pixelRatio: 3);
-    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-    if (byteData == null) return;
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+      final boundary = _coverKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return;
 
-    final file = File('${Directory.systemTemp.path}/vibeloop_group_cover_${widget.groupId}.png');
-    await file.writeAsBytes(byteData.buffer.asUint8List());
+      final image = await boundary.toImage(pixelRatio: 3);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) return;
 
-    final links = await _inviteLinksFuture;
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [XFile(file.path)],
-        text: links.webLink,
-      ),
-    );
+      final file = File('${Directory.systemTemp.path}/vibeloop_group_cover_${widget.groupId}.png');
+      await file.writeAsBytes(byteData.buffer.asUint8List());
+
+      final links = await _inviteLinksFuture;
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: links.webLink,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPreparingShare = false;
+        });
+      }
+    }
   }
 
   Widget _buildPhotoImage(GroupPhotoModel photo) {
     final repository = ref.read(groupsRepositoryProvider);
     final localFile = _resolveLocalPreviewFile(_localPreviewPaths[photo.id]);
     if (localFile != null) {
-      return Image.file(
-        localFile,
-        fit: BoxFit.contain,
-        alignment: Alignment.center,
-        filterQuality: FilterQuality.high,
-        gaplessPlayback: true,
+      return ColoredBox(
+        color: Colors.white,
+        child: Image.file(
+          localFile,
+          fit: BoxFit.contain,
+          alignment: Alignment.center,
+          filterQuality: FilterQuality.high,
+          gaplessPlayback: true,
+        ),
       );
     }
 
     return ColoredBox(
-      color: const Color(0xFFF6F9FC),
+      color: Colors.white,
       child: FutureBuilder<Uint8List?>( 
         future: repository.resolveGroupPhotoBytes(photo.storagePath),
         builder: (context, snapshot) {
           final bytes = snapshot.data;
           if (bytes != null && bytes.isNotEmpty) {
-            return Image.memory(
-              bytes,
-              fit: BoxFit.contain,
-              alignment: Alignment.center,
-              filterQuality: FilterQuality.high,
-              gaplessPlayback: true,
+            return ColoredBox(
+              color: Colors.white,
+              child: Image.memory(
+                bytes,
+                fit: BoxFit.contain,
+                alignment: Alignment.center,
+                filterQuality: FilterQuality.high,
+                gaplessPlayback: true,
+              ),
             );
           }
 
@@ -304,57 +324,12 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
 
   Widget _buildPhotoPlaceholder() {
     return Container(
-      color: Colors.white.withValues(alpha: 0.55),
+      color: Colors.white,
       child: const Center(
         child: Icon(
           Icons.broken_image_outlined,
           size: 34,
           color: Color(0xFF94A3B8),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAddPhotoTile(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(24),
-        onTap: _addPhoto,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            color: Colors.white.withValues(alpha: 0.72),
-            border: Border.all(color: const Color(0xFF2EA8FF).withValues(alpha: 0.15)),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2EA8FF).withValues(alpha: 0.10),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.add_a_photo_outlined,
-                    color: Color(0xFF2EA8FF),
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Agregar foto',
-                  style: TextStyle(
-                    color: Color(0xFF0F172A),
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );
@@ -521,7 +496,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
                     gradient: LinearGradient(
                       colors: [
                         Colors.transparent,
-                        Colors.black.withValues(alpha: 0.10),
+                        Colors.white.withValues(alpha: 0.08),
                       ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -594,6 +569,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
     required List<GroupPhotoModel> photos,
     required String? currentUserId,
     required bool canDeleteAnyPhoto,
+    bool showDeleteControls = true,
   }) {
     if (photos.isEmpty) {
       return AspectRatio(
@@ -614,7 +590,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
           child: _buildCoverTile(
             context: context,
             photo: leadPhoto,
-            showControls: leadCanDelete,
+            showControls: showDeleteControls && leadCanDelete,
             showEmoji: true,
           ),
         ),
@@ -636,13 +612,152 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
               return _buildCoverTile(
                 context: context,
                 photo: photo,
-                showControls: canDeletePhoto,
+                showControls: showDeleteControls && canDeletePhoto,
                 showEmoji: true,
               );
             },
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildShareCoverCollage({
+    required BuildContext context,
+    required List<GroupPhotoModel> photos,
+  }) {
+    Widget wrapWhite(Widget child) => ColoredBox(color: Colors.white, child: child);
+
+    if (photos.isEmpty) {
+      return wrapWhite(
+        AspectRatio(
+          aspectRatio: 1.0,
+          child: _buildEmptyGalleryState(context),
+        ),
+      );
+    }
+
+    final visiblePhotos = photos.toList();
+
+    if (visiblePhotos.length == 1) {
+      return wrapWhite(
+        AspectRatio(
+          aspectRatio: 1.0,
+          child: _buildCoverTile(
+            context: context,
+            photo: visiblePhotos.first,
+            showControls: false,
+            showEmoji: true,
+          ),
+        ),
+      );
+    }
+
+    if (visiblePhotos.length == 2) {
+      return wrapWhite(
+        AspectRatio(
+          aspectRatio: 0.52,
+          child: Column(
+            children: [
+              Expanded(
+                child: _buildCoverTile(
+                  context: context,
+                  photo: visiblePhotos[0],
+                  showControls: false,
+                  showEmoji: true,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: _buildCoverTile(
+                  context: context,
+                  photo: visiblePhotos[1],
+                  showControls: false,
+                  showEmoji: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (visiblePhotos.length == 3) {
+      return wrapWhite(
+        AspectRatio(
+          aspectRatio: 1.0,
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: _buildCoverTile(
+                        context: context,
+                        photo: visiblePhotos[0],
+                        showControls: false,
+                        showEmoji: true,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Expanded(
+                      child: _buildCoverTile(
+                        context: context,
+                        photo: visiblePhotos[1],
+                        showControls: false,
+                        showEmoji: true,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildCoverTile(
+                  context: context,
+                  photo: visiblePhotos[2],
+                  showControls: false,
+                  showEmoji: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return wrapWhite(
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final columns = width >= 720
+              ? 4
+              : width >= 520
+                  ? 3
+                  : 2;
+
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: visiblePhotos.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 1,
+            ),
+            itemBuilder: (context, index) {
+              final photo = visiblePhotos[index];
+              return _buildCoverTile(
+                context: context,
+                photo: photo,
+                showControls: false,
+                showEmoji: true,
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -744,12 +859,17 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
                     if (visiblePhotos.isNotEmpty) const SizedBox(height: 12),
                     RepaintBoundary(
                       key: _coverKey,
-                      child: _buildCollage(
-                        context: context,
-                        photos: visiblePhotos,
-                        currentUserId: currentUserId,
-                        canDeleteAnyPhoto: canDeleteAnyPhoto,
-                      ),
+                      child: _isPreparingShare
+                          ? _buildShareCoverCollage(
+                              context: context,
+                              photos: visiblePhotos,
+                            )
+                          : _buildCollage(
+                              context: context,
+                              photos: visiblePhotos,
+                              currentUserId: currentUserId,
+                              canDeleteAnyPhoto: canDeleteAnyPhoto,
+                            ),
                     ),
                   ],
                 ),
@@ -771,7 +891,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(28),
             child: Container(
-              color: const Color(0xFFF6F9FC),
+              color: Colors.white,
               child: AspectRatio(
                 aspectRatio: 0.9,
                 child: InteractiveViewer(
