@@ -31,9 +31,10 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
   late final Future<InviteLinks> _inviteLinksFuture;
   late final Future<GroupModel> _groupFuture;
   final GlobalKey _coverKey = GlobalKey();
-  bool _isPreparingShare = false;
   final Set<String> _deletingPhotoIds = <String>{};
   final Set<String> _hiddenPhotoIds = <String>{};
+  final List<GroupPhotoModel> _optimisticPhotos = <GroupPhotoModel>[];
+  final Map<String, String> _localPreviewPaths = <String, String>{};
 
   @override
   void initState() {
@@ -58,6 +59,37 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
     });
   }
 
+  List<GroupPhotoModel> _mergePhotos(List<GroupPhotoModel> remotePhotos) {
+    final byId = <String, GroupPhotoModel>{
+      for (final photo in remotePhotos) photo.id: photo,
+    };
+
+    for (final photo in _optimisticPhotos) {
+      byId.putIfAbsent(photo.id, () => photo);
+    }
+
+    final merged = byId.values.toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    return merged;
+  }
+
+  void _registerOptimisticPhoto(
+    GroupPhotoModel photo, {
+    String? localPreviewPath,
+  }) {
+    if (_optimisticPhotos.any((item) => item.id == photo.id)) {
+      return;
+    }
+
+    setState(() {
+      _optimisticPhotos.insert(0, photo);
+      if (localPreviewPath != null && localPreviewPath.trim().isNotEmpty) {
+        _localPreviewPaths[photo.id] = localPreviewPath.trim();
+      }
+    });
+  }
+
   Future<void> _addPhoto() async {
     final picker = ImagePicker();
     final image = await picker.pickImage(
@@ -69,9 +101,9 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
     if (image == null) return;
 
     try {
-      await ref.read(groupsRepositoryProvider).addGroupPhoto(widget.groupId, image);
-      _reloadPhotos();
+      final photo = await ref.read(groupsRepositoryProvider).addGroupPhoto(widget.groupId, image);
       if (!mounted) return;
+      _registerOptimisticPhoto(photo, localPreviewPath: image.path);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Foto agregada al collage')),
       );
@@ -137,68 +169,45 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
     }
   }
 
-  Future<void> _copyInviteLink() async {
-    final links = await _inviteLinksFuture;
-    await Clipboard.setData(ClipboardData(text: links.webLink));
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Link de invitación copiado')),
-    );
-  }
 
-  /// Opens the native Android/iOS share sheet with the HTTPS invite link.
-  Future<void> _shareInviteLink() async {
+
+  Future<void> _shareCover() async {
+    await WidgetsBinding.instance.endOfFrame;
+    final boundary = _coverKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null) return;
+
+    final image = await boundary.toImage(pixelRatio: 3);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    if (byteData == null) return;
+
+    final file = File('${Directory.systemTemp.path}/vibeloop_group_cover_${widget.groupId}.png');
+    await file.writeAsBytes(byteData.buffer.asUint8List());
+
     final links = await _inviteLinksFuture;
     await SharePlus.instance.share(
       ShareParams(
+        files: [XFile(file.path)],
         text: links.webLink,
-        subject: 'Únete a mi grupo en VIBELOOP',
       ),
     );
   }
 
-  Future<void> _shareCover() async {
-    if (!mounted) return;
-    setState(() {
-      _isPreparingShare = true;
-    });
-
-    try {
-      await WidgetsBinding.instance.endOfFrame;
-      final boundary = _coverKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-      if (boundary == null) return;
-
-      final image = await boundary.toImage(pixelRatio: 3);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) return;
-
-      final file = File('${Directory.systemTemp.path}/vibeloop_group_cover_${widget.groupId}.png');
-      await file.writeAsBytes(byteData.buffer.asUint8List());
-
-      final links = await _inviteLinksFuture;
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          text: links.webLink,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isPreparingShare = false;
-        });
-      }
-    }
-  }
-
   Widget _buildPhotoImage(GroupPhotoModel photo) {
     final repository = ref.read(groupsRepositoryProvider);
-    final resolvedUrl = photo.imageUrl.trim().isNotEmpty
-        ? photo.imageUrl.trim()
-        : repository.publicGroupPhotoUrl(photo.storagePath).trim();
+    final localFile = _resolveLocalPreviewFile(_localPreviewPaths[photo.id]);
+    if (localFile != null) {
+      return Image.file(
+        localFile,
+        fit: BoxFit.contain,
+        alignment: Alignment.center,
+        filterQuality: FilterQuality.high,
+        gaplessPlayback: true,
+      );
+    }
+
     return ColoredBox(
       color: const Color(0xFFF6F9FC),
-      child: FutureBuilder<Uint8List?>(
+      child: FutureBuilder<Uint8List?>( 
         future: repository.resolveGroupPhotoBytes(photo.storagePath),
         builder: (context, snapshot) {
           final bytes = snapshot.data;
@@ -212,31 +221,84 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
             );
           }
 
-          final uri = Uri.tryParse(resolvedUrl);
-          if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
-            return Image.network(
-              resolvedUrl,
-              fit: BoxFit.contain,
-              alignment: Alignment.center,
-              filterQuality: FilterQuality.high,
-              gaplessPlayback: true,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return const Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                );
-              },
-              errorBuilder: (context, error, stackTrace) => _buildPhotoPlaceholder(),
-            );
-          }
-
-          return _buildPhotoPlaceholder();
+          return FutureBuilder<String?>(
+            future: repository.resolveGroupPhotoSignedUrl(photo.storagePath),
+            builder: (context, urlSnapshot) {
+              final resolvedUrl = _resolveRemotePhotoUrl(photo.imageUrl, urlSnapshot.data);
+              return _buildNetworkPhoto(resolvedUrl);
+            },
+          );
         },
       ),
+    );
+  }
+
+  File? _resolveLocalPreviewFile(String? path) {
+    final trimmed = path?.trim() ?? '';
+    if (trimmed.isEmpty) return null;
+
+    final directFile = File(trimmed);
+    if (directFile.existsSync()) {
+      return directFile;
+    }
+
+    if (trimmed.startsWith('file://')) {
+      try {
+        final uri = Uri.parse(trimmed);
+        final fileFromUri = File(uri.toFilePath());
+        if (fileFromUri.existsSync()) {
+          return fileFromUri;
+        }
+      } catch (_) {
+        return null;
+      }
+    }
+
+    return null;
+  }
+
+  String? _resolveRemotePhotoUrl(String storedUrl, String? signedUrl) {
+    final trimmedStoredUrl = storedUrl.trim();
+    if (_isHttpUrl(trimmedStoredUrl)) {
+      return trimmedStoredUrl;
+    }
+
+    final trimmedSignedUrl = signedUrl?.trim() ?? '';
+    if (_isHttpUrl(trimmedSignedUrl)) {
+      return trimmedSignedUrl;
+    }
+
+    return null;
+  }
+
+  bool _isHttpUrl(String value) {
+    final uri = Uri.tryParse(value);
+    return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
+  }
+
+  Widget _buildNetworkPhoto(String? resolvedUrl) {
+    final url = resolvedUrl?.trim() ?? '';
+    if (!_isHttpUrl(url)) {
+      return _buildPhotoPlaceholder();
+    }
+
+    return Image.network(
+      url,
+      fit: BoxFit.contain,
+      alignment: Alignment.center,
+      filterQuality: FilterQuality.high,
+      gaplessPlayback: true,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return const Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) => _buildPhotoPlaceholder(),
     );
   }
 
@@ -253,49 +315,57 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
     );
   }
 
-  Widget _buildCoverTile({
-    required BuildContext context,
-    required GroupPhotoModel? photo,
-    required bool showControls,
-    required bool showEmoji,
-  }) {
-    if (photo == null) {
-      return Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: _addPhoto,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              color: Colors.white.withValues(alpha: 0.72),
-              border: Border.all(color: const Color(0xFF2EA8FF).withValues(alpha: 0.10)),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
+  Widget _buildAddPhotoTile(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: _addPhoto,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            color: Colors.white.withValues(alpha: 0.72),
+            border: Border.all(color: const Color(0xFF2EA8FF).withValues(alpha: 0.15)),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2EA8FF).withValues(alpha: 0.10),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
                     Icons.add_a_photo_outlined,
-                    color: const Color(0xFF2EA8FF).withValues(alpha: 0.82),
-                    size: 30,
+                    color: Color(0xFF2EA8FF),
+                    size: 28,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Agrega una foto',
-                    style: TextStyle(
-                      color: const Color(0xFF0F172A).withValues(alpha: 0.70),
-                      fontWeight: FontWeight.w700,
-                    ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Agregar foto',
+                  style: TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
+  Widget _buildCoverTile({
+    required BuildContext context,
+    required GroupPhotoModel photo,
+    required bool showControls,
+    required bool showEmoji,
+  }) {
     final deleting = _deletingPhotoIds.contains(photo.id);
     return Material(
       color: Colors.transparent,
@@ -388,45 +458,27 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
     required String? currentUserId,
     required bool canDeleteAnyPhoto,
   }) {
-    if (photos.isEmpty) {
-      return AspectRatio(
-        aspectRatio: 1.06,
-        child: _buildCoverTile(context: context, photo: null, showControls: false, showEmoji: !_isPreparingShare),
-      );
-    }
-
-    if (photos.length == 1) {
-      final photo = photos.first;
-      final canDeletePhoto = currentUserId != null && (photo.uploadedBy == currentUserId || canDeleteAnyPhoto);
-      return AspectRatio(
-        aspectRatio: 0.84,
-        child: _buildCoverTile(
-          context: context,
-          photo: photo,
-          showControls: !_isPreparingShare && canDeletePhoto,
-          showEmoji: !_isPreparingShare,
-        ),
-      );
-    }
-
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: photos.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: photos.length == 2 ? 1 : 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: photos.length == 2 ? 1.18 : 0.94,
+      itemCount: photos.length + 1,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 0.94,
       ),
       itemBuilder: (context, index) {
-        final photo = photos[index];
+        if (index == 0) {
+          return _buildAddPhotoTile(context);
+        }
+        final photo = photos[index - 1];
         final canDeletePhoto = currentUserId != null && (photo.uploadedBy == currentUserId || canDeleteAnyPhoto);
         return _buildCoverTile(
           context: context,
           photo: photo,
-          showControls: !_isPreparingShare && canDeletePhoto,
-          showEmoji: !_isPreparingShare,
+          showControls: canDeletePhoto,
+          showEmoji: true,
         );
       },
     );
@@ -485,7 +537,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
         ),
         actions: [
           Container(
-            margin: const EdgeInsets.only(right: 8),
+            margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
@@ -503,25 +555,6 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
               icon: VibeSvgIcon(VibeAssetIcons.share, size: 18, color: colorScheme.primary),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.only(right: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 16,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: IconButton(
-              tooltip: 'Agregar foto',
-              onPressed: _addPhoto,
-              icon: VibeSvgIcon(VibeAssetIcons.camera, size: 20, color: colorScheme.primary),
-            ),
-          ),
         ],
       ),
       bottomNavigationBar: const GlassBottomNavigation(child: VibeLoopBannerAd()),
@@ -531,6 +564,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
           final photos = (snapshot.data ?? const <GroupPhotoModel>[])
               .where((photo) => !_hiddenPhotoIds.contains(photo.id))
               .toList();
+          final visiblePhotos = _mergePhotos(photos);
 
           return FutureBuilder<GroupModel>(
             future: _groupFuture,
@@ -539,179 +573,17 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
               final currentUserId = Supabase.instance.client.auth.currentUser?.id;
               final canDeleteAnyPhoto = group != null && currentUserId != null && group.createdBy == currentUserId;
 
-              return FutureBuilder<InviteLinks>(
-                future: _inviteLinksFuture,
-                builder: (context, linksSnapshot) {
-                  final inviteLink = linksSnapshot.data?.webLink;
-
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Fotos del grupo',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF0F172A),
-                                  ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Toca + para sumar nuevas fotos',
-                              style: TextStyle(
-                                color: Colors.black.withValues(alpha: 0.50),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: FilledButton.icon(
-                                onPressed: _addPhoto,
-                                icon: const Icon(Icons.add_a_photo_outlined, size: 18),
-                                label: const Text('Agregar foto'),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: const Color(0xFF2EA8FF),
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: _isPreparingShare ? null : _shareCover,
-                                icon: const Icon(Icons.ios_share_rounded, size: 18),
-                                label: const Text('Compartir portada'),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: const Color(0xFF0F172A),
-                                  side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        RepaintBoundary(
-                          key: _coverKey,
-                          child: _buildCollage(
-                            context: context,
-                            photos: photos,
-                            currentUserId: currentUserId,
-                            canDeleteAnyPhoto: canDeleteAnyPhoto,
-                          ),
-                        ),
-                        if (!_isPreparingShare) ...[
-                          const SizedBox(height: 14),
-                          // ── Invite card ─────────────────────────────────
-                          GlassCard(
-                            borderRadius: 22,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      width: 36,
-                                      height: 36,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF2EA8FF).withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: const Center(
-                                        child: VibeSvgIcon(
-                                          VibeAssetIcons.share,
-                                          size: 18,
-                                          color: Color(0xFF2EA8FF),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'Invitar al grupo',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w800,
-                                              fontSize: 14,
-                                              color: Color(0xFF0F172A),
-                                            ),
-                                          ),
-                                          Text(
-                                            inviteLink ?? 'Generando link...',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              fontSize: 11,
-                                              color: Color(0xFF64748B),
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: FilledButton.icon(
-                                        onPressed: inviteLink == null ? null : _shareInviteLink,
-                                        icon: const Icon(Icons.ios_share_rounded, size: 18),
-                                        label: const Text('Invitar'),
-                                        style: FilledButton.styleFrom(
-                                          backgroundColor: const Color(0xFF2EA8FF),
-                                          foregroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(vertical: 12),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    OutlinedButton.icon(
-                                      onPressed: inviteLink == null ? null : _copyInviteLink,
-                                      icon: const Icon(Icons.copy_rounded, size: 16),
-                                      label: const Text('Copiar'),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: const Color(0xFF0F172A),
-                                        side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  );
-                },
+              return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                child: RepaintBoundary(
+                  key: _coverKey,
+                  child: _buildCollage(
+                    context: context,
+                    photos: visiblePhotos,
+                    currentUserId: currentUserId,
+                    canDeleteAnyPhoto: canDeleteAnyPhoto,
+                  ),
+                ),
               );
             },
           );
