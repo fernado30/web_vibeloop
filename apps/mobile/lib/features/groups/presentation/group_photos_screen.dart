@@ -360,6 +360,143 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
     );
   }
 
+  Widget _buildEmptyGalleryState(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(28),
+        onTap: _addPhoto,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            gradient: LinearGradient(
+              colors: [
+                const Color(0xFF2EA8FF).withValues(alpha: 0.10),
+                Colors.white.withValues(alpha: 0.90),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            border: Border.all(color: const Color(0xFF2EA8FF).withValues(alpha: 0.14)),
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 240),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2EA8FF).withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.add_a_photo_outlined,
+                      size: 36,
+                      color: Color(0xFF2EA8FF),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Aún no hay fotos',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Toca para agregar la primera foto del grupo',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.black.withValues(alpha: 0.55),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  FilledButton.icon(
+                    onPressed: _addPhoto,
+                    icon: const Icon(Icons.add_a_photo_outlined, size: 18),
+                    label: const Text('Agregar foto'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF2EA8FF),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGalleryActionBar(BuildContext context, {required bool showAddButton}) {
+    if (!showAddButton) {
+      return const SizedBox.shrink();
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: _addPhoto,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            color: Colors.white.withValues(alpha: 0.74),
+            border: Border.all(color: const Color(0xFF2EA8FF).withValues(alpha: 0.10)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2EA8FF).withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.add_a_photo_outlined,
+                  size: 18,
+                  color: Color(0xFF2EA8FF),
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Agregar foto',
+                  style: TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: Colors.black.withValues(alpha: 0.38),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCoverTile({
     required BuildContext context,
     required GroupPhotoModel photo,
@@ -458,29 +595,54 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
     required String? currentUserId,
     required bool canDeleteAnyPhoto,
   }) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: photos.length + 1,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.94,
-      ),
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return _buildAddPhotoTile(context);
-        }
-        final photo = photos[index - 1];
-        final canDeletePhoto = currentUserId != null && (photo.uploadedBy == currentUserId || canDeleteAnyPhoto);
-        return _buildCoverTile(
-          context: context,
-          photo: photo,
-          showControls: canDeletePhoto,
-          showEmoji: true,
-        );
-      },
+    if (photos.isEmpty) {
+      return AspectRatio(
+        aspectRatio: 1.05,
+        child: _buildEmptyGalleryState(context),
+      );
+    }
+
+    final leadPhoto = photos.first;
+    final leadCanDelete = currentUserId != null && (leadPhoto.uploadedBy == currentUserId || canDeleteAnyPhoto);
+    final remainingPhotos = photos.skip(1).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AspectRatio(
+          aspectRatio: 1.08,
+          child: _buildCoverTile(
+            context: context,
+            photo: leadPhoto,
+            showControls: leadCanDelete,
+            showEmoji: true,
+          ),
+        ),
+        if (remainingPhotos.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: remainingPhotos.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 0.96,
+            ),
+            itemBuilder: (context, index) {
+              final photo = remainingPhotos[index];
+              final canDeletePhoto = currentUserId != null && (photo.uploadedBy == currentUserId || canDeleteAnyPhoto);
+              return _buildCoverTile(
+                context: context,
+                photo: photo,
+                showControls: canDeletePhoto,
+                showEmoji: true,
+              );
+            },
+          ),
+        ],
+      ],
     );
   }
 
@@ -575,14 +737,21 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                child: RepaintBoundary(
-                  key: _coverKey,
-                  child: _buildCollage(
-                    context: context,
-                    photos: visiblePhotos,
-                    currentUserId: currentUserId,
-                    canDeleteAnyPhoto: canDeleteAnyPhoto,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildGalleryActionBar(context, showAddButton: visiblePhotos.isNotEmpty),
+                    if (visiblePhotos.isNotEmpty) const SizedBox(height: 12),
+                    RepaintBoundary(
+                      key: _coverKey,
+                      child: _buildCollage(
+                        context: context,
+                        photos: visiblePhotos,
+                        currentUserId: currentUserId,
+                        canDeleteAnyPhoto: canDeleteAnyPhoto,
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
