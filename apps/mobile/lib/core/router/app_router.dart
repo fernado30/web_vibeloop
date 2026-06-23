@@ -25,14 +25,20 @@ import '../../features/groups/presentation/groups_list_screen.dart';
 import '../../features/groups/presentation/group_photos_screen.dart';
 import '../../features/anonymous/presentation/anonymous_inbox_screen.dart';
 import '../../features/stitch/presentation/stitch_design_screen.dart';
+import '../theme/vibe_tokens.dart';
+import '../widgets/vibe_ui.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
   final authRepo = ref.watch(authRepositoryProvider);
 
   return GoRouter(
-    initialLocation: StitchDesignScreen.routeName,
+    initialLocation: '/splash',
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(
         path: StitchDesignScreen.routeName,
         builder: (context, state) => const StitchDesignScreen(),
@@ -172,13 +178,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isInviteFlow = state.matchedLocation.startsWith('/invite/') || state.matchedLocation.startsWith('/join/');
       final isAuthCallback = state.matchedLocation == '/auth-callback';
       final isWelcome = state.matchedLocation == StitchDesignScreen.routeName;
+      final isSplash = state.matchedLocation == '/splash';
 
       if (!isAuthed && isProtectedRoute) {
         return '/login';
       }
 
-      if (!preferences.onboardingSeen && !isWelcome && !isInviteFlow && !isAuthCallback) {
-        return StitchDesignScreen.routeName;
+      if (!preferences.onboardingSeen) {
+        if (!isWelcome && !isInviteFlow && !isAuthCallback) {
+          return StitchDesignScreen.routeName;
+        }
+      } else {
+        if (isWelcome || isSplash) {
+          return '/groups';
+        }
       }
 
       if (state.matchedLocation.startsWith('/groups/create') && (isAnonymous || !isAuthed)) {
@@ -190,8 +203,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       return null;
-  },
-);
+    },
+  );
 });
 
 class _AuthCallbackScreen extends StatelessWidget {
@@ -201,6 +214,39 @@ class _AuthCallbackScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       body: SizedBox.shrink(),
+    );
+  }
+}
+
+class SplashScreen extends StatelessWidget {
+  const SplashScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: VibeBackdrop(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'VIBELOOP',
+                style: TextStyle(
+                  fontSize: 34,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const CircularProgressIndicator(
+                color: VibeColors.primaryViolet,
+                strokeWidth: 3,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
