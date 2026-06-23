@@ -48,3 +48,4 @@ flutter:
     - assets/web.env
     - assets/icons/
     - assets/stitch/
+    - assets/legal/

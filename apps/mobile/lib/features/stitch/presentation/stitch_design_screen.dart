@@ -35,6 +35,14 @@ class _StitchDesignScreenState extends ConsumerState<StitchDesignScreen> {
           final action = message.message.trim();
           if (action == 'continue' || action == 'explore') {
             await _continue();
+          } else if (action == 'privacy') {
+            if (mounted) {
+              context.push('/groups/settings/privacy-policy');
+            }
+          } else if (action == 'terms') {
+            if (mounted) {
+              context.push('/groups/settings/terms-of-use');
+            }
           }
         },
       )

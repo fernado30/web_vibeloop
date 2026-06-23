@@ -1,147 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../../core/widgets/vibe_ui.dart';
 
-class TermsOfUseScreen extends StatelessWidget {
+class TermsOfUseScreen extends StatefulWidget {
   const TermsOfUseScreen({super.key});
 
-  static const String _termsText = '''
-Términos de uso de VIBELOOP
-Última actualización: 28 de mayo de 2026
+  @override
+  State<TermsOfUseScreen> createState() => _TermsOfUseScreenState();
+}
 
-1. Aceptación
-Al usar VIBELOOP, aceptas estos términos y te comprometes a utilizar la app de forma responsable, legal y respetuosa.
+class _TermsOfUseScreenState extends State<TermsOfUseScreen> {
+  late final WebViewController _controller;
+  bool _loaded = false;
 
-2. Descripción del servicio
-VIBELOOP es una app social para crear grupos, participar en chats, compartir fotos del grupo, reaccionar a mensajes, usar el buzón anónimo y unirte a grupos mediante enlaces de invitación.
-
-3. Cuenta y acceso
-Para usar la app puedes crear una cuenta o entrar como invitado en grupos permitidos por enlace. Eres responsable de mantener la confidencialidad de tu acceso y de la información asociada a tu cuenta o sesión.
-
-4. Uso permitido
-Aceptas no usar VIBELOOP para:
-- enviar spam, fraude o contenido malicioso;
-- acosar, amenazar o vulnerar a otros usuarios;
-- publicar contenido ilegal, sexualmente explícito, violento o que infrinja derechos de terceros;
-- intentar acceder sin autorización a cuentas, grupos, enlaces o funciones internas;
-- interferir con la estabilidad, seguridad o disponibilidad de la app.
-
-5. Contenido generado por el usuario
-Eres responsable del contenido que publicas, incluyendo mensajes, fotos, nombres de grupos, descripciones, reacciones y mensajes anónimos. Debes asegurarte de tener derechos para compartir dicho contenido.
-
-VIBELOOP puede conservar, mostrar, moderar, limitar o eliminar contenido cuando sea necesario para cumplir estos términos, la ley, requisitos de seguridad o reglas de la plataforma.
-
-6. Grupos, invitaciones y acceso como invitado
-Los enlaces de invitación y accesos invitados están destinados a facilitar la participación dentro de un grupo. No debes compartirlos de forma abusiva ni utilizarlos para evadir restricciones, seguridad o moderación.
-
-7. Fotos del grupo y almacenamiento
-Las fotos del grupo se almacenan y muestran dentro de la app para los miembros autorizados o para quienes tengan acceso válido según la función utilizada. El usuario que sube contenido confirma que cuenta con los derechos y permisos necesarios para hacerlo.
-
-8. Buzón anónimo
-El buzón anónimo está diseñado para permitir mensajes sin mostrar públicamente la identidad del remitente dentro del flujo previsto por la app. Su uso indebido puede resultar en restricciones de cuenta o eliminación de contenido.
-
-9. Anuncios y servicios de terceros
-VIBELOOP puede utilizar servicios de terceros como Supabase y Google AdMob para operar la app y monetizarla de forma controlada. Esos servicios pueden procesar datos técnicos o de uso según sus propias políticas.
-
-10. Suspensión y eliminación
-Podemos limitar, suspender o terminar el acceso si detectamos abuso, fraude, incumplimiento de estos términos o actividad que comprometa la seguridad de otros usuarios o de la plataforma.
-
-11. Cambios al servicio
-Podemos agregar, modificar o retirar funciones para mejorar la experiencia, cumplir requisitos legales o mantener la seguridad y estabilidad de la app.
-
-12. Limitación de responsabilidad
-La app se ofrece en su estado actual y, en la medida permitida por la ley, no garantizamos que estará libre de errores, interrupciones o fallos. Hacemos esfuerzos razonables para mantenerla operativa y segura.
-
-13. Contacto
-Si tienes preguntas sobre estos términos, contáctanos en soporte@vibeloop.app o en el canal oficial de soporte que utilicemos en producción.
-''';
+  @override
+  void initState() {
+    super.initState();
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(const Color(0x00000000))
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (_) {
+            if (mounted) {
+              setState(() => _loaded = true);
+            }
+          },
+        ),
+      )
+      ..loadFlutterAsset('assets/legal/terms.html');
+  }
 
   @override
   Widget build(BuildContext context) {
     return VibeScaffold(
       appBar: AppBar(
         title: const Text('Terminos de uso'),
-        actions: [
-          IconButton(
-            tooltip: 'Copiar',
-            icon: const Icon(Icons.copy_rounded),
-            onPressed: () async {
-              await Clipboard.setData(const ClipboardData(text: _termsText));
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Terminos copiados al portapapeles')),
-              );
-            },
-          ),
-        ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        children: const [
-          SectionIntroCard(
-            title: 'Marco de uso y convivencia',
-            body: 'Estos términos están redactados para reflejar el uso real de VIBELOOP. Antes de publicarlos, conviene revisarlos con asesoría legal.',
-            badge: SafetyBadge(label: 'Condiciones'),
-          ),
-          SizedBox(height: 16),
-          _PolicySection(
-            title: 'Resumen',
-            body: 'VIBELOOP es una app social para grupos, chat, fotos, reacciones, invitaciones y buzón anónimo. El uso indebido, abusivo o ilegal puede terminar en restricciones o suspensión de acceso.',
-          ),
-          _PolicySection(
-            title: 'Uso permitido',
-            body: 'Debes usar la app de manera legal y respetuosa. No se permite spam, fraude, acoso, contenido ilegal, intentos de acceso no autorizado ni acciones que comprometan la seguridad o estabilidad del servicio.',
-          ),
-          _PolicySection(
-            title: 'Contenido y responsabilidad',
-            body: 'Eres responsable del contenido que publicas. Debes tener derechos para compartir textos, fotos, nombres, descripciones y otros materiales dentro de grupos o mensajes anónimos.',
-          ),
-          _PolicySection(
-            title: 'Servicios de terceros',
-            body: 'La app puede usar Supabase para autenticación, base de datos, almacenamiento y tiempo real, y Google AdMob para anuncios cuando la monetización esté activa.',
-          ),
-          _PolicySection(
-            title: 'Texto completo',
-            body: _termsText,
-            monospace: true,
-          ),
+      body: Stack(
+        children: [
+          WebViewWidget(controller: _controller),
+          if (!_loaded)
+            const Center(
+              child: CircularProgressIndicator(),
+            ),
         ],
       ),
     );
   }
 }
 
-class _PolicySection extends StatelessWidget {
-  const _PolicySection({
-    required this.title,
-    required this.body,
-    this.monospace = false,
-  });
-
-  final String title;
-  final String body;
-  final bool monospace;
-
-  @override
-  Widget build(BuildContext context) {
-    final textStyle = monospace
-        ? const TextStyle(fontFamily: 'monospace', height: 1.45)
-        : Theme.of(context).textTheme.bodyMedium;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: GlassCard(
-        borderRadius: 24,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-            const SizedBox(height: 8),
-            Text(body, style: textStyle),
-          ],
-        ),
-      ),
-    );
-  }
-}
