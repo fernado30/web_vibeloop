@@ -41,25 +41,6 @@ class HelpScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
-          const GradientHeroCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SafetyBadge(label: 'Support', color: Colors.white),
-                SizedBox(height: 14),
-                Text(
-                  'Ayuda clara, sin fricción',
-                  style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Si algo no funciona como esperas, aquí tienes orientación rápida y una vía directa para escribir al equipo.',
-                  style: TextStyle(color: Colors.white70, height: 1.4),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
           const SectionIntroCard(
             title: 'Antes de escribirnos',
             body: 'Revisa si usas la versión más reciente, si tu conexión es estable y si el problema ocurre en un grupo o en toda la app.',

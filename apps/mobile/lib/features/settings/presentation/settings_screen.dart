@@ -1,15 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/vibe_tokens.dart';
 import '../../../core/widgets/vibe_svg_icon.dart';
 import '../../../core/widgets/vibe_ui.dart';
+import '../../auth/data/auth_repository.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
+  static final Uri _privacyUrl = Uri.parse('https://web-vibeloop-legal.vercel.app/privacy');
+  static final Uri _termsUrl = Uri.parse('https://web-vibeloop-legal.vercel.app/terms');
+
+  Future<void> _openExternalLink(BuildContext context, Uri url, String errorMessage) async {
+    final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
+    if (!launched && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateProvider);
+    final user = authState.maybeWhen(authenticated: (user) => user, orElse: () => null);
+    final isUnregistered = user == null || user.isAnonymous;
+
     final surface = Theme.of(context).colorScheme.surface;
     final text = Theme.of(context).colorScheme.onSurface;
 
@@ -127,22 +146,31 @@ class SettingsScreen extends StatelessWidget {
                 iconAsset: VibeAssetIcons.settings,
                 title: 'Términos de uso',
                 subtitle: 'Condiciones y límites del servicio',
-                onTap: () => context.push('/groups/settings/terms-of-use'),
+                onTap: () => _openExternalLink(
+                  context,
+                  _termsUrl,
+                  'No se pudieron abrir los términos de uso.',
+                ),
               ),
               _SettingsRow(
                 iconAsset: VibeAssetIcons.shield,
                 title: 'Política de privacidad',
                 subtitle: 'Cómo usamos y protegemos tus datos',
-                onTap: () => context.push('/groups/settings/privacy-policy'),
+                onTap: () => _openExternalLink(
+                  context,
+                  _privacyUrl,
+                  'No se pudo abrir la política de privacidad.',
+                ),
               ),
-              _SettingsRow(
-                iconAsset: VibeAssetIcons.blocked,
-                title: 'Eliminar cuenta',
-                subtitle: 'Salida definitiva y segura',
-                titleColor: VibeColors.dangerRed,
-                iconColor: VibeColors.dangerRed,
-                onTap: () => context.push('/groups/settings/delete-account'),
-              ),
+              if (!isUnregistered)
+                _SettingsRow(
+                  iconAsset: VibeAssetIcons.blocked,
+                  title: 'Eliminar cuenta',
+                  subtitle: 'Salida definitiva y segura',
+                  titleColor: VibeColors.dangerRed,
+                  iconColor: VibeColors.dangerRed,
+                  onTap: () => context.push('/groups/settings/delete-account'),
+                ),
             ],
           ),
         ],

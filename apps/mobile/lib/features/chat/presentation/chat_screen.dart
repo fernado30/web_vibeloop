@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 
 import 'dart:ui';
@@ -799,17 +799,46 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       key: _screenshotKey,
       child: VibeScaffold(
         appBar: AppBar(
-          leading: Padding(
-            padding: const EdgeInsets.only(left: 4),
-            child: Material(
-              color: Colors.white,
-              shape: const CircleBorder(),
-              child: IconButton(
-                tooltip: 'Volver',
-                onPressed: () => context.pop(),
-                icon: VibeSvgIcon(VibeAssetIcons.arrowBack, size: 18, color: colorScheme.onSurface),
-              ),
-            ),
+          leading: Builder(
+            builder: (context) {
+              final isDark = Theme.of(context).brightness == Brightness.dark;
+              final btnBg = isDark
+                  ? const Color(0xFF1E2D45)       // navy oscuro — integrado con el fondo
+                  : Colors.white;
+              final btnBorder = isDark
+                  ? const Color(0xFF3A4D6A)       // borde sutil visible
+                  : Colors.transparent;
+              return Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Material(
+                  color: Colors.transparent,
+                  shape: const CircleBorder(),
+                  child: Ink(
+                    decoration: BoxDecoration(
+                      color: btnBg,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: btnBorder, width: 1),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      tooltip: 'Volver',
+                      onPressed: () => context.pop(),
+                      icon: VibeSvgIcon(
+                        VibeAssetIcons.arrowBack,
+                        size: 18,
+                        color: isDark ? const Color(0xFFCBD5E1) : colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
           leadingWidth: 48,
           titleSpacing: 4,

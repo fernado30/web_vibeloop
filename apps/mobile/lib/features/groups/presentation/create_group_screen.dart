@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/ads/ad_service.dart';
 import '../../../core/theme/vibe_tokens.dart';
-import '../../../core/widgets/vibe_ui.dart';
 import '../data/groups_repository.dart';
 
 class CreateGroupScreen extends ConsumerStatefulWidget {
@@ -93,25 +92,35 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Réplica fiel del HTML/CSS proporcionado
-    final primaryGradient = const LinearGradient(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final mediaQuery = MediaQuery.of(context);
+    const primaryGradient = LinearGradient(
       colors: [Color(0xFF7D01B1), Color(0xFF3E90FF)],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
     );
 
+    final scaffoldBackground = isDark ? VibeColors.darkSurface : const Color(0xFFFCF8FB);
+    final topBarBackground = isDark ? VibeColors.darkSurfaceSoft.withValues(alpha: 0.92) : Colors.white.withValues(alpha: 0.0);
+    final cardBackground = isDark ? VibeColors.darkSurfaceSoft.withValues(alpha: 0.96) : Colors.white.withValues(alpha: 0.4);
+    final cardBorder = isDark ? VibeColors.darkStroke : Colors.black.withValues(alpha: 0.05);
+    final titleColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF111827);
+    final bodyColor = isDark ? const Color(0xFFD3DBEB) : const Color(0xFF667085);
+    final labelColor = isDark ? const Color(0xFFB8C4E0) : const Color(0xFF667085);
+    final accentColor = isDark ? const Color(0xFFBFD3FF) : const Color(0xFF005AB3);
+    final inputHintColor = isDark ? const Color(0xFF8894AC) : const Color(0xFF98A2B3);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFCF8FB),
+      backgroundColor: scaffoldBackground,
       body: SafeArea(
         child: Column(
           children: [
-            // Top navigation bar
             Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.0),
-                border: Border(bottom: BorderSide(color: Colors.black.withOpacity(0.05))),
+                color: topBarBackground,
+                border: Border(bottom: BorderSide(color: cardBorder)),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -123,90 +132,123 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                       height: 40,
                       decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
                       alignment: Alignment.center,
-                      child: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF005AB3)),
+                      child: Icon(Icons.arrow_back_ios_new, color: accentColor),
                     ),
                   ),
-                  const Text('Crea tu grupo', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                  Text(
+                    'Crea tu grupo',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: titleColor),
+                  ),
                   const SizedBox(width: 40),
                 ],
               ),
             ),
-            // Content
             Expanded(
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 640),
                   child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    padding: EdgeInsets.fromLTRB(16, 20, 16, 24 + mediaQuery.padding.bottom),
                     children: [
-                      // Step indicator
                       Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFEEF2FF),
+                              color: isDark ? const Color(0xFF1A2240) : const Color(0xFFEEF2FF),
                               borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: Colors.black.withOpacity(0.05)),
+                              border: Border.all(color: cardBorder),
                             ),
-                            child: const Text('Paso 1', style: TextStyle(color: Color(0xFF005AB3), fontSize: 13, fontWeight: FontWeight.w600)),
+                            child: Text(
+                              'Paso 1',
+                              style: TextStyle(color: accentColor, fontSize: 13, fontWeight: FontWeight.w600),
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 18),
-
-                      // Header
-                      const Text('CREA TU GRUPO', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700)),
+                      Text(
+                        'CREA TU GRUPO',
+                        style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: titleColor),
+                      ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Personaliza tu espacio. Elige un nombre que resuene y una imagen que capture la esencia de tu comunidad.',
-                        style: TextStyle(color: Color(0xFF667085), fontSize: 15),
+                        style: TextStyle(color: bodyColor, fontSize: 15),
                       ),
                       const SizedBox(height: 18),
-
-                      // Inputs
+                      if (_error != null) ...[
+                        Text(
+                          _error!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                       Form(
                         key: _formKey,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // Name
                             Container(
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.4),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.black.withOpacity(0.05)),
+                                color: cardBackground,
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(color: cardBorder),
                               ),
                               padding: const EdgeInsets.all(16),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('NOMBRE DEL GRUPO', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF667085))),
+                                  Text(
+                                    'NOMBRE DEL GRUPO',
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: labelColor),
+                                  ),
                                   TextFormField(
                                     controller: _nameController,
-                                    decoration: const InputDecoration(border: InputBorder.none, hintText: 'Ej: Amigos de la Montaña'),
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: 'Ej: Amigos de la Montaña',
+                                      hintStyle: TextStyle(color: inputHintColor),
+                                    ),
+                                    style: TextStyle(color: titleColor),
                                     validator: (value) => (value ?? '').trim().isEmpty ? 'Escribe un nombre' : null,
                                   ),
                                 ],
                               ),
                             ),
                             const SizedBox(height: 12),
-                            // Description
                             Container(
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.4),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.black.withOpacity(0.05)),
+                                color: cardBackground,
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(color: cardBorder),
                               ),
                               padding: const EdgeInsets.all(16),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('DESCRIPCIÓN', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF667085))),
+                                  Text(
+                                    'DESCRIPCIÓN',
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: labelColor),
+                                  ),
                                   TextFormField(
                                     controller: _descriptionController,
-                                    decoration: const InputDecoration(border: InputBorder.none, hintText: '¿De qué trata este grupo? Añade detalles para que los miembros sepan qué esperar.'),
-                                    maxLines: 3,
+                                    keyboardType: TextInputType.multiline,
+                                    minLines: 4,
+                                    maxLines: 6,
+                                    textAlignVertical: TextAlignVertical.top,
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      isDense: true,
+                                      hintText:
+                                          '¿De qué trata este grupo? Añade detalles para que los miembros sepan qué esperar.',
+                                      hintStyle: TextStyle(color: inputHintColor),
+                                    ),
+                                    style: TextStyle(color: titleColor),
                                     validator: (value) => (value ?? '').trim().isEmpty ? 'Escribe una descripcion' : null,
                                   ),
                                 ],
@@ -215,18 +257,21 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                           ],
                         ),
                       ),
-
                       const SizedBox(height: 20),
-                      // Cover suggestion header
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Portada sugerida', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                          TextButton(onPressed: () {}, child: const Text('Ver todas', style: TextStyle(color: Color(0xFF3E90FF)))),
+                          Text(
+                            'Portada sugerida',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor),
+                          ),
+                          TextButton(
+                            onPressed: () {},
+                            child: Text('Ver todas', style: TextStyle(color: accentColor)),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
-
                       SizedBox(
                         height: 200,
                         child: ListView.separated(
@@ -243,14 +288,29 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                                 clipBehavior: Clip.hardEdge,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(24),
-                                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12)],
-                                  border: selected ? Border.all(color: const Color(0xFF7D01B1), width: 2) : Border.all(color: Colors.transparent),
+                                  boxShadow: [
+                                  BoxShadow(
+                                      color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.08),
+                                      blurRadius: 12,
+                                    ),
+                                  ],
+                                  border: selected
+                                      ? Border.all(color: const Color(0xFF7D01B1), width: 2)
+                                      : Border.all(color: Colors.transparent),
                                 ),
                                 child: Stack(
                                   fit: StackFit.expand,
                                   children: [
                                     Image.network(url, fit: BoxFit.cover),
-                                    Container(decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.bottomCenter, end: Alignment.topCenter, colors: [Colors.black54, Colors.transparent]))),
+                                    Container(
+                                      decoration: const BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.bottomCenter,
+                                          end: Alignment.topCenter,
+                                          colors: [Colors.black54, Colors.transparent],
+                                        ),
+                                      ),
+                                    ),
                                     Positioned(
                                       bottom: 12,
                                       left: 12,
@@ -261,7 +321,10 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                                           else
                                             const SizedBox.shrink(),
                                           const SizedBox(width: 6),
-                                          Text(index == 0 ? 'Social' : index == 1 ? 'Creativo' : 'Aventura', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                                          Text(
+                                            index == 0 ? 'Social' : index == 1 ? 'Creativo' : 'Aventura',
+                                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -272,9 +335,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                           },
                         ),
                       ),
-
                       const SizedBox(height: 28),
-                      // CTA
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -287,24 +348,43 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                               elevation: 0,
                             ),
                             child: Container(
-                              decoration: BoxDecoration(gradient: primaryGradient, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: const Color(0xFF7D01B1).withOpacity(0.16), blurRadius: 20, offset: const Offset(0, 10))]),
+                              decoration: BoxDecoration(
+                                gradient: primaryGradient,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF7D01B1).withValues(alpha: 0.16),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                              ),
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              child: Row(
+                              child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text('CREAR GRUPO', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-                                  const SizedBox(width: 8),
-                                  const Icon(Icons.chevron_right, color: Colors.white),
+                                children: <Widget>[
+                                  Text(
+                                    'CREAR GRUPO',
+                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Icon(Icons.chevron_right, color: Colors.white),
                                 ],
                               ),
                             ),
                           ),
                           const SizedBox(height: 12),
-                          const Text('Puedes cambiar estos detalles más adelante en los ajustes del grupo.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF9AA3B2), fontSize: 13)),
+                          Text(
+                            'Puedes cambiar estos detalles más adelante en los ajustes del grupo.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: isDark ? const Color(0xFF93A0B8) : const Color(0xFF9AA3B2),
+                              fontSize: 13,
+                            ),
+                          ),
                         ],
                       ),
-
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24 + mediaQuery.padding.bottom),
                     ],
                   ),
                 ),

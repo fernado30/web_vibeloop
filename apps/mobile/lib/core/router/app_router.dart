@@ -8,8 +8,6 @@ import '../../features/auth/presentation/register_screen.dart';
 import '../../features/chat/presentation/chat_screen.dart';
 import '../settings/app_preferences_repository.dart';
 import '../../features/settings/presentation/settings_screen.dart';
-import '../../features/legal/presentation/privacy_policy_screen.dart';
-import '../../features/legal/presentation/terms_of_use_screen.dart';
 import '../../features/legal/presentation/help_screen.dart';
 import '../../features/legal/presentation/security_resources_screen.dart';
 import '../../features/settings/presentation/hidden_words_screen.dart';
@@ -79,14 +77,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'settings',
             builder: (context, state) => const SettingsScreen(),
             routes: [
-              GoRoute(
-                path: 'privacy-policy',
-                builder: (context, state) => const PrivacyPolicyScreen(),
-              ),
-              GoRoute(
-                path: 'terms-of-use',
-                builder: (context, state) => const TermsOfUseScreen(),
-              ),
               GoRoute(
                 path: 'help',
                 builder: (context, state) => const HelpScreen(),

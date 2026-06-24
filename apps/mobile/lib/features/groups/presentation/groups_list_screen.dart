@@ -1,7 +1,8 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -171,7 +172,7 @@ class _EmptyGroupsViewState extends State<_EmptyGroupsView>
       builder: (context, constraints) {
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+          padding: const EdgeInsets.fromLTRB(20, 48, 20, 24),
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -180,7 +181,9 @@ class _EmptyGroupsViewState extends State<_EmptyGroupsView>
                   'Tus grupos',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: VibeColors.textPrimary,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFFF8FAFC)
+                            : VibeColors.textPrimary,
                       ),
                 ),
                 Row(
@@ -247,7 +250,9 @@ class _EmptyGroupsViewState extends State<_EmptyGroupsView>
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
-                          color: VibeColors.textPrimary,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? const Color(0xFFF8FAFC)
+                              : VibeColors.textPrimary,
                           fontSize: 20,
                         ),
                   ),
@@ -256,7 +261,9 @@ class _EmptyGroupsViewState extends State<_EmptyGroupsView>
                     'Empieza una conversación increíble con las personas que más te importan.',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: VibeColors.textSecondary,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? const Color(0xFFB0BECE)
+                              : VibeColors.textSecondary,
                           fontSize: 14,
                           height: 1.35,
                         ),
@@ -265,62 +272,82 @@ class _EmptyGroupsViewState extends State<_EmptyGroupsView>
               ),
             ),
             const SizedBox(height: 18),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(32),
-                border: Border.all(color: const Color(0xFFF3F4F6)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
+            Builder(
+              builder: (context) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                final bottomInset = MediaQuery.of(context).padding.bottom;
+                return Container(
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? VibeColors.darkSurfaceSoft.withValues(alpha: 0.96)
+                        : Colors.white.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(32),
+                    border: Border.all(
+                      color: isDark
+                          ? VibeColors.darkStroke
+                          : const Color(0xFFF3F4F6),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.04),
+                        blurRadius: 18,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 48,
-                      child: ElevatedButton.icon(
-                        onPressed: widget.onCreateGroup,
-                        icon: const Icon(Icons.add_rounded, size: 20),
-                        label: const Text('Crear grupo'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6366F1),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
+                  padding: EdgeInsets.fromLTRB(16, 18, 16, 18 + bottomInset),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 48,
+                          child: ElevatedButton.icon(
+                            onPressed: widget.onCreateGroup,
+                            icon: const Icon(Icons.add_rounded, size: 20),
+                            label: const Text('Crear grupo'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF6366F1),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
                           ),
-                          textStyle: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: SizedBox(
-                      height: 48,
-                      child: OutlinedButton.icon(
-                        onPressed: widget.onOpenSettings,
-                        icon: const Icon(Icons.settings, size: 20),
-                        label: const Text('Ajustes'),
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF334155),
-                          side: const BorderSide(color: Color(0xFFE5E7EB)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: SizedBox(
+                          height: 48,
+                          child: OutlinedButton.icon(
+                            onPressed: widget.onOpenSettings,
+                            icon: const Icon(Icons.settings, size: 20),
+                            label: const Text('Ajustes'),
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: isDark
+                                  ? VibeColors.darkSurface
+                                  : Colors.white,
+                              foregroundColor: isDark
+                                  ? const Color(0xFFCBD5E1)
+                                  : const Color(0xFF334155),
+                              side: BorderSide(
+                                color: isDark
+                                    ? VibeColors.darkStroke
+                                    : const Color(0xFFE5E7EB),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
                           ),
-                          textStyle: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ],
         );
@@ -389,6 +416,14 @@ class _GroupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark
+        ? const Color(0xFF182033).withValues(alpha: 0.85)
+        : Colors.white.withValues(alpha: 0.72);
+    final cardBorder = isDark
+        ? const Color(0xFF2D3F5C).withValues(alpha: 0.7)
+        : Colors.white.withValues(alpha: 0.55);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -401,12 +436,12 @@ class _GroupCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.42),
+                color: cardBg,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.34)),
+                border: Border.all(color: cardBorder),
                 boxShadow: [
                   BoxShadow(
-                    color: VibeColors.primaryDeepBlue.withValues(alpha: 0.04),
+                    color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.06),
                     blurRadius: 18,
                     offset: const Offset(0, 8),
                   ),
@@ -425,11 +460,11 @@ class _GroupCard extends StatelessWidget {
                           group.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w600,
                             height: 1.15,
-                            color: VibeColors.textPrimary,
+                            color: isDark ? const Color(0xFFF0F4FF) : VibeColors.textPrimary,
                             letterSpacing: -0.2,
                           ),
                         ),
@@ -496,47 +531,69 @@ class _GroupsTopBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFFFCF8FB).withValues(alpha: 0.82),
-            border: Border(
-              bottom: BorderSide(color: const Color(0xFFC0C6D6).withValues(alpha: 0.28)),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scaffoldColor = Theme.of(context).scaffoldBackgroundColor;
+    final titleColor = isDark ? const Color(0xFFF0F4FF) : VibeColors.textPrimary;
+    final borderColor = isDark
+        ? const Color(0xFF3A4560).withValues(alpha: 0.5)
+        : const Color(0xFFC0C6D6).withValues(alpha: 0.28);
+
+    // Hace que la status bar sea transparente y sus iconos se adapten al tema
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: isDark
+          ? SystemUiOverlayStyle.light.copyWith(
+              statusBarColor: Colors.transparent,
+              statusBarBrightness: Brightness.dark,
+              statusBarIconBrightness: Brightness.light,
+            )
+          : SystemUiOverlayStyle.dark.copyWith(
+              statusBarColor: Colors.transparent,
+              statusBarBrightness: Brightness.light,
+              statusBarIconBrightness: Brightness.dark,
             ),
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Tus grupos',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                        color: VibeColors.textPrimary,
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+          child: Container(
+            decoration: BoxDecoration(
+              // Se integra con el fondo del scaffold en lugar de usar blanco fijo
+              color: scaffoldColor.withValues(alpha: isDark ? 0.82 : 0.82),
+              border: Border(
+                bottom: BorderSide(color: borderColor),
+              ),
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Tus grupos',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.3,
+                          color: titleColor,
+                        ),
                       ),
                     ),
-                  ),
-                  _TopCircleButton(
-                    iconAsset: VibeAssetIcons.refresh,
-                    tooltip: 'Actualizar',
-                    onPressed: onRefresh,
-                  ),
-                  const SizedBox(width: 10),
-                  _TopCircleButton(
-                    iconData: Icons.settings_outlined,
-                    tooltip: 'Ajustes',
-                    onPressed: onOpenSettings,
-                  ),
-                ],
+                    _TopCircleButton(
+                      iconAsset: VibeAssetIcons.refresh,
+                      tooltip: 'Actualizar',
+                      onPressed: onRefresh,
+                    ),
+                    const SizedBox(width: 10),
+                    _TopCircleButton(
+                      iconData: Icons.settings_outlined,
+                      tooltip: 'Ajustes',
+                      onPressed: onOpenSettings,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -592,24 +649,38 @@ class _GroupMetaPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final pillBg = isDark
+        ? const Color(0xFF1E2D45).withValues(alpha: 0.9)
+        : const Color(0xFFF0EDEF).withValues(alpha: 0.92);
+    final pillBorder = isDark
+        ? const Color(0xFF3A4D6A)
+        : const Color(0xFFE4E2E4);
+    final textColor = isDark
+        ? const Color(0xFFB8C8E0)
+        : VibeColors.primaryDeepBlue;
+    final iconColor = isDark
+        ? const Color(0xFF9BB0CC)
+        : VibeColors.primaryDeepBlue.withValues(alpha: 0.82);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0EDEF).withValues(alpha: 0.92),
+        color: pillBg,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE4E2E4)),
+        border: Border.all(color: pillBorder),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 15, color: VibeColors.primaryDeepBlue.withValues(alpha: 0.82)),
+            Icon(icon, size: 15, color: iconColor),
             const SizedBox(width: 6),
           ],
           Text(
             label,
-            style: const TextStyle(
-              color: VibeColors.primaryDeepBlue,
+            style: TextStyle(
+              color: textColor,
               fontSize: 13,
               fontWeight: FontWeight.w600,
               height: 1.1,
@@ -667,7 +738,16 @@ class _TopCircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark
+        ? const Color(0xFFCBD5E1)
+        : const Color(0xFF4B5563);
+    final bgColor = isDark
+        ? VibeColors.darkSurfaceSoft.withValues(alpha: 0.85)
+        : const Color(0xFFF0EDEF).withValues(alpha: 0.85);
+    final borderColor = isDark
+        ? VibeColors.darkStroke
+        : const Color(0xFFE4E2E4).withValues(alpha: 0.8);
     return Tooltip(
       message: tooltip,
       child: Material(
@@ -680,14 +760,14 @@ class _TopCircleButton extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFFF0EDEF).withValues(alpha: 0.55),
+              color: bgColor,
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFE4E2E4).withValues(alpha: 0.8)),
+              border: Border.all(color: borderColor),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
+                  color: Colors.black.withValues(alpha: isDark ? 0.24 : 0.06),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
@@ -696,12 +776,12 @@ class _TopCircleButton extends StatelessWidget {
                   ? Icon(
                       iconData,
                       size: 18,
-                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.88),
+                      color: iconColor,
                     )
                   : VibeSvgIcon(
                       iconAsset!,
                       size: 18,
-                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.88),
+                      color: iconColor,
                     ),
             ),
           ),

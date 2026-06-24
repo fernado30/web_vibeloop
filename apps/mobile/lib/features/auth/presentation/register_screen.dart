@@ -85,36 +85,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               constraints: const BoxConstraints(maxWidth: 440),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const GradientHeroCard(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF4B7BFF), Color(0xFF7B4DFF), Color(0xFFFF5CA8)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SafetyBadge(label: 'Nuevo perfil', color: Colors.white),
-                        SizedBox(height: 16),
-                        Text(
-                          'Crea tu espacio con más control',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.w800,
-                            height: 1.05,
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          'Regístrate para crear grupos, compartir portadas y manejar seguridad, apariencia y filtros desde un solo lugar.',
-                          style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                   GlassCard(
                     padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
                     child: Form(

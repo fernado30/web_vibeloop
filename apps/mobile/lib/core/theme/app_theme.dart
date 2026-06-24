@@ -147,22 +147,28 @@ final ThemeData vibeloopDarkTheme = ThemeData(
   brightness: Brightness.dark,
   fontFamily: 'SF Pro Display',
   colorScheme: const ColorScheme.dark(
-    primary: VibeColors.cyan,
-    secondary: VibeColors.primaryViolet,
-    tertiary: VibeColors.coralPink,
-    surface: VibeColors.darkSurface,
-    onPrimary: VibeColors.textPrimary,
+    // Primary: violeta suave — más cómodo que el cian en fondos oscuros
+    primary: Color(0xFF9B8FFF),
+    secondary: Color(0xFFBB86FC),
+    tertiary: Color(0xFFFF7AAB),
+    // Superficies: navy cálido con más contraste entre capas
+    surface: Color(0xFF111827),
+    surfaceContainerHighest: Color(0xFF1E2A3D),
+    onPrimary: Colors.white,
     onSecondary: Colors.white,
     onTertiary: Colors.white,
-    onSurface: Colors.white,
-    onSurfaceVariant: Color(0xFFB5C0D4),
-    outline: VibeColors.darkStroke,
-    error: VibeColors.dangerRed,
+    // Texto: blanco cálido para reducir fatiga visual
+    onSurface: Color(0xFFF0F4FF),
+    onSurfaceVariant: Color(0xFFA8B5CE),
+    outline: Color(0xFF3A4560),
+    outlineVariant: Color(0xFF253047),
+    error: Color(0xFFFF6B6B),
+    onError: Colors.white,
   ),
-  scaffoldBackgroundColor: VibeColors.darkSurface,
+  scaffoldBackgroundColor: const Color(0xFF0C1220),
   appBarTheme: const AppBarTheme(
     backgroundColor: Colors.transparent,
-    foregroundColor: Colors.white,
+    foregroundColor: Color(0xFFF0F4FF),
     elevation: 0,
     centerTitle: true,
     toolbarHeight: 60,
@@ -170,91 +176,102 @@ final ThemeData vibeloopDarkTheme = ThemeData(
     titleTextStyle: TextStyle(
       fontSize: 20,
       fontWeight: FontWeight.w800,
-      color: Colors.white,
+      color: Color(0xFFF0F4FF),
       letterSpacing: -0.3,
     ),
   ),
   cardTheme: CardThemeData(
-    color: VibeColors.darkSurfaceSoft.withValues(alpha: 0.90),
+    color: const Color(0xFF182033),
     elevation: 0,
     margin: EdgeInsets.zero,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(VibeRadii.card),
-      side: const BorderSide(color: VibeColors.darkStroke, width: 1),
+      side: const BorderSide(color: Color(0xFF253047), width: 1),
     ),
   ),
   inputDecorationTheme: InputDecorationTheme(
-    labelStyle: const TextStyle(color: Color(0xFFB5C0D4), fontWeight: FontWeight.w600),
-    hintStyle: const TextStyle(color: Color(0xFFB5C0D4)),
+    labelStyle: const TextStyle(color: Color(0xFF9BA8BF), fontWeight: FontWeight.w600),
+    hintStyle: const TextStyle(color: Color(0xFF6B7A96)),
     filled: true,
-    fillColor: VibeColors.darkSurfaceSoft,
+    // Fill diferenciado del scaffold para que los inputs sean visibles
+    fillColor: const Color(0xFF1A2540),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(22),
       borderSide: BorderSide.none,
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(22),
-      borderSide: const BorderSide(color: VibeColors.darkStroke),
+      borderSide: const BorderSide(color: Color(0xFF3A4560), width: 1),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(22),
-      borderSide: const BorderSide(color: VibeColors.cyan, width: 1.6),
+      borderSide: const BorderSide(color: Color(0xFF9B8FFF), width: 1.8),
     ),
     contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
   ),
   filledButtonTheme: FilledButtonThemeData(
     style: FilledButton.styleFrom(
-      backgroundColor: VibeColors.cyan,
-      foregroundColor: VibeColors.textPrimary,
+      backgroundColor: const Color(0xFF9B8FFF),
+      foregroundColor: Colors.white,
       minimumSize: const Size.fromHeight(56),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(VibeRadii.button)),
     ),
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: VibeColors.cyan,
-      foregroundColor: VibeColors.textPrimary,
+      backgroundColor: const Color(0xFF9B8FFF),
+      foregroundColor: Colors.white,
       minimumSize: const Size.fromHeight(56),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(VibeRadii.button)),
     ),
   ),
   outlinedButtonTheme: OutlinedButtonThemeData(
     style: OutlinedButton.styleFrom(
-      foregroundColor: Colors.white,
-      side: const BorderSide(color: VibeColors.darkStroke, width: 1.2),
+      foregroundColor: const Color(0xFFF0F4FF),
+      side: const BorderSide(color: Color(0xFF3A4560), width: 1.2),
       minimumSize: const Size.fromHeight(56),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(VibeRadii.button)),
     ),
   ),
   textButtonTheme: TextButtonThemeData(
     style: TextButton.styleFrom(
-      foregroundColor: VibeColors.cyan,
+      foregroundColor: const Color(0xFF9B8FFF),
     ),
   ),
   textTheme: vibeloopTheme.textTheme.apply(
-    bodyColor: Colors.white,
-    displayColor: Colors.white,
+    bodyColor: const Color(0xFFF0F4FF),
+    displayColor: const Color(0xFFF0F4FF),
   ),
   chipTheme: ChipThemeData(
-    backgroundColor: VibeColors.darkSurfaceSoft,
-    selectedColor: VibeColors.primaryViolet.withValues(alpha: 0.35),
-    disabledColor: VibeColors.darkSurfaceSoft,
-    labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+    backgroundColor: const Color(0xFF1A2540),
+    selectedColor: const Color(0xFF9B8FFF).withValues(alpha: 0.28),
+    disabledColor: const Color(0xFF182033),
+    labelStyle: const TextStyle(color: Color(0xFFF0F4FF), fontWeight: FontWeight.w600),
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(VibeRadii.pill)),
-    side: const BorderSide(color: VibeColors.darkStroke),
+    side: const BorderSide(color: Color(0xFF3A4560)),
   ),
   bottomSheetTheme: const BottomSheetThemeData(
-    backgroundColor: VibeColors.darkSurfaceSoft,
+    backgroundColor: Color(0xFF182033),
     surfaceTintColor: Colors.transparent,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
     ),
   ),
   snackBarTheme: SnackBarThemeData(
-    backgroundColor: VibeColors.darkSurfaceSoft,
-    contentTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+    backgroundColor: const Color(0xFF1E2A3D),
+    contentTextStyle: const TextStyle(color: Color(0xFFF0F4FF), fontWeight: FontWeight.w600),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     behavior: SnackBarBehavior.floating,
+  ),
+  switchTheme: SwitchThemeData(
+    thumbColor: WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.selected) ? Colors.white : const Color(0xFF6B7A96),
+    ),
+    trackColor: WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.selected)
+          ? const Color(0xFF9B8FFF).withValues(alpha: 0.85)
+          : const Color(0xFF253047),
+    ),
   ),
 );

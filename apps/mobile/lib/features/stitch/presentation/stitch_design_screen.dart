@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../../core/settings/app_preferences_repository.dart';
@@ -36,13 +37,15 @@ class _StitchDesignScreenState extends ConsumerState<StitchDesignScreen> {
           if (action == 'continue' || action == 'explore') {
             await _continue();
           } else if (action == 'privacy') {
-            if (mounted) {
-              context.push('/groups/settings/privacy-policy');
-            }
+            await launchUrl(
+              Uri.parse('https://web-vibeloop-legal-1cu5ygsqc-fernando-s-projects-4ac4887a.vercel.app/'),
+              mode: LaunchMode.externalApplication,
+            );
           } else if (action == 'terms') {
-            if (mounted) {
-              context.push('/groups/settings/terms-of-use');
-            }
+            await launchUrl(
+              Uri.parse('https://web-vibeloop-legal-1cu5ygsqc-fernando-s-projects-4ac4887a.vercel.app/'),
+              mode: LaunchMode.externalApplication,
+            );
           }
         },
       )

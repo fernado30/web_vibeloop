@@ -336,6 +336,18 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
   }
 
   Widget _buildEmptyGalleryState(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgStart = isDark
+        ? const Color(0xFF1A2540).withValues(alpha: 0.90)
+        : const Color(0xFF2EA8FF).withValues(alpha: 0.10);
+    final bgEnd = isDark
+        ? const Color(0xFF111827).withValues(alpha: 0.95)
+        : Colors.white.withValues(alpha: 0.90);
+    final titleColor = isDark ? const Color(0xFFF0F4FF) : const Color(0xFF0F172A);
+    final subtitleColor = isDark
+        ? const Color(0xFF8A9BBD)
+        : Colors.black.withValues(alpha: 0.55);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -345,14 +357,13 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(28),
             gradient: LinearGradient(
-              colors: [
-                const Color(0xFF2EA8FF).withValues(alpha: 0.10),
-                Colors.white.withValues(alpha: 0.90),
-              ],
+              colors: [bgStart, bgEnd],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            border: Border.all(color: const Color(0xFF2EA8FF).withValues(alpha: 0.14)),
+            border: Border.all(
+              color: const Color(0xFF2EA8FF).withValues(alpha: isDark ? 0.22 : 0.14),
+            ),
           ),
           child: Center(
             child: ConstrainedBox(
@@ -364,7 +375,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
                     width: 72,
                     height: 72,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2EA8FF).withValues(alpha: 0.12),
+                      color: const Color(0xFF2EA8FF).withValues(alpha: isDark ? 0.18 : 0.12),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -374,11 +385,11 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'Aún no hay fotos',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Color(0xFF0F172A),
+                      color: titleColor,
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                     ),
@@ -388,7 +399,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
                     'Toca para agregar la primera foto del grupo',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Colors.black.withValues(alpha: 0.55),
+                      color: subtitleColor,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -421,6 +432,18 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
       return const SizedBox.shrink();
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final barBg = isDark
+        ? const Color(0xFF1A2540).withValues(alpha: 0.90)
+        : Colors.white.withValues(alpha: 0.74);
+    final barBorder = isDark
+        ? const Color(0xFF2EA8FF).withValues(alpha: 0.18)
+        : const Color(0xFF2EA8FF).withValues(alpha: 0.10);
+    final labelColor = isDark ? const Color(0xFFF0F4FF) : const Color(0xFF0F172A);
+    final arrowColor = isDark
+        ? const Color(0xFF6B7A96)
+        : Colors.black.withValues(alpha: 0.38);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -431,8 +454,8 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            color: Colors.white.withValues(alpha: 0.74),
-            border: Border.all(color: const Color(0xFF2EA8FF).withValues(alpha: 0.10)),
+            color: barBg,
+            border: Border.all(color: barBorder),
           ),
           child: Row(
             children: [
@@ -440,7 +463,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2EA8FF).withValues(alpha: 0.12),
+                  color: const Color(0xFF2EA8FF).withValues(alpha: isDark ? 0.18 : 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -450,11 +473,11 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
                 ),
               ),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Agregar foto',
                   style: TextStyle(
-                    color: Color(0xFF0F172A),
+                    color: labelColor,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
@@ -463,7 +486,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
               Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 14,
-                color: Colors.black.withValues(alpha: 0.38),
+                color: arrowColor,
               ),
             ],
           ),
@@ -534,27 +557,34 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
                 Positioned(
                   right: 8,
                   top: 8,
-                  child: Material(
-                    color: Colors.white.withValues(alpha: 0.88),
-                    shape: const CircleBorder(),
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: deleting ? null : () => _deletePhoto(photo),
-                      child: Padding(
-                        padding: const EdgeInsets.all(6),
-                        child: deleting
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : Icon(
-                                Icons.delete_outline_rounded,
-                                size: 16,
-                                color: Colors.redAccent.withValues(alpha: 0.90),
-                              ),
-                      ),
-                    ),
+                  child: Builder(
+                    builder: (context) {
+                      final isDarkTile = Theme.of(context).brightness == Brightness.dark;
+                      return Material(
+                        color: isDarkTile
+                            ? const Color(0xFF1E2D45).withValues(alpha: 0.92)
+                            : Colors.white.withValues(alpha: 0.88),
+                        shape: const CircleBorder(),
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: deleting ? null : () => _deletePhoto(photo),
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: deleting
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : Icon(
+                                    Icons.delete_outline_rounded,
+                                    size: 16,
+                                    color: Colors.redAccent.withValues(alpha: 0.90),
+                                  ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
             ],
@@ -782,19 +812,46 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return VibeScaffold(
       appBar: AppBar(
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 8),
-          child: Material(
-            color: Colors.white,
-            shape: const CircleBorder(),
-            child: IconButton(
-              tooltip: 'Volver',
-              onPressed: () => context.pop(),
-              icon: VibeSvgIcon(VibeAssetIcons.arrowBack, size: 18, color: colorScheme.onSurface),
-            ),
-          ),
+        leading: Builder(
+          builder: (context) {
+            final isDarkBtn = Theme.of(context).brightness == Brightness.dark;
+            return Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                child: Ink(
+                  decoration: BoxDecoration(
+                    color: isDarkBtn ? const Color(0xFF1E2D45) : Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isDarkBtn ? const Color(0xFF3A4D6A) : Colors.transparent,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDarkBtn ? 0.28 : 0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: IconButton(
+                    tooltip: 'Volver',
+                    onPressed: () => context.pop(),
+                    icon: VibeSvgIcon(
+                      VibeAssetIcons.arrowBack,
+                      size: 18,
+                      color: isDarkBtn ? const Color(0xFFCBD5E1) : colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
         ),
         leadingWidth: 56,
         title: Column(
@@ -816,11 +873,14 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
           Container(
             margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E2D45) : Colors.white,
               borderRadius: BorderRadius.circular(18),
+              border: isDark
+                  ? Border.all(color: const Color(0xFF3A4D6A))
+                  : null,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
+                  color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.06),
                   blurRadius: 16,
                   offset: const Offset(0, 8),
                 ),
