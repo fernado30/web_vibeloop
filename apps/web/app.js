@@ -99,6 +99,27 @@ function hasUrl(content) {
   return /(https?:\/\/|www\.)/i.test(content);
 }
 
+async function postAnonymousMessage(endpointBaseUrl, inviteCode, content, includeAnonKey = false) {
+  const response = await fetch(`${endpointBaseUrl.replace(/\/+$/, '')}/functions/v1/send-anonymous-message`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(includeAnonKey ? {
+        apikey: config.supabaseAnonKey,
+        Authorization: `Bearer ${config.supabaseAnonKey}`,
+      } : {}),
+    },
+    body: JSON.stringify({ inviteCode, content }),
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(result.error ?? 'No se pudo enviar el mensaje.');
+  }
+
+  return result;
+}
+
 async function loadAnonymousInbox(token) {
   const inviteCode = getInviteCode(token);
   if (!inviteCode) {
@@ -134,19 +155,17 @@ async function loadAnonymousInbox(token) {
     feedbackEl.classList.add('hidden');
 
     try {
-      const functionsUrl = `${getApiBaseUrl()}/functions/v1/send-anonymous-message`;
-      const response = await fetch(functionsUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(getApiBaseUrl() === config.supabaseUrl ? { apikey: config.supabaseAnonKey } : {}),
-        },
-        body: JSON.stringify({ inviteCode, content }),
-      });
+      const apiBaseUrl = getApiBaseUrl();
+      const usesBackend = apiBaseUrl !== config.supabaseUrl;
 
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(result.error ?? 'No se pudo enviar el mensaje.');
+      try {
+        await postAnonymousMessage(apiBaseUrl, inviteCode, content, !usesBackend);
+      } catch (primaryError) {
+        if (!usesBackend) {
+          throw primaryError;
+        }
+
+        await postAnonymousMessage(config.supabaseUrl, inviteCode, content, true);
       }
 
       messageInputEl.value = '';
