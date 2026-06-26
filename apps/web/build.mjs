@@ -37,6 +37,7 @@ async function main() {
   }
 
   const config = {
+    backendUrl: readEnv('VIBELOOP_BACKEND_URL'),
     supabaseUrl: readEnv('SUPABASE_URL'),
     supabaseAnonKey: readEnv('SUPABASE_ANON_KEY'),
   };

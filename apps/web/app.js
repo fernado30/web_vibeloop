@@ -27,6 +27,12 @@ function requireConfig() {
   }
 }
 
+function getApiBaseUrl() {
+  return (config.backendUrl && !config.backendUrl.includes('YOUR_BACKEND'))
+    ? config.backendUrl.replace(/\/+$/, '')
+    : config.supabaseUrl.replace(/\/+$/, '');
+}
+
 function showError(message) {
   landingViewEl.classList.add('hidden');
   inboxViewEl.classList.add('hidden');
@@ -128,12 +134,12 @@ async function loadAnonymousInbox(token) {
     feedbackEl.classList.add('hidden');
 
     try {
-      const functionsUrl = `${config.supabaseUrl}/functions/v1/send-anonymous-message`;
+      const functionsUrl = `${getApiBaseUrl()}/functions/v1/send-anonymous-message`;
       const response = await fetch(functionsUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': config.supabaseAnonKey,
+          ...(getApiBaseUrl() === config.supabaseUrl ? { apikey: config.supabaseAnonKey } : {}),
         },
         body: JSON.stringify({ inviteCode, content }),
       });

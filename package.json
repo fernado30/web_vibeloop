@@ -3,7 +3,9 @@
   "private": true,
   "scripts": {
     "supabase:link": "npx supabase link --project-ref rkwugxemjrwtfjvtckes --yes",
-    "supabase:migrate": "npx supabase db push --yes"
+    "supabase:migrate": "npx supabase db push --yes",
+    "backend:dev": "node apps/backend/server.mjs",
+    "backend:start": "node apps/backend/server.mjs"
   },
   "devDependencies": {
     "@supabase/cli": "^1.0.0",

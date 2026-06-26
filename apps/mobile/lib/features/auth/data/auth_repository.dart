@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/backend/backend_config.dart';
 import '../../../core/utils/profile_emojis.dart';
 import '../domain/auth_state.dart' as local_auth;
 
@@ -103,6 +106,54 @@ class AuthRepository {
     }
 
     try {
+      final backendConfig = await BackendConfig.load();
+      final backendUrl = backendConfig.backendUrl;
+      if (backendUrl != null) {
+        try {
+          final session = _supabase.auth.currentSession;
+          final client = HttpClient();
+          try {
+            final request = await client.postUrl(Uri.parse('$backendUrl/functions/v1/delete-account'));
+            request.headers.contentType = ContentType.json;
+            if (session?.accessToken != null) {
+              request.headers.set(HttpHeaders.authorizationHeader, 'Bearer ${session!.accessToken}');
+            }
+            request.write(jsonEncode({
+              'confirmationText': confirmationText.trim(),
+            }));
+
+            final response = await request.close();
+            final responseBody = await utf8.decoder.bind(response).join();
+            Object? payload;
+            if (responseBody.trim().isNotEmpty) {
+              try {
+                payload = jsonDecode(responseBody);
+              } catch (_) {
+                payload = null;
+              }
+            }
+
+            if (response.statusCode < 200 || response.statusCode >= 300) {
+              final message = payload is Map<String, dynamic> && payload['error'] != null
+                  ? payload['error'].toString()
+                  : 'No se pudo eliminar la cuenta.';
+              throw StateError(message);
+            }
+          } finally {
+            client.close(force: true);
+          }
+
+          await signOut();
+          return;
+        } on SocketException {
+          // Fall through to the legacy path.
+        } on HttpException {
+          // Fall through to the legacy path.
+        } on HandshakeException {
+          // Fall back to the legacy Supabase Function path if the backend is unavailable.
+        }
+      }
+
       final response = await _supabase.functions.invoke(
         'delete-account',
         body: {

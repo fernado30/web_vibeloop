@@ -1044,14 +1044,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                           style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.w700,
-                                            color: isMine ? Colors.white.withValues(alpha: 0.95) : colorScheme.onSurfaceVariant,
+                                            color: isMine
+                                                ? Colors.white.withValues(alpha: 0.95)
+                                                : const Color(0xFF1E293B),
                                           ),
                                         ),
                                         const SizedBox(height: 6),
                                         Text(
                                           message.content,
                                           style: TextStyle(
-                                            color: isMine ? Colors.white : colorScheme.onSurface,
+                                            color: isMine
+                                                ? Colors.white
+                                                : const Color(0xFF0F172A),
                                           ),
                                         ),
                                         if (message.reactions.isNotEmpty) ...[

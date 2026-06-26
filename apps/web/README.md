@@ -5,7 +5,7 @@ Standalone web app for anonymous messages.
 ## What it does
 
 - Opens links in the form `/open/:token` and `/invite/:token`
-- Loads the group from Supabase using the public anon key
+- Sends anonymous messages through the backend API
 - Lets anyone write and send anonymous messages to that group
 - `/open/:token` tries to open the mobile app with an Android `intent://` link and falls back to the web inbox
 - `/invite/:token` opens the anonymous message inbox directly
@@ -14,10 +14,12 @@ Standalone web app for anonymous messages.
 
 On Vercel, set these environment variables:
 
+- `VIBELOOP_BACKEND_URL`
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
 
 The build step will generate `config.js` automatically from those values.
+If `VIBELOOP_BACKEND_URL` is not set, the web app falls back to the legacy Supabase function URL.
 
 For local testing, you can edit `config.js` directly.
 
