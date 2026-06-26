@@ -19,7 +19,7 @@ On Vercel, set these environment variables:
 - `SUPABASE_ANON_KEY`
 
 The build step will generate `config.js` automatically from those values.
-If `VIBELOOP_BACKEND_URL` is not set, the web app falls back to the legacy Supabase function URL.
+`VIBELOOP_BACKEND_URL` must point to the separate backend service, for example `https://backend-vibeloop.onrender.com`.
 
 For local testing, you can edit `config.js` directly.
 

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('.', import.meta.url));
 const distDir = join(root, 'dist');
 
-const requiredEnv = ['SUPABASE_URL', 'SUPABASE_ANON_KEY'];
+const requiredEnv = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'VIBELOOP_BACKEND_URL'];
 
 function readEnv(name) {
   return process.env[name]?.trim() ?? '';

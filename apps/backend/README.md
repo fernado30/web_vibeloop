@@ -7,8 +7,8 @@ Backend propio para centralizar la lógica sensible sin quitar Supabase.
 - `POST /functions/v1/send-anonymous-message`
 - `POST /functions/v1/resolve-invite`
 - `POST /functions/v1/delete-account`
-- `POST /functions/v1/register-user`
-- `POST /functions/v1/join-guest-with-photo`
+- `POST /functions/v1/register-user` interno
+- `POST /functions/v1/join-guest-with-photo` interno
 - `GET /health`
 
 ## Cómo se usa
@@ -22,7 +22,15 @@ Backend propio para centralizar la lógica sensible sin quitar Supabase.
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `SUPABASE_ANON_KEY` opcional, solo para compatibilidad con rutas antiguas
+- `BACKEND_INTERNAL_KEY` recomendado, protege rutas internas como registro y alta de invitado
 - `PORT` opcional, por defecto `8787`
+- `ALLOWED_ORIGINS` opcional, lista separada por comas de orígenes permitidos para CORS
+
+## Rutas sensibles
+
+- `delete-account` exige `Authorization: Bearer <supabase_token>` y valida el usuario con Supabase Auth antes de borrar datos.
+- `register-user` y `join-guest-with-photo` requieren `x-backend-internal-key: <BACKEND_INTERNAL_KEY>`.
+- `send-anonymous-message` sigue siendo pública pero con validación de origen, rate limit persistente y filtros de contenido.
 
 ## Arranque local
 
