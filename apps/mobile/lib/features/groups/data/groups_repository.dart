@@ -214,6 +214,19 @@ class GroupsRepository {
       }
     }
 
+    Future<void> refreshAllIfUploaderChanged(String? userId) async {
+      if (userId == null || userId.isEmpty) {
+        return;
+      }
+
+      final shouldRefresh = cache.any((photo) => photo.uploadedBy == userId);
+      if (!shouldRefresh) {
+        return;
+      }
+
+      await emit();
+    }
+
     channel.onPostgresChanges(
       event: PostgresChangeEvent.insert,
       schema: 'public',
@@ -257,9 +270,17 @@ class GroupsRepository {
         }
 
         cache = cache.where((photo) => photo.id != deletedId).toList();
-        if (!controller.isClosed) {
-          controller.add(cache);
-        }
+        emit();
+      },
+    );
+
+    channel.onPostgresChanges(
+      event: PostgresChangeEvent.update,
+      schema: 'public',
+      table: 'users',
+      callback: (payload) {
+        final userId = payload.newRecord['id']?.toString();
+        refreshAllIfUploaderChanged(userId);
       },
     );
 

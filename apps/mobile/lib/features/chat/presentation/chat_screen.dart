@@ -63,7 +63,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _anonymousOverlayRefreshScheduled = false;
   Timer? _typingTimer;
   bool _isTyping = false;
-  String _currentUserEmoji = 'ðŸ™‚';
+  String _currentUserEmoji = '\u{1F642}';
 
   @override
   void initState() {
@@ -83,7 +83,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final profile = await ref.read(authRepositoryProvider).fetchCurrentProfile();
     if (!mounted) return;
     setState(() {
-      _currentUserEmoji = profile?['emoji']?.toString() ?? 'ðŸ™‚';
+      _currentUserEmoji = profile?['emoji']?.toString() ?? '\u{1F642}';
     });
   }
 
@@ -308,7 +308,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       return const SizedBox.shrink();
     }
 
-    final previewMessage = anonymousMessages.isNotEmpty ? anonymousMessages.first : null;
     final unseenCount = _unseenAnonymousMessages(anonymousMessages).length;
     final isOpen = _anonymousBubbleOpen;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -318,12 +317,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       onTapOutside: (_) => _closeAnonymousBubble(anonymousMessages),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.only(top: 6, right: 8),
+          padding: const EdgeInsets.only(top: 78, right: 8),
           child: Align(
             alignment: Alignment.topRight,
             child: GestureDetector(
               onTap: () => _toggleAnonymousBubble(anonymousMessages),
-                child: AnimatedContainer(
+              child: AnimatedContainer(
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOutCubic,
                 width: isOpen ? 220 : 174,
@@ -361,21 +360,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   borderRadius: BorderRadius.circular(28),
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: isDark ? 0.08 : 0.12),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: isDark ? 0.12 : 0.18),
+                    child: DefaultTextStyle.merge(
+                      style: const TextStyle(decoration: TextDecoration.none),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: isDark ? 0.08 : 0.12),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: isDark ? 0.12 : 0.18),
+                          ),
+                          borderRadius: BorderRadius.circular(28),
                         ),
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                      child: AnimatedSize(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOutCubic,
-                        alignment: Alignment.topCenter,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
+                        child: AnimatedSize(
+                          duration: const Duration(milliseconds: 220),
+                          curve: Curves.easeOutCubic,
+                          alignment: Alignment.topCenter,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
                             Padding(
                               padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                               child: Row(
@@ -469,33 +470,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                 ],
                               ),
                             ),
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-                              child: Align(
-                                alignment: Alignment.center,
-                                child: Container(
-                                  constraints: BoxConstraints(maxWidth: isOpen ? 132 : 116),
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.14),
-                                    borderRadius: BorderRadius.circular(18),
-                                    border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-                                  ),
-                                  child: Text(
-                                    previewMessage?.content ?? 'Hola mundo',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.92),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
                             AnimatedSwitcher(
                               duration: const Duration(milliseconds: 200),
                               switchInCurve: Curves.easeOutCubic,
@@ -513,6 +487,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                               color: Colors.white.withValues(alpha: 0.82),
                                               fontWeight: FontWeight.w600,
                                               fontSize: 11,
+                                              decoration: TextDecoration.none,
                                             ),
                                           ),
                                           const SizedBox(height: 8),
@@ -561,6 +536,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                                               fontWeight: FontWeight.w600,
                                                               height: 1.2,
                                                               fontSize: 11,
+                                                              decoration: TextDecoration.none,
                                                             ),
                                                           ),
                                                         ),
@@ -593,7 +569,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildChatBackdrop(BuildContext context) {
@@ -691,87 +667,119 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ? Colors.white.withValues(alpha: 0.72)
         : (isDark ? Colors.white.withValues(alpha: 0.70) : colorScheme.onSurfaceVariant);
 
-    final maxBubbleWidth = isMine ? 308.0 : 300.0;
-
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: maxBubbleWidth),
-      child: IntrinsicWidth(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                gradient: bubbleGradient,
-                color: bubbleColor,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(22),
-                  topRight: const Radius.circular(22),
-                  bottomLeft: Radius.circular(isMine ? 22 : 12),
-                  bottomRight: Radius.circular(isMine ? 12 : 22),
-                ),
-                border: Border.all(color: borderColor),
-                boxShadow: [
-                  BoxShadow(
-                    color: isMine
-                        ? const Color(0xFF7C3AED).withValues(alpha: isDark ? 0.24 : 0.18)
-                        : Colors.black.withValues(alpha: isDark ? 0.24 : 0.10),
-                    blurRadius: 24,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.fromLTRB(14, 11, 12, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    message.content,
-                    textWidthBasis: TextWidthBasis.longestLine,
-                    softWrap: true,
-                    style: TextStyle(
-                      fontSize: 16,
-                      height: 1.18,
-                      fontWeight: FontWeight.w600,
-                      color: textColor,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth.isFinite ? constraints.maxWidth : MediaQuery.sizeOf(context).width;
+        final widthCap = (availableWidth - 56).clamp(176.0, 308.0).toDouble();
+        final bubbleMaxWidth = isMine ? widthCap : widthCap.clamp(176.0, 300.0).toDouble();
+        Widget bubbleBody({bool includeReactions = true}) {
+          return IntrinsicWidth(
+            child: Column(
+              crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: bubbleGradient,
+                      color: bubbleColor,
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(22),
+                        topRight: const Radius.circular(22),
+                        bottomLeft: Radius.circular(isMine ? 22 : 12),
+                        bottomRight: Radius.circular(isMine ? 12 : 22),
+                      ),
+                      border: Border.all(color: borderColor),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isMine
+                              ? const Color(0xFF7C3AED).withValues(alpha: isDark ? 0.24 : 0.18)
+                              : Colors.black.withValues(alpha: isDark ? 0.24 : 0.10),
+                          blurRadius: 24,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Row(
+                    padding: const EdgeInsets.fromLTRB(14, 11, 12, 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          timeLabel,
+                          message.content,
+                          textWidthBasis: TextWidthBasis.longestLine,
+                          softWrap: true,
                           style: TextStyle(
-                            fontSize: 10.5,
+                            fontSize: 16,
+                            height: 1.18,
                             fontWeight: FontWeight.w600,
-                            color: metaColor,
+                            color: textColor,
                           ),
                         ),
-                        if (isMine) ...[
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.done_all_rounded,
-                            size: 14,
-                            color: metaColor,
-                          ),
-                        ],
-                      ],
-                    ),
+                        const SizedBox(height: 6),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                timeLabel,
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: metaColor,
+                                ),
+                              ),
+                              if (isMine) ...[
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.done_all_rounded,
+                                  size: 14,
+                                  color: metaColor,
+                                ),
+                              ],
+                            ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            if (message.reactions.isNotEmpty) ...[
-              const SizedBox(height: 7),
-              ReactionBar(reactions: message.reactions, isMine: isMine),
+          ),
+        ),
+                if (includeReactions && message.reactions.isNotEmpty) ...[
+                  const SizedBox(height: 7),
+                  ReactionBar(reactions: message.reactions, isMine: isMine),
+                ],
+              ],
+            ),
+          );
+        }
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (!isMine) ...[
+              _MessageEmojiAvatar(
+                emoji: senderLabel,
+                isMine: isMine,
+                isDark: isDark,
+              ),
+              const SizedBox(width: 10),
+            ],
+            bubbleBody(),
+            if (isMine) ...[
+              const SizedBox(width: 10),
+              _MessageEmojiAvatar(
+                emoji: senderLabel,
+                isMine: isMine,
+                isDark: isDark,
+              ),
             ],
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -782,7 +790,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final iconBackground = isDark
         ? const Color(0xFF1D2640)
         : const Color(0xFFF3F7FF);
-    final iconColor = isDark ? const Color(0xFF8FD3FF) : const Color(0xFF2585E8);
     final hintStyle = TextStyle(
       color: isDark ? Colors.white.withValues(alpha: 0.48) : const Color(0xFF8D97AA),
       fontSize: 15,
@@ -840,10 +847,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             ],
                           ),
                           child: Center(
-                            child: VibeSvgIcon(
-                              VibeAssetIcons.loopLogo,
-                              size: 23,
-                              color: iconColor,
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 180),
+                              switchInCurve: Curves.easeOutCubic,
+                              switchOutCurve: Curves.easeInCubic,
+                              transitionBuilder: (child, animation) {
+                                return ScaleTransition(
+                                  scale: animation,
+                                  child: FadeTransition(opacity: animation, child: child),
+                                );
+                              },
+                              child: Text(
+                                _currentUserEmoji,
+                                key: ValueKey<String>(_currentUserEmoji),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  height: 1,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -921,7 +943,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     MessageModel message,
     ColorScheme colorScheme,
   ) {
-    const reactionOptions = ['ðŸ‘', 'â¤ï¸', 'ðŸ˜‚', 'ðŸ˜®', 'ðŸ˜¢', 'ðŸ”¥'];
+    const reactionOptions = [
+      '\u{1F44D}',
+      '\u{2764}\u{FE0F}',
+      '\u{1F602}',
+      '\u{1F62E}',
+      '\u{1F622}',
+      '\u{1F525}',
+    ];
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
@@ -1120,7 +1149,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   String _anonymousBadgeEmoji(String seed) {
-    const badgeEmojis = ['ðŸ…', 'âœ¨', 'ðŸŒŸ', 'ðŸ’«', 'ðŸ”¥', 'ðŸŽ–ï¸'];
+    const badgeEmojis = [
+      '\u{1F3C5}',
+      '\u2728',
+      '\u{1F31F}',
+      '\u{1F4AB}',
+      '\u{1F525}',
+      '\u{1F396}\u{FE0F}',
+    ];
     if (seed.isEmpty) return badgeEmojis.first;
     return badgeEmojis[seed.hashCode.abs() % badgeEmojis.length];
   }
@@ -2150,6 +2186,74 @@ class _ChatGlow extends StatelessWidget {
           stops: const [0.0, 1.0],
         ),
       ),
+    );
+  }
+}
+
+class _MessageEmojiAvatar extends StatelessWidget {
+  const _MessageEmojiAvatar({
+    required this.emoji,
+    required this.isMine,
+    required this.isDark,
+  });
+
+  final String emoji;
+  final bool isMine;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final background = isDark
+        ? const [Color(0xFFFFF4D8), Color(0xFFFFE7B8)]
+        : const [Color(0xFFFFF8EA), Color(0xFFFFEED0)];
+    final shadowColor = isMine
+        ? const Color(0xFF7C3AED).withValues(alpha: isDark ? 0.28 : 0.18)
+        : const Color(0xFF3B82F6).withValues(alpha: isDark ? 0.18 : 0.12);
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: background,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.92), width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: shadowColor,
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              emoji,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 20, height: 1),
+            ),
+          ),
+        ),
+        Positioned(
+          right: -1,
+          bottom: 0,
+          child: Container(
+            width: 9,
+            height: 9,
+            decoration: BoxDecoration(
+              color: isMine ? const Color(0xFF6366F1) : const Color(0xFF5B4BFF),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 1.4),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

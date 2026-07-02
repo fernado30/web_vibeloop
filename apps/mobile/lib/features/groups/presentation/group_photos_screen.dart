@@ -61,11 +61,12 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
   }
 
   List<GroupPhotoModel> _mergePhotos(List<GroupPhotoModel> remotePhotos) {
+    final remoteIds = remotePhotos.map((photo) => photo.id).toSet();
     final byId = <String, GroupPhotoModel>{
       for (final photo in remotePhotos) photo.id: photo,
     };
 
-    for (final photo in _optimisticPhotos) {
+    for (final photo in _optimisticPhotos.where((photo) => !remoteIds.contains(photo.id) && !_hiddenPhotoIds.contains(photo.id))) {
       byId.putIfAbsent(photo.id, () => photo);
     }
 
@@ -146,6 +147,12 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
 
     try {
       await ref.read(groupsRepositoryProvider).deleteGroupPhoto(photo.id);
+      if (mounted) {
+        setState(() {
+          _optimisticPhotos.removeWhere((item) => item.id == photo.id);
+          _localPreviewPaths.remove(photo.id);
+        });
+      }
       _reloadPhotos();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -608,8 +615,21 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF111827).withValues(alpha: 0.92) : const Color(0xFF1F2937).withValues(alpha: 0.92),
+                        gradient: LinearGradient(
+                          colors: isDark
+                              ? const [
+                                  Color(0xFFFFF4D8),
+                                  Color(0xFFFFE2AE),
+                                ]
+                              : const [
+                                  Color(0xFFFFF8EA),
+                                  Color(0xFFFFEECF),
+                                ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                         shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.88), width: 2),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.16),
@@ -618,11 +638,11 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
                           ),
                         ],
                       ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.local_fire_department_rounded,
-                          size: 22,
-                          color: Colors.orange,
+                      child: Center(
+                        child: Text(
+                          photo.uploaderEmoji,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 22, height: 1),
                         ),
                       ),
                     ),
