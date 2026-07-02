@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../core/widgets/vibe_ui.dart';
 import '../data/auth_repository.dart';
+import 'auth_visuals.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -75,91 +75,55 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return VibeScaffold(
-      appBar: AppBar(title: const Text('Crear cuenta')),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  GlassCard(
-                    padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text('Crear cuenta', style: Theme.of(context).textTheme.headlineMedium),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Prepara tu perfil para lanzar grupos y entrar con más intención.',
-                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                ),
-                          ),
-                          const SizedBox(height: 24),
-                          TextFormField(
-                            controller: _nameController,
-                            decoration: const InputDecoration(labelText: 'Nombre'),
-                            validator: (value) => (value ?? '').trim().isEmpty ? 'Ingresa tu nombre' : null,
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            decoration: const InputDecoration(labelText: 'Email'),
-                            validator: (value) => value == null || !value.contains('@') ? 'Ingresa un email valido' : null,
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _passwordController,
-                            obscureText: true,
-                            decoration: const InputDecoration(labelText: 'Contrasena'),
-                            validator: (value) => (value ?? '').length < 8 ? 'Minimo 8 caracteres' : null,
-                          ),
-                          if (_error != null) ...[
-                            const SizedBox(height: 16),
-                            Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-                          ],
-                          const SizedBox(height: 20),
-                          GradientButton(
-                            onPressed: _loading ? null : _submit,
-                            label: 'Registrarme',
-                            icon: _loading
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                                  )
-                                : const Icon(Icons.auto_awesome_rounded),
-                          ),
-                          const SizedBox(height: 12),
-                          OutlinedButton.icon(
-                            onPressed: _loading ? null : _signInGoogle,
-                            icon: const Icon(Icons.login),
-                            label: const Text('Registrarme con Google'),
-                          ),
-                          const SizedBox(height: 14),
-                          const QuickActionPill(label: 'Crea grupos premium', icon: Icons.groups_rounded),
-                          const SizedBox(height: 12),
-                          TextButton(
-                            onPressed: _loading ? null : () => context.go('/login'),
-                            child: const Text('Ya tengo cuenta'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+    return AuthScreenShell(
+      title: 'Crea tu cuenta',
+      subtitle: 'Únete a Vibeloop y conecta con tu comunidad.',
+      fields: [
+        Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              AuthTextField(
+                controller: _nameController,
+                label: 'Nombre',
+                icon: Icons.person_outline_rounded,
+                textInputAction: TextInputAction.next,
+                validator: (value) => (value ?? '').trim().isEmpty ? 'Ingresa tu nombre' : null,
               ),
-            ),
+              const SizedBox(height: 16),
+              AuthTextField(
+                controller: _emailController,
+                label: 'Email',
+                icon: Icons.mail_outline_rounded,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                validator: (value) => value == null || !value.contains('@') ? 'Ingresa un email válido' : null,
+              ),
+              const SizedBox(height: 16),
+              AuthTextField(
+                controller: _passwordController,
+                label: 'Contraseña',
+                icon: Icons.lock_outline_rounded,
+                obscureText: true,
+                textInputAction: TextInputAction.done,
+                onSubmitted: _loading ? null : _submit,
+                validator: (value) => (value ?? '').length < 8 ? 'Mínimo 8 caracteres' : null,
+              ),
+            ],
           ),
         ),
+      ],
+      primaryLabel: 'Registrarme',
+      primaryIcon: const Icon(Icons.auto_awesome_rounded, size: 27),
+      onPrimaryPressed: _submit,
+      googleLabel: 'Registrarme con Google',
+      onGooglePressed: _signInGoogle,
+      errorText: _error,
+      loading: _loading,
+      footer: AuthFooterLink(
+        prompt: '¿Ya tengo cuenta?',
+        actionLabel: 'Iniciar sesión',
+        onPressed: () => context.go('/login'),
       ),
     );
   }

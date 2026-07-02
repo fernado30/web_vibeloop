@@ -46,6 +46,8 @@ flutter:
   assets:
     - assets/.env
     - assets/web.env
+    - assets/app_icon.png
+    - assets/icon/
     - assets/icons/
     - assets/stitch/
     - assets/legal/

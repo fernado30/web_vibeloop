@@ -639,26 +639,35 @@ class ReactionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: reactions.entries
-          .map(
-            (entry) => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: isMine ? Colors.white.withValues(alpha: 0.18) : colorScheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(VibeRadii.pill),
-              ),
-              child: Text(
-                '${entry.key} ${entry.value}',
-                style: TextStyle(
-                  color: isMine ? Colors.white : colorScheme.onSurfaceVariant,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: reactions.entries
+            .map(
+              (entry) => Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: isMine ? Colors.white.withValues(alpha: 0.16) : colorScheme.primary.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(VibeRadii.pill),
+                  ),
+                  child: Text(
+                    '${entry.key} ${entry.value}',
+                    style: TextStyle(
+                      color: isMine ? Colors.white : colorScheme.onSurfaceVariant,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      height: 1,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          )
-          .toList(),
+            )
+            .toList(),
+      ),
     );
   }
 }

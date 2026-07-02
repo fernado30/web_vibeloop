@@ -434,28 +434,35 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final barBg = isDark
-        ? const Color(0xFF1A2540).withValues(alpha: 0.90)
-        : Colors.white.withValues(alpha: 0.74);
+        ? const Color(0xFF0F172A).withValues(alpha: 0.86)
+        : Colors.white.withValues(alpha: 0.92);
     final barBorder = isDark
-        ? const Color(0xFF2EA8FF).withValues(alpha: 0.18)
-        : const Color(0xFF2EA8FF).withValues(alpha: 0.10);
-    final labelColor = isDark ? const Color(0xFFF0F4FF) : const Color(0xFF0F172A);
+        ? Colors.white.withValues(alpha: 0.08)
+        : const Color(0xFFE8EAF3);
+    final labelColor = isDark ? const Color(0xFFF1F5FF) : const Color(0xFF1F2937);
     final arrowColor = isDark
-        ? const Color(0xFF6B7A96)
-        : Colors.black.withValues(alpha: 0.38);
+        ? Colors.white.withValues(alpha: 0.62)
+        : const Color(0xFF374151);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
         onTap: _addPhoto,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(22),
             color: barBg,
             border: Border.all(color: barBorder),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.24 : 0.08),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: Row(
             children: [
@@ -463,29 +470,36 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2EA8FF).withValues(alpha: isDark ? 0.18 : 0.12),
-                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF4F46E5),
+                      Color(0xFF8B5CF6),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
                   Icons.add_a_photo_outlined,
                   size: 18,
-                  color: Color(0xFF2EA8FF),
+                  color: Colors.white,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Agregar foto',
                   style: TextStyle(
                     color: labelColor,
-                    fontSize: 14,
+                    fontSize: 14.5,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
               Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14,
+                Icons.chevron_right_rounded,
+                size: 20,
                 color: arrowColor,
               ),
             ],
@@ -502,92 +516,119 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
     required bool showEmoji,
   }) {
     final deleting = _deletingPhotoIds.contains(photo.id);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         onTap: () => _showPhotoPreview(context, photo),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              _buildPhotoImage(photo),
-              IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.transparent,
-                        Colors.white.withValues(alpha: 0.08),
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
-                ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFF2563EB),
+                Color(0xFF8B5CF6),
+                Color(0xFFD946EF),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF8B5CF6).withValues(alpha: isDark ? 0.26 : 0.22),
+                blurRadius: 22,
+                offset: const Offset(0, 12),
               ),
-              if (showEmoji)
-                Positioned(
-                  left: 10,
-                  top: 10,
-                  child: Container(
-                    width: 30,
-                    height: 30,
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.24 : 0.10),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(2),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(26),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _buildPhotoImage(photo),
+                IgnorePointer(
+                  child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.78),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.10),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        photo.uploaderEmoji,
-                        style: const TextStyle(fontSize: 15),
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: isDark ? 0.06 : 0.03),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                       ),
                     ),
                   ),
                 ),
-              if (showControls)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Builder(
-                    builder: (context) {
-                      final isDarkTile = Theme.of(context).brightness == Brightness.dark;
-                      return Material(
-                        color: isDarkTile
-                            ? const Color(0xFF1E2D45).withValues(alpha: 0.92)
-                            : Colors.white.withValues(alpha: 0.88),
-                        shape: const CircleBorder(),
-                        child: InkWell(
-                          customBorder: const CircleBorder(),
-                          onTap: deleting ? null : () => _deletePhoto(photo),
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: deleting
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : Icon(
-                                    Icons.delete_outline_rounded,
-                                    size: 16,
-                                    color: Colors.redAccent.withValues(alpha: 0.90),
-                                  ),
+                if (showControls)
+                  Positioned(
+                    right: 12,
+                    top: 12,
+                    child: Builder(
+                      builder: (context) {
+                        final isDarkTile = Theme.of(context).brightness == Brightness.dark;
+                        return Material(
+                          color: isDarkTile ? Colors.white.withValues(alpha: 0.96) : Colors.white.withValues(alpha: 0.98),
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: deleting ? null : () => _deletePhoto(photo),
+                            child: Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: deleting
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : Icon(
+                                      Icons.delete_outline_rounded,
+                                      size: 18,
+                                      color: isDarkTile ? const Color(0xFF111827) : const Color(0xFF111827),
+                                    ),
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
-            ],
+                if (showEmoji)
+                  Positioned(
+                    left: 12,
+                    bottom: 12,
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF111827).withValues(alpha: 0.92) : const Color(0xFF1F2937).withValues(alpha: 0.92),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.16),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.local_fire_department_rounded,
+                          size: 22,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -616,7 +657,7 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AspectRatio(
-          aspectRatio: 1.08,
+          aspectRatio: 0.82,
           child: _buildCoverTile(
             context: context,
             photo: leadPhoto,
@@ -810,32 +851,40 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return VibeScaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        toolbarHeight: 92,
+        systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
         leading: Builder(
           builder: (context) {
             final isDarkBtn = Theme.of(context).brightness == Brightness.dark;
             return Padding(
-              padding: const EdgeInsets.only(left: 8),
+              padding: const EdgeInsets.only(left: 12),
               child: Material(
                 color: Colors.transparent,
                 shape: const CircleBorder(),
                 child: Ink(
                   decoration: BoxDecoration(
-                    color: isDarkBtn ? const Color(0xFF1E2D45) : Colors.white,
+                    color: isDarkBtn
+                        ? const Color(0xFF111827).withValues(alpha: 0.88)
+                        : Colors.white.withValues(alpha: 0.92),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isDarkBtn ? const Color(0xFF3A4D6A) : Colors.transparent,
+                      color: isDarkBtn
+                          ? Colors.white.withValues(alpha: 0.06)
+                          : const Color(0xFFE6E8F0),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDarkBtn ? 0.28 : 0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
+                        color: Colors.black.withValues(alpha: isDarkBtn ? 0.26 : 0.08),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
                       ),
                     ],
                   ),
@@ -844,8 +893,8 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
                     onPressed: () => context.pop(),
                     icon: VibeSvgIcon(
                       VibeAssetIcons.arrowBack,
-                      size: 18,
-                      color: isDarkBtn ? const Color(0xFFCBD5E1) : colorScheme.onSurface,
+                      size: 20,
+                      color: isDarkBtn ? const Color(0xFFF1F5F9) : const Color(0xFF111827),
                     ),
                   ),
                 ),
@@ -853,43 +902,67 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
             );
           },
         ),
-        leadingWidth: 56,
+        leadingWidth: 68,
         title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Fotos del grupo',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Fotos del grupo',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 19,
+                        letterSpacing: -0.3,
+                      ),
+                ),
+                const SizedBox(width: 6),
+                const Icon(Icons.auto_awesome_rounded, size: 16, color: Color(0xFF8B5CF6)),
+              ],
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             Text(
               'Collage compartido',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: isDark ? const Color(0xFFB4B9C6) : const Color(0xFF7C3AED),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           ],
         ),
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 12),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E2D45) : Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: isDark
-                  ? Border.all(color: const Color(0xFF3A4D6A))
-                  : null,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.06),
-                  blurRadius: 16,
-                  offset: const Offset(0, 8),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Material(
+              color: Colors.transparent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF8B5CF6),
+                      Color(0xFFA855F7),
+                      Color(0xFFF43F5E),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.26),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: IconButton(
-              tooltip: 'Compartir portada',
-              onPressed: _shareCover,
-              icon: VibeSvgIcon(VibeAssetIcons.share, size: 18, color: colorScheme.primary),
+                child: IconButton(
+                  tooltip: 'Compartir portada',
+                  onPressed: _shareCover,
+                  icon: const Icon(Icons.ios_share_rounded, size: 20, color: Colors.white),
+                ),
+              ),
             ),
           ),
         ],
@@ -911,11 +984,11 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
               final canDeleteAnyPhoto = group != null && currentUserId != null && group.createdBy == currentUserId;
 
               return SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildGalleryActionBar(context, showAddButton: visiblePhotos.isNotEmpty),
+                    _buildGalleryActionBar(context, showAddButton: true),
                     if (visiblePhotos.isNotEmpty) const SizedBox(height: 12),
                     RepaintBoundary(
                       key: _coverKey,
