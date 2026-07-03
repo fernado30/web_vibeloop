@@ -29,7 +29,7 @@ class SecurityResourcesScreen extends StatelessWidget {
           ),
           SizedBox(height: 12),
           SectionIntroCard(
-            title: 'Revisa mensajes anonimos con cuidado',
+            title: 'Revisa mensajes anónimos con cuidado',
             body: 'Los mensajes anónimos pueden ser útiles, pero también requieren moderación. Si detectas abuso, conserva evidencia y reduce el impacto desde la app.',
           ),
           SizedBox(height: 12),

@@ -85,7 +85,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               AuthTextField(
                 controller: _emailController,
-                label: 'Email',
+                label: 'Correo electrónico',
                 icon: Icons.mail_outline_rounded,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
@@ -115,7 +115,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       footer: AuthFooterLink(
         prompt: null,
         actionLabel: 'Crear cuenta',
-        onPressed: () => context.go('/register'),
+        onPressed: () => context.push('/register'),
       ),
     );
   }

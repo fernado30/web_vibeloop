@@ -73,7 +73,7 @@ class _HiddenWordsScreenState extends ConsumerState<HiddenWordsScreen> {
                   controller: _controller,
                   textInputAction: TextInputAction.done,
                   onSubmitted: (_) => _addWord(),
-                  decoration: const InputDecoration(hintText: 'Ej. spam, groseria, tema sensible...'),
+                  decoration: const InputDecoration(hintText: 'Ej. spam, grosería, tema sensible...'),
                 ),
                 const SizedBox(height: 12),
                 GradientButton(
@@ -89,7 +89,7 @@ class _HiddenWordsScreenState extends ConsumerState<HiddenWordsScreen> {
             const LoadingStateCard(label: 'Cargando palabras...')
           else if (_words.isEmpty)
             const EmptyStateCard(
-              title: 'Aun no tienes palabras ocultas',
+              title: 'Aún no tienes palabras ocultas',
               body: 'Agrega una palabra para empezar a ocultar contenido en el chat y en el buzón anónimo.',
             )
           else

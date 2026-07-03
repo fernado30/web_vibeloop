@@ -18,9 +18,9 @@ class NotificationsScreen extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
           const SectionIntroCard(
-            title: 'Define que avisos quieres recibir',
+            title: 'Define qué avisos quieres recibir',
             body: 'Estas preferencias se guardan en el dispositivo y dejan lista una experiencia más tranquila y personal.',
-            badge: SafetyBadge(label: 'Focus'),
+            badge: SafetyBadge(label: 'Enfoque'),
           ),
           const SizedBox(height: 16),
           if (!state.loaded)
@@ -79,7 +79,7 @@ class NotificationsScreen extends ConsumerWidget {
                             );
                           }
                         : null,
-                    title: const Text('Vibracion'),
+                    title: const Text('Vibración'),
                     subtitle: const Text('Activa una vibración breve en alertas compatibles.'),
                   ),
                 ],
@@ -88,7 +88,7 @@ class NotificationsScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           const ModerationWarningCard(
             title: 'Preparado para crecer',
-            body: 'Por ahora estas preferencias quedan guardadas y listas para futuras push notifications o avisos locales.',
+            body: 'Por ahora estas preferencias quedan guardadas y listas para futuras notificaciones push o avisos locales.',
           ),
         ],
       ),

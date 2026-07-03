@@ -48,7 +48,7 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
 
     if (!isAuthed || isAnonymous) {
       if (!mounted) return;
-      context.go('/login');
+      context.push('/login');
       return;
     }
 
@@ -96,8 +96,6 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
             if (groups.isEmpty) {
               return _EmptyGroupsView(
                 onCreateGroup: _handleCreateGroupTap,
-                onOpenSettings: () => context.push('/groups/settings'),
-                onRefresh: () => ref.read(groupsControllerProvider.notifier).loadMyGroups(),
               );
             }
 
@@ -184,13 +182,9 @@ class _LoadingGroupsView extends StatelessWidget {
 class _EmptyGroupsView extends StatefulWidget {
   const _EmptyGroupsView({
     required this.onCreateGroup,
-    required this.onOpenSettings,
-    required this.onRefresh,
   });
 
   final VoidCallback onCreateGroup;
-  final VoidCallback onOpenSettings;
-  final VoidCallback onRefresh;
 
   @override
   State<_EmptyGroupsView> createState() => _EmptyGroupsViewState();
@@ -218,46 +212,28 @@ class _EmptyGroupsViewState extends State<_EmptyGroupsView> with SingleTickerPro
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final bottomInset = MediaQuery.of(context).padding.bottom;
+        const buttonGradient = LinearGradient(
+          colors: [
+            Color(0xFF2E7DFF),
+            Color(0xFF6D4DFF),
+            Color(0xFFFF4B95),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        );
+
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 48, 20, 24),
+          padding: EdgeInsets.fromLTRB(20, 28, 20, 24 + bottomInset),
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Tus grupos',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFFF8FAFC) : VibeColors.textPrimary,
-                      ),
-                ),
-                Row(
-                  children: [
-                    _TopCircleButton(
-                      iconAsset: VibeAssetIcons.refresh,
-                      tooltip: 'Actualizar',
-                      onPressed: widget.onRefresh,
-                    ),
-                    const SizedBox(width: 12),
-                    _TopCircleButton(
-                      iconData: Icons.settings,
-                      tooltip: 'Ajustes',
-                      onPressed: widget.onOpenSettings,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
             SizedBox(
-              height: constraints.maxHeight > 620 ? constraints.maxHeight - 260 : 400,
+              height: math.max(520.0, constraints.maxHeight * 0.78),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    child: Stack(
+                  SizedBox(height: constraints.maxHeight * 0.25),
+                  Stack(
                       alignment: Alignment.center,
                       clipBehavior: Clip.none,
                       children: [
@@ -290,96 +266,75 @@ class _EmptyGroupsViewState extends State<_EmptyGroupsView> with SingleTickerPro
                         ),
                       ],
                     ),
-                  ),
                   Text(
                     'Crea tu primer grupo',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFFF8FAFC) : VibeColors.textPrimary,
-                          fontSize: 20,
+                          fontSize: 22,
                         ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   Text(
-                    'Empieza una conversaciÃ³n increÃ­ble con las personas que mÃ¡s te importan.',
+                    'Empieza una conversación increíble con las personas que más te importan.',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFFB0BECE) : VibeColors.textSecondary,
-                          fontSize: 14,
-                          height: 1.35,
+                          fontSize: 15,
+                          height: 1.38,
                         ),
+                  ),
+                  const Spacer(),
+                  SizedBox(height: constraints.maxHeight * 0.08),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 360),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: buttonGradient,
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF5C67E8).withValues(alpha: 0.28),
+                            blurRadius: 24,
+                            offset: const Offset(0, 12),
+                          ),
+                        ],
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 66,
+                        child: FilledButton.icon(
+                          onPressed: widget.onCreateGroup,
+                          icon: const Icon(Icons.add_rounded, size: 24),
+                          label: const Text(
+                            'Crear grupo',
+                            style: TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            surfaceTintColor: Colors.transparent,
+                            overlayColor: Colors.transparent,
+                            elevation: 0,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(32),
+                            ),
+                            minimumSize: const Size.fromHeight(66),
+                          ).copyWith(
+                            iconColor: const WidgetStatePropertyAll<Color>(Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 18),
-            Builder(
-              builder: (context) {
-                final isDark = Theme.of(context).brightness == Brightness.dark;
-                final bottomInset = MediaQuery.of(context).padding.bottom;
-                return Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? VibeColors.darkSurfaceSoft.withValues(alpha: 0.96) : Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(32),
-                    border: Border.all(
-                      color: isDark ? VibeColors.darkStroke : const Color(0xFFF3F4F6),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.04),
-                        blurRadius: 18,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  padding: EdgeInsets.fromLTRB(16, 18, 16, 18 + bottomInset),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: 48,
-                          child: ElevatedButton.icon(
-                            onPressed: widget.onCreateGroup,
-                            icon: const Icon(Icons.add_rounded, size: 20),
-                            label: const Text('Crear grupo'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF6366F1),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              textStyle: const TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: SizedBox(
-                          height: 48,
-                          child: OutlinedButton.icon(
-                            onPressed: widget.onOpenSettings,
-                            icon: const Icon(Icons.settings, size: 20),
-                            label: const Text('Ajustes'),
-                            style: OutlinedButton.styleFrom(
-                              backgroundColor: isDark ? VibeColors.darkSurface : Colors.white,
-                              foregroundColor: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
-                              side: BorderSide(
-                                color: isDark ? VibeColors.darkStroke : const Color(0xFFE5E7EB),
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              textStyle: const TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
             ),
           ],
         );
@@ -427,8 +382,8 @@ class _PeopleGroupIcon extends StatelessWidget {
         <circle cx="50" cy="35" r="12" fill="url(#people-gradient)"/>
         <path d="M30 75C30 62 38 55 50 55C62 55 70 62 70 75" stroke="url(#people-gradient)" stroke-width="10" stroke-linecap="round" fill="none"/>
       </svg>''',
-      width: 96,
-      height: 96,
+      width: 125,
+      height: 125,
     );
   }
 }

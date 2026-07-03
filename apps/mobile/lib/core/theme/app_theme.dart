@@ -5,7 +5,8 @@ import 'vibe_tokens.dart';
 final ThemeData vibeloopTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.light,
-  fontFamily: 'SF Pro Display',
+  fontFamily: 'Inter',
+  fontFamilyFallback: const ['SF Pro Display', 'Roboto', 'Segoe UI', 'Arial'],
   colorScheme: const ColorScheme.light(
     primary: VibeColors.electricBlue,
     secondary: VibeColors.primaryViolet,
@@ -145,7 +146,8 @@ final ThemeData vibeloopTheme = ThemeData(
 final ThemeData vibeloopDarkTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.dark,
-  fontFamily: 'SF Pro Display',
+  fontFamily: 'Inter',
+  fontFamilyFallback: const ['SF Pro Display', 'Roboto', 'Segoe UI', 'Arial'],
   colorScheme: const ColorScheme.dark(
     // Primary: violeta suave — más cómodo que el cian en fondos oscuros
     primary: Color(0xFF9B8FFF),

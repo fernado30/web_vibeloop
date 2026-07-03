@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -60,6 +61,11 @@ class _VibeloopAppState extends ConsumerState<VibeloopApp> {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'VIBELOOP',
+      locale: const Locale('es', 'ES'),
+      supportedLocales: const [
+        Locale('es', 'ES'),
+      ],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       theme: vibeloopTheme,
       darkTheme: vibeloopDarkTheme,
       themeMode: preferences.themeMode,

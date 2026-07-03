@@ -16,6 +16,7 @@ import '../../../core/theme/vibe_tokens.dart';
 import '../../../core/widgets/vibe_svg_icon.dart';
 import '../../../core/widgets/vibe_ui.dart';
 import '../../../core/utils/profile_emojis.dart';
+import '../../../core/utils/error_helper.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../anonymous/data/anonymous_repository.dart';
 import '../../anonymous/domain/anonymous_message_model.dart';
@@ -1072,7 +1073,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             const SizedBox(width: 14),
                             Expanded(
                             child: Text(
-                              '!mensajes anÃ³nimos!',
+                              '!mensajes anónimos!',
                               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w800,
@@ -1132,6 +1133,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   String _friendlyChatError(Object error) {
+    if (isNetworkError(error)) {
+      return getFriendlyNetworkError(actionContext: 'enviar el mensaje');
+    }
     final message = error.toString();
     if (message.contains('rate_limited_cooldown')) {
       return 'Espera un momento antes de enviar otro mensaje.';
@@ -1187,7 +1191,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   Text('Escoge tu emoji', style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 10),
                   Text(
-                    'Este emoji te identificarÃ¡ en el chat.',
+                    'Este emoji te identificará en el chat.',
                     style: TextStyle(color: colorScheme.onSurfaceVariant),
                   ),                  const SizedBox(height: 16),
                   Wrap(
@@ -1247,7 +1251,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ).toString();
     await SharePlus.instance.share(
       ShareParams(
-        text: 'Ãšnete a mi grupo en VIBELOOP: $inviteLink',
+        text: 'Únete a mi grupo en VIBELOOP: $inviteLink',
       ),
     );
     unawaited(AdService.instance.showInterstitialAfterInviteShared());
@@ -1390,9 +1394,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           ),
                           const SizedBox(width: 12),
                           _ExpandableHeaderActionMenu(
-                            screenshotLabel: 'Pantallazo',
+                            screenshotLabel: 'Captura',
                             inviteLabel: 'Invitar',
-                            shareLabel: 'Link web',
+                            shareLabel: 'Enlace web',
                             photosLabel: 'Fotos',
                             screenshotIconAsset: VibeAssetIcons.screenshot,
                             inviteIconAsset: VibeAssetIcons.invite,

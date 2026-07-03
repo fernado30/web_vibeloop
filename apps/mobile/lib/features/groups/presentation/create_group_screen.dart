@@ -1,9 +1,12 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/ads/ad_service.dart';
 import '../../../core/theme/vibe_tokens.dart';
+import '../../../core/widgets/vibe_svg_icon.dart';
 import '../data/groups_repository.dart';
 
 class CreateGroupScreen extends ConsumerStatefulWidget {
@@ -61,6 +64,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
             description: _descriptionController.text.trim(),
             imageUrl: _selectedImageUrl!,
           );
+
       if (mounted) {
         if (shouldShowInterstitial) {
           await AdService.instance.showInterstitialAfterGroupCreated(waitForDismissal: true);
@@ -69,8 +73,8 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
           context.go('/groups/${group.id}/chat');
         }
       }
-    } catch (e) {
-      _safeSetState(() => _error = _friendlyCreateGroupError(e));
+    } catch (error) {
+      _safeSetState(() => _error = _friendlyCreateGroupError(error));
     } finally {
       _safeSetState(() => _loading = false);
     }
@@ -85,312 +89,667 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
       return 'Has creado demasiados grupos en poco tiempo.';
     }
     if (message.contains('Invalid group name')) {
-      return 'El nombre del grupo no es valido.';
+      return 'El nombre del grupo no es válido.';
     }
     return message;
   }
 
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: const TextStyle(
+        color: Color(0xFFB9C0D8),
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.7,
+      ),
+    );
+  }
+
+  Widget _buildFieldCard({
+    required Widget icon,
+    required String hintText,
+    required TextEditingController controller,
+    required String? Function(String?) validator,
+    int maxLines = 1,
+    int minLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    final isMultiline = maxLines > 1;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(VibeRadii.card),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF101A30).withValues(alpha: 0.92),
+            const Color(0xFF0D1528).withValues(alpha: 0.88),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.22),
+            blurRadius: 32,
+            offset: const Offset(0, 16),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(VibeRadii.card),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20, isMultiline ? 18 : 16, 20, isMultiline ? 18 : 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                  ),
+                  alignment: Alignment.center,
+                  child: icon,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: TextFormField(
+                    controller: controller,
+                    maxLines: maxLines,
+                    minLines: minLines,
+                    keyboardType: keyboardType,
+                    cursorColor: Colors.white,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w400,
+                      height: 1.35,
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      border: InputBorder.none,
+                      hintText: hintText,
+                      hintMaxLines: isMultiline ? 3 : 1,
+                      hintStyle: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.54),
+                        fontSize: isMultiline ? 17 : 18,
+                        fontWeight: FontWeight.w400,
+                        height: 1.35,
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    validator: validator,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCoverCard({
+    required String url,
+    required String title,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        width: 236,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: selected ? const Color(0xFF19B8FF) : Colors.white.withValues(alpha: 0.12),
+            width: selected ? 1.6 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: selected
+                  ? const Color(0xFF7A3CFF).withValues(alpha: 0.35)
+                  : Colors.black.withValues(alpha: 0.22),
+              blurRadius: selected ? 28 : 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.network(
+                url,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: const Color(0xFF101A30),
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.image_rounded, color: Colors.white54, size: 32),
+                ),
+              ),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Color(0xFF050816),
+                      Colors.transparent,
+                    ],
+                    stops: [0.0, 0.62],
+                  ),
+                ),
+              ),
+              if (selected)
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: const Color(0xFF7F5BFF).withValues(alpha: 0.65), width: 1.5),
+                  ),
+                ),
+              Positioned(
+                left: 18,
+                right: 18,
+                bottom: 16,
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackground() {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment(0.08, -0.94),
+          radius: 1.35,
+          colors: [
+            Color(0xFF6E18C8),
+            Color(0xFF16234D),
+            Color(0xFF040916),
+          ],
+          stops: [0.0, 0.24, 0.8],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final mediaQuery = MediaQuery.of(context);
-    const primaryGradient = LinearGradient(
-      colors: [Color(0xFF7D01B1), Color(0xFF3E90FF)],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
+    final bottomPadding = mediaQuery.padding.bottom;
+    const buttonGradient = LinearGradient(
+      colors: [
+        Color(0xFF246BFF),
+        Color(0xFF7E2DFF),
+        Color(0xFFFF4DB0),
+      ],
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
     );
 
-    final scaffoldBackground = isDark ? VibeColors.darkSurface : const Color(0xFFFCF8FB);
-    final topBarBackground = isDark ? VibeColors.darkSurfaceSoft.withValues(alpha: 0.92) : Colors.white.withValues(alpha: 0.0);
-    final cardBackground = isDark ? VibeColors.darkSurfaceSoft.withValues(alpha: 0.96) : Colors.white.withValues(alpha: 0.4);
-    final cardBorder = isDark ? VibeColors.darkStroke : Colors.black.withValues(alpha: 0.05);
-    final titleColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF111827);
-    final bodyColor = isDark ? const Color(0xFFD3DBEB) : const Color(0xFF667085);
-    final labelColor = isDark ? const Color(0xFFB8C4E0) : const Color(0xFF667085);
-    final accentColor = isDark ? const Color(0xFFBFD3FF) : const Color(0xFF005AB3);
-    final inputHintColor = isDark ? const Color(0xFF8894AC) : const Color(0xFF98A2B3);
-
     return Scaffold(
-      backgroundColor: scaffoldBackground,
+      backgroundColor: const Color(0xFF040916),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            Container(
-              decoration: BoxDecoration(
-                color: topBarBackground,
-                border: Border(bottom: BorderSide(color: cardBorder)),
-              ),
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  InkWell(
-                    onTap: () => context.pop(),
-                    borderRadius: BorderRadius.circular(999),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
-                      alignment: Alignment.center,
-                      child: Icon(Icons.arrow_back_ios_new, color: accentColor),
-                    ),
-                  ),
-                  Text(
-                    'Crea tu grupo',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: titleColor),
-                  ),
-                  const SizedBox(width: 40),
+            Positioned.fill(child: _buildBackground()),
+            Positioned(
+              top: -110,
+              right: -70,
+              child: _GlowBlob(
+                size: 260,
+                colors: [
+                  const Color(0xFFFF4BC6).withValues(alpha: 0.56),
+                  const Color(0xFF6C2CFF).withValues(alpha: 0.18),
+                  Colors.transparent,
                 ],
               ),
             ),
-            Expanded(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 640),
-                  child: ListView(
-                    padding: EdgeInsets.fromLTRB(16, 20, 16, 24 + mediaQuery.padding.bottom),
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1A2240) : const Color(0xFFEEF2FF),
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: cardBorder),
-                            ),
-                            child: Text(
-                              'Paso 1',
-                              style: TextStyle(color: accentColor, fontSize: 13, fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      Text(
-                        'CREA TU GRUPO',
-                        style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: titleColor),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Personaliza tu espacio. Elige un nombre que resuene y una imagen que capture la esencia de tu comunidad.',
-                        style: TextStyle(color: bodyColor, fontSize: 15),
-                      ),
-                      const SizedBox(height: 18),
-                      if (_error != null) ...[
-                        Text(
-                          _error!,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: cardBackground,
-                                borderRadius: BorderRadius.circular(18),
-                                border: Border.all(color: cardBorder),
-                              ),
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+            Positioned(
+              bottom: -160,
+              left: -120,
+              child: _GlowBlob(
+                size: 320,
+                colors: [
+                  const Color(0xFF256BFF).withValues(alpha: 0.22),
+                  const Color(0xFF256BFF).withValues(alpha: 0.08),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+            Positioned(
+              top: 18,
+              left: 18,
+              child: _FloatingBackButton(onTap: () => context.pop()),
+            ),
+            Positioned.fill(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(28, 24, 28, 20 + bottomPadding),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 660),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 30),
+                        Center(
+                          child: Column(
+                            children: [
+                              Stack(
+                                clipBehavior: Clip.none,
+                                alignment: Alignment.center,
                                 children: [
-                                  Text(
-                                    'NOMBRE DEL GRUPO',
-                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: labelColor),
-                                  ),
-                                  TextFormField(
-                                    controller: _nameController,
-                                    decoration: InputDecoration(
-                                      border: InputBorder.none,
-                                      hintText: 'Ej: Amigos de la Montaña',
-                                      hintStyle: TextStyle(color: inputHintColor),
+                                  Positioned(
+                                    top: -18,
+                                    right: -42,
+                                    child: Icon(
+                                      Icons.auto_awesome_rounded,
+                                      size: 26,
+                                      color: const Color(0xFF7C4DFF).withValues(alpha: 0.95),
                                     ),
-                                    style: TextStyle(color: titleColor),
-                                    validator: (value) => (value ?? '').trim().isEmpty ? 'Escribe un nombre' : null,
                                   ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: cardBackground,
-                                borderRadius: BorderRadius.circular(18),
-                                border: Border.all(color: cardBorder),
-                              ),
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'DESCRIPCIÓN',
-                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: labelColor),
-                                  ),
-                                  TextFormField(
-                                    controller: _descriptionController,
-                                    keyboardType: TextInputType.multiline,
-                                    minLines: 4,
-                                    maxLines: 6,
-                                    textAlignVertical: TextAlignVertical.top,
-                                    decoration: InputDecoration(
-                                      border: InputBorder.none,
-                                      isDense: true,
-                                      hintText:
-                                          '¿De qué trata este grupo? Añade detalles para que los miembros sepan qué esperar.',
-                                      hintStyle: TextStyle(color: inputHintColor),
+                                  Positioned(
+                                    bottom: 10,
+                                    left: -46,
+                                    child: Icon(
+                                      Icons.auto_awesome_rounded,
+                                      size: 22,
+                                      color: const Color(0xFF4EA5FF).withValues(alpha: 0.95),
                                     ),
-                                    style: TextStyle(color: titleColor),
-                                    validator: (value) => (value ?? '').trim().isEmpty ? 'Escribe una descripcion' : null,
                                   ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Portada sugerida',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor),
-                          ),
-                          TextButton(
-                            onPressed: () {},
-                            child: Text('Ver todas', style: TextStyle(color: accentColor)),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 200,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _coverOptions.length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 12),
-                          itemBuilder: (context, index) {
-                            final url = _coverOptions[index];
-                            final selected = url == _selectedImageUrl;
-                            return GestureDetector(
-                              onTap: () => setState(() => _selectedImageUrl = url),
-                              child: Container(
-                                width: 256,
-                                clipBehavior: Clip.hardEdge,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(24),
-                                  boxShadow: [
-                                  BoxShadow(
-                                      color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.08),
-                                      blurRadius: 12,
+                                  Container(
+                                    width: 126,
+                                    height: 126,
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Color(0xFF2D7CFF),
+                                          Color(0xFF8C3BFF),
+                                          Color(0xFFFF4FB8),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
                                     ),
-                                  ],
-                                  border: selected
-                                      ? Border.all(color: const Color(0xFF7D01B1), width: 2)
-                                      : Border.all(color: Colors.transparent),
-                                ),
-                                child: Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    Image.network(url, fit: BoxFit.cover),
-                                    Container(
-                                      decoration: const BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.bottomCenter,
-                                          end: Alignment.topCenter,
-                                          colors: [Colors.black54, Colors.transparent],
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: const Color(0xFF071021),
+                                        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                                      ),
+                                      child: const Center(
+                                        child: VibeSvgIcon(
+                                          VibeAssetIcons.group,
+                                          size: 54,
+                                          color: Colors.white,
                                         ),
                                       ),
                                     ),
-                                    Positioned(
-                                      bottom: 12,
-                                      left: 12,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 28),
+                              const Text(
+                                'Crea tu grupo',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 46,
+                                  height: 1.0,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Personaliza tu espacio',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.62),
+                                  fontSize: 24,
+                                  height: 1.1,
+                                  fontWeight: FontWeight.w400,
+                                  letterSpacing: -0.35,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 52),
+                        Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _buildLabel('NOMBRE DEL GRUPO'),
+                              const SizedBox(height: 14),
+                              _buildFieldCard(
+                                icon: ShaderMask(
+                                  shaderCallback: (bounds) => buttonGradient.createShader(bounds),
+                                  child: const Icon(Icons.groups_rounded, color: Colors.white, size: 28),
+                                ),
+                                hintText: 'Ej: Amigos de la Montaña',
+                                controller: _nameController,
+                                validator: (value) => (value ?? '').trim().isEmpty ? 'Escribe un nombre' : null,
+                              ),
+                              const SizedBox(height: 34),
+                              _buildLabel('DESCRIPCIÓN'),
+                              const SizedBox(height: 14),
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(VibeRadii.card),
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      const Color(0xFF101A30).withValues(alpha: 0.92),
+                                      const Color(0xFF0D1528).withValues(alpha: 0.88),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.22),
+                                      blurRadius: 32,
+                                      offset: const Offset(0, 16),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(VibeRadii.card),
+                                  child: BackdropFilter(
+                                    filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
                                       child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          if (index == 0)
-                                            const Icon(Icons.check_circle, color: Colors.white, size: 18)
-                                          else
-                                            const SizedBox.shrink(),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            index == 0 ? 'Social' : index == 1 ? 'Creativo' : 'Aventura',
-                                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                                          Container(
+                                            width: 38,
+                                            height: 38,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withValues(alpha: 0.04),
+                                              borderRadius: BorderRadius.circular(14),
+                                              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                                            ),
+                                            alignment: Alignment.center,
+                                            child: ShaderMask(
+                                              shaderCallback: (bounds) => buttonGradient.createShader(bounds),
+                                              child: const Icon(Icons.edit_rounded, color: Colors.white, size: 24),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 14),
+                                          Expanded(
+                                            child: TextFormField(
+                                              controller: _descriptionController,
+                                              keyboardType: TextInputType.multiline,
+                                              minLines: 4,
+                                              maxLines: 6,
+                                              cursorColor: Colors.white,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w400,
+                                                height: 1.4,
+                                              ),
+                                              textAlignVertical: TextAlignVertical.top,
+                                              decoration: InputDecoration(
+                                                border: InputBorder.none,
+                                                isDense: true,
+                                                hintText:
+                                                    '¿De qué trata este grupo? Añade detalles para que los miembros sepan qué esperar.',
+                                                hintStyle: TextStyle(
+                                                  color: Colors.white.withValues(alpha: 0.54),
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w400,
+                                                  height: 1.4,
+                                                ),
+                                              ),
+                                              validator: (value) =>
+                                                  (value ?? '').trim().isEmpty ? 'Escribe una descripción' : null,
+                                            ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          ElevatedButton(
-                            onPressed: _loading ? null : _submit,
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 18),
-                              backgroundColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                              elevation: 0,
-                            ),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: primaryGradient,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF7D01B1).withValues(alpha: 0.16),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                ],
+                              const SizedBox(height: 10),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: ValueListenableBuilder<TextEditingValue>(
+                                  valueListenable: _descriptionController,
+                                  builder: (context, value, child) {
+                                    return Text(
+                                      '${value.text.length}/120',
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(alpha: 0.60),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              child: const Row(
+                              const SizedBox(height: 24),
+                              Divider(color: Colors.white.withValues(alpha: 0.10), height: 1),
+                              const SizedBox(height: 28),
+                              _buildLabel('PORTADA DEL GRUPO'),
+                              const SizedBox(height: 14),
+                              SizedBox(
+                                height: 290,
+                                child: ListView.separated(
+                                  scrollDirection: Axis.horizontal,
+                                  physics: const BouncingScrollPhysics(),
+                                  itemCount: _coverOptions.length,
+                                  separatorBuilder: (_, __) => const SizedBox(width: 18),
+                                  itemBuilder: (context, index) {
+                                    final url = _coverOptions[index];
+                                    final title = index == 0 ? 'Social' : index == 1 ? 'Creativo' : 'Aventura';
+                                    final selected = url == _selectedImageUrl;
+                                    return _buildCoverCard(
+                                      url: url,
+                                      title: title,
+                                      selected: selected,
+                                      onTap: () => setState(() => _selectedImageUrl = url),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 38),
+                              Opacity(
+                                opacity: _loading ? 0.72 : 1,
+                                child: InkWell(
+                                  onTap: _loading ? null : _submit,
+                                  borderRadius: BorderRadius.circular(24),
+                                  child: Container(
+                                    height: 78,
+                                    decoration: BoxDecoration(
+                                      gradient: buttonGradient,
+                                      borderRadius: BorderRadius.circular(24),
+                                      border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFF3B7BFF).withValues(alpha: 0.30),
+                                          blurRadius: 26,
+                                          offset: const Offset(0, 12),
+                                        ),
+                                        BoxShadow(
+                                          color: const Color(0xFFF04BB7).withValues(alpha: 0.18),
+                                          blurRadius: 30,
+                                          offset: const Offset(0, 14),
+                                        ),
+                                      ],
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: AnimatedSwitcher(
+                                      duration: const Duration(milliseconds: 180),
+                                      child: _loading
+                                          ? const SizedBox(
+                                              key: ValueKey('loading'),
+                                              width: 24,
+                                              height: 24,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2.4,
+                                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                              ),
+                                            )
+                                          : const Row(
+                                              key: ValueKey('cta'),
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  'CREAR GRUPO',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 23,
+                                                    fontWeight: FontWeight.w700,
+                                                    letterSpacing: -0.3,
+                                                  ),
+                                                ),
+                                                SizedBox(width: 18),
+                                                Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 22),
+                                              ],
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
+                                children: [
+                                  const Icon(Icons.lock_outline_rounded, color: Color(0xFF9D39FF), size: 24),
+                                  const SizedBox(width: 12),
                                   Text(
-                                    'CREAR GRUPO',
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+                                    'Tu grupo será privado por defecto',
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.62),
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w400,
+                                    ),
                                   ),
-                                  SizedBox(width: 8),
-                                  Icon(Icons.chevron_right, color: Colors.white),
                                 ],
                               ),
+                              if (_error != null) ...[
+                                const SizedBox(height: 18),
+                                Text(
+                                  _error!,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Color(0xFFFF6B8A),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 34 + bottomPadding),
+                        Center(
+                          child: Container(
+                            width: 140,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.90),
+                              borderRadius: BorderRadius.circular(999),
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Puedes cambiar estos detalles más adelante en los ajustes del grupo.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: isDark ? const Color(0xFF93A0B8) : const Color(0xFF9AA3B2),
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 24 + mediaQuery.padding.bottom),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FloatingBackButton extends StatelessWidget {
+  const _FloatingBackButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 78,
+        height: 78,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: const Color(0xFF121A2E).withValues(alpha: 0.82),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.28),
+              blurRadius: 26,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: const Center(
+          child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 40),
+        ),
+      ),
+    );
+  }
+}
+
+class _GlowBlob extends StatelessWidget {
+  const _GlowBlob({
+    required this.size,
+    required this.colors,
+  });
+
+  final double size;
+  final List<Color> colors;
+
+  @override
+  Widget build(BuildContext context) {
+    final stops = colors.length == 3 ? const [0.0, 0.45, 1.0] : null;
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: colors,
+          stops: stops,
         ),
       ),
     );

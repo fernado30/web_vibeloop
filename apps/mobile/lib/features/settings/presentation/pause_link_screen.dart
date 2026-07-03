@@ -42,14 +42,14 @@ class _PauseLinkScreenState extends ConsumerState<PauseLinkScreen> {
   @override
   Widget build(BuildContext context) {
     return VibeScaffold(
-      appBar: AppBar(title: const Text('Pausa mi enlace')),
+      appBar: AppBar(title: const Text('Pausar mi enlace')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
           const SectionIntroCard(
-            title: 'Pausa el acceso por invitacion cuando lo necesites',
-            body: 'Si dejas de querer recibir nuevos miembros por link, puedes pausar el enlace del grupo. Los miembros actuales no se ven afectados.',
-            badge: SafetyBadge(label: 'Invite control'),
+            title: 'Pausa el acceso por invitación cuando lo necesites',
+            body: 'Si dejas de querer recibir nuevos miembros por enlace, puedes pausar el enlace del grupo. Los miembros actuales no se ven afectados.',
+            badge: SafetyBadge(label: 'Control de invitaciones'),
           ),
           const SizedBox(height: 16),
           if (_loading)
@@ -73,7 +73,7 @@ class _PauseLinkScreenState extends ConsumerState<PauseLinkScreen> {
                       group.name,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                     ),
-                    subtitle: Text(group.invitePaused ? 'El enlace esta pausado' : 'El enlace esta activo'),
+                    subtitle: Text(group.invitePaused ? 'El enlace está pausado' : 'El enlace está activo'),
                   ),
                 ),
               ),

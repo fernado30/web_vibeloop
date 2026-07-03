@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../theme/vibe_tokens.dart';
+import '../utils/error_helper.dart';
 
 class VibeBackdrop extends StatelessWidget {
   const VibeBackdrop({super.key, this.child});
@@ -376,23 +377,71 @@ class ErrorStateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isOffline = isNetworkError(body);
+    final cardColor = isOffline
+        ? VibeColors.electricBlue.withValues(alpha: 0.08)
+        : VibeColors.coralPink.withValues(alpha: 0.10);
+    final titleColor = isOffline ? VibeColors.electricBlue : VibeColors.dangerRed;
+    final iconData = isOffline ? Icons.wifi_off_rounded : Icons.error_outline_rounded;
+
+    String displayBody = body;
+    if (isOffline) {
+      final titleLower = title.toLowerCase();
+      if (titleLower.contains('grupos')) {
+        displayBody = getFriendlyNetworkError(actionContext: 'cargar tus grupos');
+      } else if (titleLower.contains('acceder') || titleLower.contains('entrar') || titleLower.contains('unir')) {
+        displayBody = getFriendlyNetworkError(actionContext: 'acceder al grupo');
+      } else {
+        displayBody = getFriendlyNetworkError();
+      }
+    }
+
     return GlassCard(
-      color: VibeColors.coralPink.withValues(alpha: 0.10),
+      color: cardColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              Icon(
+                iconData,
+                color: titleColor,
+                size: 26,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: titleColor,
+                      ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
           Text(
-            title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: VibeColors.dangerRed,
+            displayBody,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xFFADB7D3)
+                      : VibeColors.textSecondary,
                 ),
           ),
-          const SizedBox(height: 8),
-          Text(body),
           if (onRetry != null) ...[
             const SizedBox(height: 16),
-            OutlinedButton(onPressed: onRetry, child: const Text('Reintentar')),
+            OutlinedButton(
+              onPressed: onRetry,
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: titleColor.withValues(alpha: 0.4)),
+                foregroundColor: titleColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(VibeRadii.button),
+                ),
+              ),
+              child: const Text('Reintentar'),
+            ),
           ],
         ],
       ),
@@ -448,7 +497,7 @@ class ShareLinkCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const SafetyBadge(label: 'Invite link'),
+              const SafetyBadge(label: 'Enlace'),
               const Spacer(),
               if (onShare != null)
                 IconButton(
@@ -721,7 +770,7 @@ class AnonymousMessageCard extends StatelessWidget {
         children: [
           Row(
             children: const [
-              SafetyBadge(label: 'Anonimo', color: VibeColors.coralPink),
+              SafetyBadge(label: 'Anónimo', color: VibeColors.coralPink),
             ],
           ),
           const SizedBox(height: 12),

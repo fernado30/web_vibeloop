@@ -65,7 +65,7 @@ class _StitchDesignScreenState extends ConsumerState<StitchDesignScreen> {
   Future<void> _loadHtml() async {
     final rawHtml = await rootBundle.loadString('assets/stitch/loop_onboarding.html');
     final normalizedHtml = rawHtml
-        .replaceAll('PolÃ­tica', 'Política')
+        .replaceAll('Pol\u00c3\u00adtica', 'Política')
         .replaceFirst(
           '<button class="w-full bg-transparent hover:bg-white/5 text-white h-14 rounded-3xl font-bold border border-white/20 flex items-center justify-center relative transition-transform active:scale-[0.98]">',
           '<button id="explore-button" class="w-full bg-transparent hover:bg-white/5 text-white h-14 rounded-3xl font-bold border border-white/20 flex items-center justify-center relative transition-transform active:scale-[0.98]">',

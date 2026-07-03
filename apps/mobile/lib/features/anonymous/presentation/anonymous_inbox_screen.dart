@@ -33,7 +33,7 @@ class _AnonymousInboxScreenState extends ConsumerState<AnonymousInboxScreen> {
   @override
   Widget build(BuildContext context) {
     return VibeScaffold(
-      appBar: AppBar(title: const Text('Buzon anonimo')),
+      appBar: AppBar(title: const Text('Buzón anónimo')),
       body: RefreshIndicator(
         onRefresh: _reload,
         child: StreamBuilder<List<AnonymousMessageModel>>(
@@ -43,7 +43,7 @@ class _AnonymousInboxScreenState extends ConsumerState<AnonymousInboxScreen> {
               return ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(20),
-                children: const [LoadingStateCard(label: 'Cargando mensajes anonimos...')],
+                children: const [LoadingStateCard(label: 'Cargando mensajes anónimos...')],
               );
             }
 
@@ -55,8 +55,8 @@ class _AnonymousInboxScreenState extends ConsumerState<AnonymousInboxScreen> {
                 children: const [
                   SizedBox(height: 120),
                   EmptyStateCard(
-                    title: 'Todavia no hay mensajes anonimos',
-                    body: 'Cuando lleguen nuevos mensajes, apareceran aqui para revisarlos en tiempo real.',
+                    title: 'Todavía no hay mensajes anónimos',
+                    body: 'Cuando lleguen nuevos mensajes, aparecerán aquí para revisarlos en tiempo real.',
                   ),
                 ],
               );
@@ -70,9 +70,9 @@ class _AnonymousInboxScreenState extends ConsumerState<AnonymousInboxScreen> {
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return const SectionIntroCard(
-                    title: 'Inbox cuidado para conversaciones delicadas',
-                    body: 'Revisa mensajes nuevos, detecta reacciones y mantiene la vista despejada para moderar mejor.',
-                    badge: SafetyBadge(label: 'Anonimo'),
+                    title: 'Bandeja cuidadosa para conversaciones delicadas',
+                    body: 'Revisa mensajes nuevos, detecta reacciones y mantén la vista despejada para moderar mejor.',
+                    badge: SafetyBadge(label: 'Anónimo'),
                   );
                 }
 

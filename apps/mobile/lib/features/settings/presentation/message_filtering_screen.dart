@@ -52,9 +52,9 @@ class _MessageFilteringScreenState extends ConsumerState<MessageFilteringScreen>
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
           const SectionIntroCard(
-            title: 'Define como quieres ver el chat',
+            title: 'Define cómo quieres ver el chat',
             body: 'Estos controles ayudan a mantener el entorno más cómodo para ti sin alterar la lógica de mensajes del grupo.',
-            badge: SafetyBadge(label: 'Moderacion'),
+            badge: SafetyBadge(label: 'Moderación'),
           ),
           const SizedBox(height: 16),
           if (_loading)

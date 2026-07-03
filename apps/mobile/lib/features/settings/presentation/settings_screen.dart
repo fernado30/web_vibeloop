@@ -127,7 +127,7 @@ class SettingsScreen extends ConsumerWidget {
             children: [
               _SettingsRow(
                 icon: Icons.question_mark_rounded,
-                title: 'I need help',
+                title: 'Necesito ayuda',
                 subtitle: null,
                 onTap: () => context.push('/groups/settings/help'),
               ),

@@ -13,6 +13,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/ads/vibe_loop_banner_ad.dart';
 import '../../../core/widgets/vibe_svg_icon.dart';
 import '../../../core/widgets/vibe_ui.dart';
+import '../../../core/utils/error_helper.dart';
 import '../data/groups_repository.dart';
 import '../domain/group_model.dart';
 import '../domain/group_photo_model.dart';
@@ -853,6 +854,9 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
   }
 
   String _friendlyPhotoError(Object error) {
+    if (isNetworkError(error)) {
+      return getFriendlyNetworkError(actionContext: 'subir la foto');
+    }
     final message = error.toString();
     if (message.contains('rate_limited_cooldown')) {
       return 'Espera un momento antes de subir otra foto.';

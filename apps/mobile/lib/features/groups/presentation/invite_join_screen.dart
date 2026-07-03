@@ -6,6 +6,8 @@ import '../../../core/ads/vibe_loop_banner_ad.dart';
 import '../../../core/utils/profile_emojis.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/groups_repository.dart';
+import '../../../core/widgets/vibe_ui.dart';
+import '../../../core/utils/error_helper.dart';
 
 class InviteJoinScreen extends ConsumerStatefulWidget {
   const InviteJoinScreen({super.key, required this.inviteCode});
@@ -67,6 +69,9 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
   }
 
   String _friendlyError(Object error) {
+    if (isNetworkError(error)) {
+      return getFriendlyNetworkError(actionContext: 'acceder al grupo');
+    }
     final message = error.toString();
     if (message.contains('anonymous_provider_disabled')) {
       return 'Activa Anonymous Sign-ins en Supabase para permitir invitados sin correo.';
@@ -119,11 +124,10 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (_error != null) ...[
-                          Text(_error!, style: const TextStyle(color: Colors.redAccent)),
-                          const SizedBox(height: 16),
-                          FilledButton(
-                            onPressed: () => _bootstrap(),
-                            child: const Text('Reintentar'),
+                          ErrorStateCard(
+                            title: 'No pudimos acceder al grupo',
+                            body: _error!,
+                            onRetry: () => _bootstrap(),
                           ),
                         ],
                       ],

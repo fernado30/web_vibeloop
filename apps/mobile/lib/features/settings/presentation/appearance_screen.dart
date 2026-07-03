@@ -20,7 +20,7 @@ class AppearanceScreen extends ConsumerWidget {
           const SectionIntroCard(
             title: 'Controla como se ve VIBELOOP',
             body: 'Puedes cambiar entre modo claro, oscuro o seguir el sistema. El cambio se guarda y se aplica en toda la app al instante.',
-            badge: SafetyBadge(label: 'Theme'),
+            badge: SafetyBadge(label: 'Tema'),
           ),
           const SizedBox(height: 16),
           if (!state.loaded)

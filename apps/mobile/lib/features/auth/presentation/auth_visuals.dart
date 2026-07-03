@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/vibe_tokens.dart';
+import '../../../core/utils/error_helper.dart';
 
 class AuthScreenShell extends StatelessWidget {
   const AuthScreenShell({
@@ -314,9 +315,12 @@ class _LogoBlock extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(40),
-          child: Image.asset(
-            'assets/icon/vibeloop_icon.png',
-            fit: BoxFit.cover,
+          child: Transform.scale(
+            scale: 1.34,
+            child: Image.asset(
+              'assets/icon/vibeloop_icon.png',
+              fit: BoxFit.cover,
+            ),
           ),
         ),
       ),
@@ -607,58 +611,15 @@ class _GoogleMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(
+    return Image.asset(
+      'assets/icons/google_logo.png',
       width: 30,
       height: 30,
-      child: CustomPaint(
-        painter: _GoogleGPainter(),
-      ),
+      fit: BoxFit.contain,
     );
   }
 }
 
-class _GoogleGPainter extends CustomPainter {
-  const _GoogleGPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final stroke = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = size.shortestSide * 0.19
-      ..strokeCap = StrokeCap.round;
-    final bar = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = size.shortestSide * 0.19
-      ..strokeCap = StrokeCap.round
-      ..color = const Color(0xFF4285F4);
-
-    final rect = Rect.fromLTWH(
-      stroke.strokeWidth / 2,
-      stroke.strokeWidth / 2,
-      size.width - stroke.strokeWidth,
-      size.height - stroke.strokeWidth,
-    );
-
-    stroke.color = const Color(0xFFEA4335);
-    canvas.drawArc(rect, 3.95, 0.78, false, stroke);
-
-    stroke.color = const Color(0xFFFBBC05);
-    canvas.drawArc(rect, 4.72, 0.78, false, stroke);
-
-    stroke.color = const Color(0xFF34A853);
-    canvas.drawArc(rect, 5.50, 0.95, false, stroke);
-
-    stroke.color = const Color(0xFF4285F4);
-    canvas.drawArc(rect, 0.05, 0.95, false, stroke);
-
-    final barStart = Offset(size.width * 0.52, size.height * 0.52);
-    final barEnd = Offset(size.width * 0.84, size.height * 0.52);
-    canvas.drawLine(barStart, barEnd, bar);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
 
 class _AuthErrorBanner extends StatelessWidget {
   const _AuthErrorBanner({required this.message});
@@ -667,20 +628,36 @@ class _AuthErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isOffline = isNetworkError(message);
+    final bgColor = isOffline ? const Color(0xFFEEF6FF) : const Color(0xFFFFEEF4);
+    final borderColor = isOffline ? const Color(0xFFC6E0FF) : const Color(0xFFFFC6D9);
+    final textColor = isOffline ? const Color(0xFF2E7DFF) : const Color(0xFFD63B6F);
+    final displayText = isOffline ? getFriendlyNetworkError() : message;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFEEF4),
+        color: bgColor,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFFFC6D9)),
+        border: Border.all(color: borderColor),
       ),
-      child: Text(
-        message,
-        style: const TextStyle(
-          color: Color(0xFFD63B6F),
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        children: [
+          if (isOffline) ...[
+            Icon(Icons.wifi_off_rounded, color: textColor, size: 22),
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: Text(
+              displayText,
+              style: TextStyle(
+                color: textColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

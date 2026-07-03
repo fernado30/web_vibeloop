@@ -37,7 +37,7 @@ class HelpScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return VibeScaffold(
-      appBar: AppBar(title: const Text('I need help')),
+      appBar: AppBar(title: const Text('Necesito ayuda')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [

@@ -93,7 +93,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               const SizedBox(height: 16),
               AuthTextField(
                 controller: _emailController,
-                label: 'Email',
+                label: 'Correo electrónico',
                 icon: Icons.mail_outline_rounded,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
@@ -123,7 +123,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       footer: AuthFooterLink(
         prompt: '¿Ya tengo cuenta?',
         actionLabel: 'Iniciar sesión',
-        onPressed: () => context.go('/login'),
+        onPressed: () => context.push('/login'),
       ),
     );
   }
