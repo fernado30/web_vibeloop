@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/vibe_tokens.dart';
 import '../../../core/widgets/vibe_svg_icon.dart';
 import '../../../core/widgets/vibe_ui.dart';
+import '../../../core/settings/app_preferences_repository.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/groups_repository.dart';
 import '../domain/group_model.dart';
@@ -62,7 +63,8 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
     final groups = groupsState.maybeWhen(data: (groups) => groups, orElse: () => null);
     final showEmptyState = groups != null && groups.isEmpty;
     final user = ref.watch(authStateProvider).maybeWhen(authenticated: (user) => user, orElse: () => null);
-    final greetingName = _resolveGreetingName(user);
+    final savedUsername = ref.watch(appPreferencesControllerProvider).username;
+    final greetingName = _resolveGreetingName(user, savedUsername);
 
     return VibeScaffold(
       appBar: null,
@@ -124,8 +126,11 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
                   for (final group in filteredGroups) ...[
                     _GroupCard(
                       group: group,
+                      currentUserId: user?.id ?? '',
                       onOpenChat: () => context.push('/groups/${group.id}/chat'),
                       onOpenAnonymous: () => context.push('/groups/${group.id}/anonymous'),
+                      onDeleteGroup: () => _showDeleteConfirmation(context, group),
+                      ref: ref,
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -149,19 +154,75 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
     }).toList();
   }
 
-  String _resolveGreetingName(dynamic user) {
+  String _resolveGreetingName(dynamic user, String? savedUsername) {
+    // Priority 1: username chosen during onboarding
+    if (savedUsername != null && savedUsername.isNotEmpty) {
+      return savedUsername;
+    }
+
+    // Priority 2: display_name from auth metadata
     final displayName = user?.userMetadata?['display_name']?.toString().trim();
     if (displayName != null && displayName.isNotEmpty) {
       return displayName;
     }
 
+    // Priority 3: derive from email
     final emailName = user?.email?.split('@').first.trim();
     if (emailName != null && emailName.isNotEmpty) {
       return emailName[0].toUpperCase() + emailName.substring(1);
     }
 
-    return 'Fernando';
+    return 'Vibelooper';
   }
+
+  Future<void> _showDeleteConfirmation(BuildContext context, GroupModel group) async {
+    final shouldDelete = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) {
+            return AlertDialog(
+              title: const Text('Eliminar grupo'),
+              content: Text(
+                'Vas a eliminar "${group.name}".\nSe borrarán el chat, las fotos y la membresía de todos los miembros.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: VibeColors.dangerRed,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Eliminar'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+
+    if (!shouldDelete || !mounted) {
+      return;
+    }
+
+    try {
+      await ref.read(groupsRepositoryProvider).deleteGroup(group.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${group.name} fue eliminado')),
+      );
+      ref.read(groupsControllerProvider.notifier).loadMyGroups();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo eliminar el grupo: $error')),
+      );
+    }
+  }
+
 }
 
 class _LoadingGroupsView extends StatelessWidget {
@@ -567,13 +628,19 @@ class _NoResultsGroupsView extends StatelessWidget {
 class _GroupCard extends StatelessWidget {
   const _GroupCard({
     required this.group,
+    required this.currentUserId,
     required this.onOpenChat,
     required this.onOpenAnonymous,
+    required this.onDeleteGroup,
+    required this.ref,
   });
 
   final GroupModel group;
+  final String currentUserId;
   final VoidCallback onOpenChat;
   final VoidCallback onOpenAnonymous;
+  final VoidCallback onDeleteGroup;
+  final WidgetRef ref;
 
   @override
   Widget build(BuildContext context) {
@@ -667,6 +734,23 @@ class _GroupCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (group.createdBy == currentUserId)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.delete_outline_rounded,
+                          color: VibeColors.dangerRed,
+                          size: 22,
+                        ),
+                        onPressed: onDeleteGroup,
+                        tooltip: 'Eliminar grupo',
+                        constraints: const BoxConstraints(
+                          minWidth: 40,
+                          minHeight: 40,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

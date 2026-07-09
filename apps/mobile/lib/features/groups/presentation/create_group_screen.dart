@@ -94,12 +94,12 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
     return message;
   }
 
-  Widget _buildLabel(String text) {
+  Widget _buildLabel(String text, {required bool isDark}) {
     return Text(
       text,
-      style: const TextStyle(
-        color: Color(0xFFB9C0D8),
-        fontSize: 13,
+      style: TextStyle(
+        color: isDark ? const Color(0xFFB9C0D8) : VibeColors.textSecondary,
+        fontSize: 11,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.7,
       ),
@@ -111,78 +111,99 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
     required String hintText,
     required TextEditingController controller,
     required String? Function(String?) validator,
+    required bool isDark,
     int maxLines = 1,
     int minLines = 1,
     TextInputType keyboardType = TextInputType.text,
   }) {
     final isMultiline = maxLines > 1;
 
+    // Light: white card with subtle shadow; Dark: translucent glass
+    final cardColor = isDark
+        ? Colors.white.withValues(alpha: 0.05)
+        : Colors.white.withValues(alpha: 0.92);
+
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : VibeColors.strokeSoft;
+
+    final textColor = isDark ? Colors.white : VibeColors.textPrimary;
+    final hintColor = isDark
+        ? Colors.white.withValues(alpha: 0.45)
+        : VibeColors.textSecondary;
+
+    final iconBgColor = isDark
+        ? Colors.white.withValues(alpha: 0.06)
+        : VibeColors.surfaceSoft;
+    final iconBorderColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : VibeColors.strokeSoft;
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(VibeRadii.card),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF101A30).withValues(alpha: 0.92),
-            const Color(0xFF0D1528).withValues(alpha: 0.88),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        border: Border.all(color: borderColor),
+        color: cardColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.22),
-            blurRadius: 32,
-            offset: const Offset(0, 16),
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.10)
+                : VibeColors.primaryDeepBlue.withValues(alpha: 0.06),
+            blurRadius: isDark ? 12 : 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(VibeRadii.card),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Padding(
-            padding: EdgeInsets.fromLTRB(20, isMultiline ? 18 : 16, 20, isMultiline ? 18 : 14),
+            padding: EdgeInsets.fromLTRB(14, isMultiline ? 12 : 10, 14, isMultiline ? 12 : 10),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 38,
-                  height: 38,
+                  width: 30,
+                  height: 30,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.04),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                    color: iconBgColor,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: iconBorderColor),
                   ),
                   alignment: Alignment.center,
                   child: icon,
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 10),
                 Expanded(
                   child: TextFormField(
                     controller: controller,
                     maxLines: maxLines,
                     minLines: minLines,
                     keyboardType: keyboardType,
-                    cursorColor: Colors.white,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
+                    cursorColor: isDark ? Colors.white : VibeColors.primaryViolet,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 15,
                       fontWeight: FontWeight.w400,
                       height: 1.35,
                     ),
                     decoration: InputDecoration(
                       isDense: true,
                       border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
                       hintText: hintText,
                       hintMaxLines: isMultiline ? 3 : 1,
                       hintStyle: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.54),
-                        fontSize: isMultiline ? 17 : 18,
+                        color: hintColor,
+                        fontSize: isMultiline ? 14 : 15,
                         fontWeight: FontWeight.w400,
                         height: 1.35,
                       ),
                       contentPadding: EdgeInsets.zero,
+                      fillColor: Colors.transparent,
+                      filled: false,
                     ),
                     validator: validator,
                   ),
@@ -206,9 +227,9 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,
-        width: 236,
+        width: 130,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected ? const Color(0xFF19B8FF) : Colors.white.withValues(alpha: 0.12),
             width: selected ? 1.6 : 1,
@@ -218,13 +239,13 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
               color: selected
                   ? const Color(0xFF7A3CFF).withValues(alpha: 0.35)
                   : Colors.black.withValues(alpha: 0.22),
-              blurRadius: selected ? 28 : 20,
-              offset: const Offset(0, 10),
+              blurRadius: selected ? 16 : 10,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(16),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -234,7 +255,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                 errorBuilder: (context, error, stackTrace) => Container(
                   color: const Color(0xFF101A30),
                   alignment: Alignment.center,
-                  child: const Icon(Icons.image_rounded, color: Colors.white54, size: 32),
+                  child: const Icon(Icons.image_rounded, color: Colors.white54, size: 24),
                 ),
               ),
               const DecoratedBox(
@@ -253,19 +274,19 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
               if (selected)
                 Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: const Color(0xFF7F5BFF).withValues(alpha: 0.65), width: 1.5),
                   ),
                 ),
               Positioned(
-                left: 18,
-                right: 18,
-                bottom: 16,
+                left: 10,
+                right: 10,
+                bottom: 10,
                 child: Text(
                   title,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
                     letterSpacing: -0.2,
                   ),
@@ -278,18 +299,35 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
     );
   }
 
-  Widget _buildBackground() {
+  Widget _buildBackground({required bool isDark}) {
+    if (isDark) {
+      return const DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment(0.08, -0.94),
+            radius: 1.35,
+            colors: [
+              Color(0xFF6E18C8),
+              Color(0xFF16234D),
+              Color(0xFF040916),
+            ],
+            stops: [0.0, 0.24, 0.8],
+          ),
+        ),
+      );
+    }
+    // Light mode: soft lavender→sky gradient
     return const DecoratedBox(
       decoration: BoxDecoration(
         gradient: RadialGradient(
-          center: Alignment(0.08, -0.94),
-          radius: 1.35,
+          center: Alignment(0.1, -0.9),
+          radius: 1.4,
           colors: [
-            Color(0xFF6E18C8),
-            Color(0xFF16234D),
-            Color(0xFF040916),
+            Color(0xFFE8E0FF), // lavender suave
+            Color(0xFFF0F4FF), // azul hielo
+            Color(0xFFF7F7FB), // gris muy claro
           ],
-          stops: [0.0, 0.24, 0.8],
+          stops: [0.0, 0.35, 0.85],
         ),
       ),
     );
@@ -299,6 +337,8 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final bottomPadding = mediaQuery.padding.bottom;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     const buttonGradient = LinearGradient(
       colors: [
         Color(0xFF246BFF),
@@ -309,52 +349,82 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
       end: Alignment.centerRight,
     );
 
+    final scaffoldBg = isDark ? const Color(0xFF040916) : const Color(0xFFF7F7FB);
+    final titleColor = isDark ? Colors.white : VibeColors.textPrimary;
+    final subtitleColor = isDark
+        ? Colors.white.withValues(alpha: 0.62)
+        : VibeColors.textSecondary;
+    final dividerColor = isDark
+        ? Colors.white.withValues(alpha: 0.10)
+        : VibeColors.strokeSoft;
+    final lockColor = isDark ? const Color(0xFF9D39FF) : VibeColors.primaryViolet;
+    final lockTextColor = isDark
+        ? Colors.white.withValues(alpha: 0.62)
+        : VibeColors.textSecondary;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF040916),
+      backgroundColor: scaffoldBg,
       body: SafeArea(
         child: Stack(
           children: [
-            Positioned.fill(child: _buildBackground()),
-            Positioned(
-              top: -110,
-              right: -70,
-              child: _GlowBlob(
-                size: 260,
-                colors: [
-                  const Color(0xFFFF4BC6).withValues(alpha: 0.56),
-                  const Color(0xFF6C2CFF).withValues(alpha: 0.18),
-                  Colors.transparent,
-                ],
+            Positioned.fill(child: _buildBackground(isDark: isDark)),
+            // Glow blobs — only in dark mode for visual flair
+            if (isDark) ...[
+              Positioned(
+                top: -110,
+                right: -70,
+                child: _GlowBlob(
+                  size: 260,
+                  colors: [
+                    const Color(0xFFFF4BC6).withValues(alpha: 0.56),
+                    const Color(0xFF6C2CFF).withValues(alpha: 0.18),
+                    Colors.transparent,
+                  ],
+                ),
               ),
-            ),
-            Positioned(
-              bottom: -160,
-              left: -120,
-              child: _GlowBlob(
-                size: 320,
-                colors: [
-                  const Color(0xFF256BFF).withValues(alpha: 0.22),
-                  const Color(0xFF256BFF).withValues(alpha: 0.08),
-                  Colors.transparent,
-                ],
+              Positioned(
+                bottom: -160,
+                left: -120,
+                child: _GlowBlob(
+                  size: 320,
+                  colors: [
+                    const Color(0xFF256BFF).withValues(alpha: 0.22),
+                    const Color(0xFF256BFF).withValues(alpha: 0.08),
+                    Colors.transparent,
+                  ],
+                ),
               ),
-            ),
+            ],
+            // Light mode subtle blob
+            if (!isDark)
+              Positioned(
+                top: -80,
+                right: -60,
+                child: _GlowBlob(
+                  size: 220,
+                  colors: [
+                    const Color(0xFF7B61FF).withValues(alpha: 0.12),
+                    const Color(0xFF7B61FF).withValues(alpha: 0.04),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
             Positioned(
-              top: 18,
-              left: 18,
-              child: _FloatingBackButton(onTap: () => context.pop()),
+              top: 12,
+              left: 12,
+              child: _FloatingBackButton(onTap: () => context.pop(), isDark: isDark),
             ),
             Positioned.fill(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(28, 24, 28, 20 + bottomPadding),
+                padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomPadding),
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 660),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 16),
                         Center(
                           child: Column(
                             children: [
@@ -363,27 +433,27 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                                 alignment: Alignment.center,
                                 children: [
                                   Positioned(
-                                    top: -18,
-                                    right: -42,
+                                    top: -10,
+                                    right: -28,
                                     child: Icon(
                                       Icons.auto_awesome_rounded,
-                                      size: 26,
+                                      size: 16,
                                       color: const Color(0xFF7C4DFF).withValues(alpha: 0.95),
                                     ),
                                   ),
                                   Positioned(
-                                    bottom: 10,
-                                    left: -46,
+                                    bottom: 4,
+                                    left: -28,
                                     child: Icon(
                                       Icons.auto_awesome_rounded,
-                                      size: 22,
+                                      size: 14,
                                       color: const Color(0xFF4EA5FF).withValues(alpha: 0.95),
                                     ),
                                   ),
                                   Container(
-                                    width: 126,
-                                    height: 126,
-                                    padding: const EdgeInsets.all(4),
+                                    width: 80,
+                                    height: 80,
+                                    padding: const EdgeInsets.all(3),
                                     decoration: const BoxDecoration(
                                       shape: BoxShape.circle,
                                       gradient: LinearGradient(
@@ -399,133 +469,152 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                                     child: Container(
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: const Color(0xFF071021),
-                                        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                                        color: isDark ? const Color(0xFF071021) : Colors.white,
+                                        border: Border.all(
+                                          color: isDark
+                                              ? Colors.white.withValues(alpha: 0.12)
+                                              : VibeColors.strokeSoft,
+                                        ),
                                       ),
-                                      child: const Center(
+                                      child: Center(
                                         child: VibeSvgIcon(
                                           VibeAssetIcons.group,
-                                          size: 54,
-                                          color: Colors.white,
+                                          size: 36,
+                                          color: isDark ? Colors.white : VibeColors.primaryViolet,
                                         ),
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 28),
-                              const Text(
+                              const SizedBox(height: 14),
+                              Text(
                                 'Crea tu grupo',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 46,
+                                  color: titleColor,
+                                  fontSize: 28,
                                   height: 1.0,
                                   fontWeight: FontWeight.w800,
-                                  letterSpacing: -1.2,
+                                  letterSpacing: -0.8,
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 6),
                               Text(
                                 'Personaliza tu espacio',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.62),
-                                  fontSize: 24,
+                                  color: subtitleColor,
+                                  fontSize: 15,
                                   height: 1.1,
                                   fontWeight: FontWeight.w400,
-                                  letterSpacing: -0.35,
+                                  letterSpacing: -0.2,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 52),
+                        const SizedBox(height: 20),
                         Form(
                           key: _formKey,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              _buildLabel('NOMBRE DEL GRUPO'),
-                              const SizedBox(height: 14),
+                              _buildLabel('NOMBRE DEL GRUPO', isDark: isDark),
+                              const SizedBox(height: 8),
                               _buildFieldCard(
+                                isDark: isDark,
                                 icon: ShaderMask(
                                   shaderCallback: (bounds) => buttonGradient.createShader(bounds),
-                                  child: const Icon(Icons.groups_rounded, color: Colors.white, size: 28),
+                                  child: const Icon(Icons.groups_rounded, color: Colors.white, size: 20),
                                 ),
                                 hintText: 'Ej: Amigos de la Montaña',
                                 controller: _nameController,
                                 validator: (value) => (value ?? '').trim().isEmpty ? 'Escribe un nombre' : null,
                               ),
-                              const SizedBox(height: 34),
-                              _buildLabel('DESCRIPCIÓN'),
-                              const SizedBox(height: 14),
+                              const SizedBox(height: 16),
+                              _buildLabel('DESCRIPCIÓN', isDark: isDark),
+                              const SizedBox(height: 8),
+                              // Description field (multiline)
                               Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(VibeRadii.card),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      const Color(0xFF101A30).withValues(alpha: 0.92),
-                                      const Color(0xFF0D1528).withValues(alpha: 0.88),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
+                                  border: Border.all(
+                                    color: isDark
+                                        ? Colors.white.withValues(alpha: 0.08)
+                                        : VibeColors.strokeSoft,
                                   ),
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.05)
+                                      : Colors.white.withValues(alpha: 0.92),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.22),
-                                      blurRadius: 32,
-                                      offset: const Offset(0, 16),
+                                      color: isDark
+                                          ? Colors.black.withValues(alpha: 0.10)
+                                          : VibeColors.primaryDeepBlue.withValues(alpha: 0.06),
+                                      blurRadius: isDark ? 12 : 16,
+                                      offset: const Offset(0, 4),
                                     ),
                                   ],
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(VibeRadii.card),
                                   child: BackdropFilter(
-                                    filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                                     child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+                                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                                       child: Row(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Container(
-                                            width: 38,
-                                            height: 38,
+                                            width: 30,
+                                            height: 30,
                                             decoration: BoxDecoration(
-                                              color: Colors.white.withValues(alpha: 0.04),
-                                              borderRadius: BorderRadius.circular(14),
-                                              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                                              color: isDark
+                                                  ? Colors.white.withValues(alpha: 0.06)
+                                                  : VibeColors.surfaceSoft,
+                                              borderRadius: BorderRadius.circular(10),
+                                              border: Border.all(
+                                                color: isDark
+                                                    ? Colors.white.withValues(alpha: 0.08)
+                                                    : VibeColors.strokeSoft,
+                                              ),
                                             ),
                                             alignment: Alignment.center,
                                             child: ShaderMask(
                                               shaderCallback: (bounds) => buttonGradient.createShader(bounds),
-                                              child: const Icon(Icons.edit_rounded, color: Colors.white, size: 24),
+                                              child: const Icon(Icons.edit_rounded, color: Colors.white, size: 18),
                                             ),
                                           ),
-                                          const SizedBox(width: 14),
+                                          const SizedBox(width: 10),
                                           Expanded(
                                             child: TextFormField(
                                               controller: _descriptionController,
                                               keyboardType: TextInputType.multiline,
-                                              minLines: 4,
-                                              maxLines: 6,
-                                              cursorColor: Colors.white,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 18,
+                                              minLines: 2,
+                                              maxLines: 3,
+                                              cursorColor: isDark ? Colors.white : VibeColors.primaryViolet,
+                                              style: TextStyle(
+                                                color: isDark ? Colors.white : VibeColors.textPrimary,
+                                                fontSize: 15,
                                                 fontWeight: FontWeight.w400,
                                                 height: 1.4,
                                               ),
                                               textAlignVertical: TextAlignVertical.top,
                                               decoration: InputDecoration(
                                                 border: InputBorder.none,
+                                                enabledBorder: InputBorder.none,
+                                                focusedBorder: InputBorder.none,
                                                 isDense: true,
+                                                fillColor: Colors.transparent,
+                                                filled: false,
                                                 hintText:
                                                     '¿De qué trata este grupo? Añade detalles para que los miembros sepan qué esperar.',
                                                 hintStyle: TextStyle(
-                                                  color: Colors.white.withValues(alpha: 0.54),
-                                                  fontSize: 18,
+                                                  color: isDark
+                                                      ? Colors.white.withValues(alpha: 0.45)
+                                                      : VibeColors.textSecondary,
+                                                  fontSize: 14,
                                                   fontWeight: FontWeight.w400,
                                                   height: 1.4,
                                                 ),
@@ -540,7 +629,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 10),
+                              const SizedBox(height: 6),
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: ValueListenableBuilder<TextEditingValue>(
@@ -549,26 +638,28 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                                     return Text(
                                       '${value.text.length}/120',
                                       style: TextStyle(
-                                        color: Colors.white.withValues(alpha: 0.60),
-                                        fontSize: 14,
+                                        color: isDark
+                                            ? Colors.white.withValues(alpha: 0.60)
+                                            : VibeColors.textSecondary,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     );
                                   },
                                 ),
                               ),
-                              const SizedBox(height: 24),
-                              Divider(color: Colors.white.withValues(alpha: 0.10), height: 1),
-                              const SizedBox(height: 28),
-                              _buildLabel('PORTADA DEL GRUPO'),
+                              const SizedBox(height: 12),
+                              Divider(color: dividerColor, height: 1),
                               const SizedBox(height: 14),
+                              _buildLabel('PORTADA DEL GRUPO', isDark: isDark),
+                              const SizedBox(height: 8),
                               SizedBox(
-                                height: 290,
+                                height: 150,
                                 child: ListView.separated(
                                   scrollDirection: Axis.horizontal,
                                   physics: const BouncingScrollPhysics(),
                                   itemCount: _coverOptions.length,
-                                  separatorBuilder: (_, __) => const SizedBox(width: 18),
+                                  separatorBuilder: (_, __) => const SizedBox(width: 10),
                                   itemBuilder: (context, index) {
                                     final url = _coverOptions[index];
                                     final title = index == 0 ? 'Social' : index == 1 ? 'Creativo' : 'Aventura';
@@ -582,28 +673,28 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                                   },
                                 ),
                               ),
-                              const SizedBox(height: 38),
+                              const SizedBox(height: 18),
                               Opacity(
                                 opacity: _loading ? 0.72 : 1,
                                 child: InkWell(
                                   onTap: _loading ? null : _submit,
-                                  borderRadius: BorderRadius.circular(24),
+                                  borderRadius: BorderRadius.circular(12),
                                   child: Container(
-                                    height: 78,
+                                    height: 50,
                                     decoration: BoxDecoration(
                                       gradient: buttonGradient,
-                                      borderRadius: BorderRadius.circular(24),
+                                      borderRadius: BorderRadius.circular(12),
                                       border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
                                       boxShadow: [
                                         BoxShadow(
                                           color: const Color(0xFF3B7BFF).withValues(alpha: 0.30),
-                                          blurRadius: 26,
-                                          offset: const Offset(0, 12),
+                                          blurRadius: 16,
+                                          offset: const Offset(0, 6),
                                         ),
                                         BoxShadow(
                                           color: const Color(0xFFF04BB7).withValues(alpha: 0.18),
-                                          blurRadius: 30,
-                                          offset: const Offset(0, 14),
+                                          blurRadius: 18,
+                                          offset: const Offset(0, 8),
                                         ),
                                       ],
                                     ),
@@ -613,10 +704,10 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                                       child: _loading
                                           ? const SizedBox(
                                               key: ValueKey('loading'),
-                                              width: 24,
-                                              height: 24,
+                                              width: 20,
+                                              height: 20,
                                               child: CircularProgressIndicator(
-                                                strokeWidth: 2.4,
+                                                strokeWidth: 2.2,
                                                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                               ),
                                             )
@@ -629,43 +720,43 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                                                   'CREAR GRUPO',
                                                   style: TextStyle(
                                                     color: Colors.white,
-                                                    fontSize: 23,
+                                                    fontSize: 15,
                                                     fontWeight: FontWeight.w700,
-                                                    letterSpacing: -0.3,
+                                                    letterSpacing: -0.2,
                                                   ),
                                                 ),
-                                                SizedBox(width: 18),
-                                                Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 22),
+                                                SizedBox(width: 10),
+                                                Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 16),
                                               ],
                                             ),
                                     ),
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 12),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.lock_outline_rounded, color: Color(0xFF9D39FF), size: 24),
-                                  const SizedBox(width: 12),
+                                  Icon(Icons.lock_outline_rounded, color: lockColor, size: 16),
+                                  const SizedBox(width: 6),
                                   Text(
                                     'Tu grupo será privado por defecto',
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.62),
-                                      fontSize: 18,
+                                      color: lockTextColor,
+                                      fontSize: 13,
                                       fontWeight: FontWeight.w400,
                                     ),
                                   ),
                                 ],
                               ),
                               if (_error != null) ...[
-                                const SizedBox(height: 18),
+                                const SizedBox(height: 14),
                                 Text(
                                   _error!,
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                     color: Color(0xFFFF6B8A),
-                                    fontSize: 14,
+                                    fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -673,13 +764,15 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                             ],
                           ),
                         ),
-                        SizedBox(height: 34 + bottomPadding),
+                        SizedBox(height: 20 + bottomPadding),
                         Center(
                           child: Container(
-                            width: 140,
-                            height: 5,
+                            width: 120,
+                            height: 4,
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.90),
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.90)
+                                  : VibeColors.textSecondary.withValues(alpha: 0.25),
                               borderRadius: BorderRadius.circular(999),
                             ),
                           ),
@@ -698,31 +791,44 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
 }
 
 class _FloatingBackButton extends StatelessWidget {
-  const _FloatingBackButton({required this.onTap});
+  const _FloatingBackButton({required this.onTap, required this.isDark});
 
   final VoidCallback onTap;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 78,
-        height: 78,
+        width: 48,
+        height: 48,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: const Color(0xFF121A2E).withValues(alpha: 0.82),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+          color: isDark
+              ? const Color(0xFF121A2E).withValues(alpha: 0.82)
+              : Colors.white.withValues(alpha: 0.90),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : VibeColors.strokeSoft,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.28),
-              blurRadius: 26,
-              offset: const Offset(0, 12),
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.22)
+                  : VibeColors.primaryDeepBlue.withValues(alpha: 0.08),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
-        child: const Center(
-          child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 40),
+        child: Center(
+          child: Icon(
+            Icons.arrow_back_rounded,
+            color: isDark ? Colors.white : VibeColors.textPrimary,
+            size: 24,
+          ),
         ),
       ),
     );

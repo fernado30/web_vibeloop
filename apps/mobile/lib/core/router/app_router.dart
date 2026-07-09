@@ -23,8 +23,54 @@ import '../../features/groups/presentation/groups_list_screen.dart';
 import '../../features/groups/presentation/group_photos_screen.dart';
 import '../../features/anonymous/presentation/anonymous_inbox_screen.dart';
 import '../../features/stitch/presentation/stitch_design_screen.dart';
+import '../../features/stitch/presentation/stitch_onboarding_flow.dart';
 import '../theme/vibe_tokens.dart';
 import '../widgets/vibe_ui.dart';
+
+String? resolveAppRedirect({
+  required String matchedLocation,
+  required bool isLoading,
+  required bool preferencesLoaded,
+  required bool onboardingSeen,
+  required bool isAuthed,
+  required bool isAnonymous,
+  required bool goingToAuth,
+  required bool isInviteFlow,
+  required bool isAuthCallback,
+  required bool isWelcome,
+  required bool isSplash,
+}) {
+  if (isLoading || !preferencesLoaded) {
+    return null;
+  }
+
+  if (!isAuthed && !goingToAuth && !isWelcome && !isInviteFlow && !isAuthCallback && !isSplash) {
+    if (matchedLocation == '/groups' && onboardingSeen) {
+      return null;
+    }
+    return '/login';
+  }
+
+  if (!onboardingSeen) {
+    if (!isWelcome && !isInviteFlow && !isAuthCallback) {
+      return StitchDesignScreen.routeName;
+    }
+  } else {
+    if (isWelcome || isSplash) {
+      return '/groups';
+    }
+  }
+
+  if (matchedLocation.startsWith('/groups/create') && (isAnonymous || !isAuthed)) {
+    return '/login';
+  }
+
+  if (isAuthed && !isAnonymous && goingToAuth) {
+    return '/groups';
+  }
+
+  return null;
+}
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -40,6 +86,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: StitchDesignScreen.routeName,
         builder: (context, state) => const StitchDesignScreen(),
+      ),
+      GoRoute(
+        path: StitchPlatformOnboardingScreen.routeName,
+        builder: (context, state) => const StitchPlatformOnboardingScreen(),
+      ),
+      GoRoute(
+        path: StitchUsernameOnboardingScreen.routeName,
+        builder: (context, state) => const StitchUsernameOnboardingScreen(),
       ),
       GoRoute(
         path: '/login',
@@ -149,50 +203,31 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       final isLoading = authState.maybeWhen(loading: () => true, orElse: () => false);
-      final preferences = ref.watch(appPreferencesControllerProvider);
-      if (isLoading) {
-        return null;
-      }
-
-      if (!preferences.loaded) {
-        return null;
-      }
-
+      final preferences = ref.read(appPreferencesControllerProvider);
       final user = authState.maybeWhen(authenticated: (user) => user, orElse: () => null);
       final isAuthed = user != null;
       final isAnonymous = authRepo.currentUser?.isAnonymous ?? false;
       final goingToAuth = state.matchedLocation == '/login' || state.matchedLocation == '/register';
-      final isProtectedRoute = state.matchedLocation.contains('/chat') ||
-          state.matchedLocation.contains('/anonymous') ||
-          state.matchedLocation.contains('/photos');
       final isInviteFlow = state.matchedLocation.startsWith('/invite/') || state.matchedLocation.startsWith('/join/');
       final isAuthCallback = state.matchedLocation == '/auth-callback';
-      final isWelcome = state.matchedLocation == StitchDesignScreen.routeName;
+      final isWelcome = state.matchedLocation == StitchDesignScreen.routeName ||
+          state.matchedLocation == StitchPlatformOnboardingScreen.routeName ||
+          state.matchedLocation == StitchUsernameOnboardingScreen.routeName;
       final isSplash = state.matchedLocation == '/splash';
 
-      if (!isAuthed && isProtectedRoute) {
-        return '/login';
-      }
-
-      if (!preferences.onboardingSeen) {
-        if (!isWelcome && !isInviteFlow && !isAuthCallback) {
-          return StitchDesignScreen.routeName;
-        }
-      } else {
-        if (isWelcome || isSplash) {
-          return '/groups';
-        }
-      }
-
-      if (state.matchedLocation.startsWith('/groups/create') && (isAnonymous || !isAuthed)) {
-        return '/login';
-      }
-
-      if (isAuthed && !isAnonymous && goingToAuth) {
-        return '/groups';
-      }
-
-      return null;
+      return resolveAppRedirect(
+        matchedLocation: state.matchedLocation,
+        isLoading: isLoading,
+        preferencesLoaded: preferences.loaded,
+        onboardingSeen: preferences.onboardingSeen,
+        isAuthed: isAuthed,
+        isAnonymous: isAnonymous,
+        goingToAuth: goingToAuth,
+        isInviteFlow: isInviteFlow,
+        isAuthCallback: isAuthCallback,
+        isWelcome: isWelcome,
+        isSplash: isSplash,
+      );
     },
   );
 });

@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import '../../../core/settings/app_preferences_repository.dart';
+import 'stitch_onboarding_flow.dart';
 
 class StitchDesignScreen extends ConsumerStatefulWidget {
   const StitchDesignScreen({super.key});
@@ -64,13 +64,7 @@ class _StitchDesignScreenState extends ConsumerState<StitchDesignScreen> {
 
   Future<void> _loadHtml() async {
     final rawHtml = await rootBundle.loadString('assets/stitch/loop_onboarding.html');
-    final normalizedHtml = rawHtml
-        .replaceAll('Pol\u00c3\u00adtica', 'Política')
-        .replaceFirst(
-          '<button class="w-full bg-transparent hover:bg-white/5 text-white h-14 rounded-3xl font-bold border border-white/20 flex items-center justify-center relative transition-transform active:scale-[0.98]">',
-          '<button id="explore-button" class="w-full bg-transparent hover:bg-white/5 text-white h-14 rounded-3xl font-bold border border-white/20 flex items-center justify-center relative transition-transform active:scale-[0.98]">',
-        );
-
+    final normalizedHtml = rawHtml.replaceAll('Pol\u00c3\u00adtica', 'Política');
     await _controller.loadHtmlString(normalizedHtml);
   }
 
@@ -94,9 +88,8 @@ class _StitchDesignScreenState extends ConsumerState<StitchDesignScreen> {
   }
 
   Future<void> _continue() async {
-    await ref.read(appPreferencesControllerProvider.notifier).markOnboardingSeen();
     if (!mounted) return;
-    context.go('/groups');
+    context.go(StitchPlatformOnboardingScreen.routeName);
   }
 
   @override

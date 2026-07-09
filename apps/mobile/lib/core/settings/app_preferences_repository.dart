@@ -17,6 +17,7 @@ class AppPreferencesRepository {
   static const _soundsEnabledKey = 'sounds_enabled';
   static const _vibrationEnabledKey = 'vibration_enabled';
   static const _onboardingSeenKey = 'onboarding_seen';
+  static const _usernameKey = 'username';
 
   Future<SharedPreferences> get _prefs async => SharedPreferences.getInstance();
 
@@ -69,6 +70,16 @@ class AppPreferencesRepository {
     final prefs = await _prefs;
     await prefs.setBool(_onboardingSeenKey, true);
   }
+
+  Future<String?> loadUsername() async {
+    final prefs = await _prefs;
+    return prefs.getString(_usernameKey);
+  }
+
+  Future<void> saveUsername(String username) async {
+    final prefs = await _prefs;
+    await prefs.setString(_usernameKey, username);
+  }
 }
 
 class AppPreferencesController extends StateNotifier<AppPreferencesState> {
@@ -82,11 +93,13 @@ class AppPreferencesController extends StateNotifier<AppPreferencesState> {
     final themeMode = await _repository.loadThemeMode();
     final notifications = await _repository.loadNotificationPreferences();
     final onboardingSeen = await _repository.loadOnboardingSeen();
+    final username = await _repository.loadUsername();
     state = state.copyWith(
       loaded: true,
       themeMode: themeMode,
       notifications: notifications,
       onboardingSeen: state.onboardingSeen || onboardingSeen,
+      username: username,
     );
   }
 
@@ -105,6 +118,11 @@ class AppPreferencesController extends StateNotifier<AppPreferencesState> {
     state = state.copyWith(onboardingSeen: true);
     await _repository.saveOnboardingSeen();
   }
+
+  Future<void> saveUsername(String username) async {
+    state = state.copyWith(username: username);
+    await _repository.saveUsername(username);
+  }
 }
 
 class AppPreferencesState {
@@ -113,24 +131,28 @@ class AppPreferencesState {
     this.themeMode = ThemeMode.system,
     this.notifications = const NotificationPreferences(),
     this.onboardingSeen = false,
+    this.username,
   });
 
   final bool loaded;
   final ThemeMode themeMode;
   final NotificationPreferences notifications;
   final bool onboardingSeen;
+  final String? username;
 
   AppPreferencesState copyWith({
     bool? loaded,
     ThemeMode? themeMode,
     NotificationPreferences? notifications,
     bool? onboardingSeen,
+    String? username,
   }) {
     return AppPreferencesState(
       loaded: loaded ?? this.loaded,
       themeMode: themeMode ?? this.themeMode,
       notifications: notifications ?? this.notifications,
       onboardingSeen: onboardingSeen ?? this.onboardingSeen,
+      username: username ?? this.username,
     );
   }
 }

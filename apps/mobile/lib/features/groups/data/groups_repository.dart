@@ -83,15 +83,13 @@ class GroupsRepository {
       return const [];
     }
 
-    final rows = await _runWithSchemaCheck(
-      () => _supabase
-          .from('groups')
-          .select('id, name, description, image_url, created_by, invite_code, created_at, group_members!inner(user_id)')
-          .eq('group_members.user_id', user.id)
-          .order('created_at', ascending: false),
+    final cutoff = DateTime.now().toUtc().subtract(const Duration(days: 5)).toIso8601String();
+    final rows = await _loadMyGroupsRows(
+      userId: user.id,
+      activeSince: cutoff,
     );
 
-    final groups = (rows as List<dynamic>).map((row) {
+    final groups = rows.map((row) {
       return GroupModel.fromJson(_normalizeGroupJson(Map<String, dynamic>.from(row as Map)));
     }).toList();
 
@@ -99,6 +97,33 @@ class GroupsRepository {
       final memberCount = await _countMembers(group.id);
       return group.copyWith(memberCount: memberCount);
     }));
+  }
+
+  Future<List<dynamic>> _loadMyGroupsRows({
+    required String userId,
+    required String activeSince,
+  }) async {
+    try {
+      return await _runWithSchemaCheck(
+        () => _supabase
+            .from('groups')
+            .select('id, name, description, image_url, created_by, invite_code, created_at, group_members!inner(user_id)')
+            .eq('group_members.user_id', userId)
+            .gte('last_activity_at', activeSince)
+            .order('created_at', ascending: false),
+      );
+    } on PostgrestException catch (exception) {
+      if (_looksLikeMissingLastActivityColumn(exception)) {
+        return await _runWithSchemaCheck(
+          () => _supabase
+              .from('groups')
+              .select('id, name, description, image_url, created_by, invite_code, created_at, group_members!inner(user_id)')
+              .eq('group_members.user_id', userId)
+              .order('created_at', ascending: false),
+        );
+      }
+      rethrow;
+    }
   }
 
   Future<GroupModel> createGroup({
@@ -484,6 +509,29 @@ class GroupsRepository {
     );
   }
 
+  Future<void> deleteGroup(String groupId) async {
+    try {
+      final response = await _supabase.functions.invoke(
+        'delete-group',
+        body: {'groupId': groupId},
+      );
+
+      if (response.status < 200 || response.status >= 300) {
+        final payload = response.data;
+        final message = payload is Map<String, dynamic> && payload['error'] != null
+            ? payload['error'].toString()
+            : 'No se pudo eliminar el grupo.';
+        throw StateError(message);
+      }
+    } on FunctionException catch (error) {
+      if (error.status != 404) {
+        rethrow;
+      }
+
+      await _deleteGroupLocally(groupId);
+    }
+  }
+
   Future<void> joinGroup(String groupId, {String? inviteCode}) async {
     final user = _supabase.auth.currentUser;
     if (user == null) {
@@ -510,6 +558,43 @@ class GroupsRepository {
   Future<int> _countMembers(String groupId) async {
     final rows = await _runWithSchemaCheck(() => _supabase.from('group_members').select('id').eq('group_id', groupId));
     return (rows as List<dynamic>).length;
+  }
+
+  Future<void> _deleteGroupLocally(String groupId) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      throw AuthException('No hay una sesion activa.');
+    }
+
+    final group = await _runWithSchemaCheck(
+      () => _supabase.from('groups').select('id, created_by').eq('id', groupId).maybeSingle(),
+    );
+
+    if (group == null) {
+      throw StateError('El grupo ya no existe.');
+    }
+
+    if (group['created_by']?.toString() != user.id) {
+      throw StateError('Solo el creador puede eliminar este grupo.');
+    }
+
+    final photoRows = await _runWithSchemaCheck(
+      () => _supabase.from('group_photos').select('storage_path').eq('group_id', groupId),
+    );
+
+    final storagePaths = (photoRows as List<dynamic>)
+        .map((row) => (row as Map)['storage_path']?.toString().trim() ?? '')
+        .where((path) => path.isNotEmpty)
+        .toSet()
+        .toList();
+
+    if (storagePaths.isNotEmpty) {
+      await _supabase.storage.from('group-photos').remove(storagePaths);
+    }
+
+    await _runWithSchemaCheck(
+      () => _supabase.from('groups').delete().eq('id', groupId),
+    );
   }
 
   Future<String> _resolveGroupPhotoDisplayUrl({
@@ -593,6 +678,11 @@ class GroupsRepository {
   Map<String, dynamic> _normalizeGroupJson(Map<String, dynamic> json) {
     json['created_by'] = json['created_by']?.toString() ?? '';
     return json;
+  }
+
+  bool _looksLikeMissingLastActivityColumn(PostgrestException exception) {
+    final message = exception.message.toLowerCase();
+    return message.contains('last_activity_at') || exception.code == '42703';
   }
 
   Future<List<GroupPhotoModel>> _attachUploaderEmojis(List<GroupPhotoModel> photos) async {

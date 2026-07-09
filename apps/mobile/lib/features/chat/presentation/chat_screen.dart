@@ -1275,6 +1275,78 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  Future<void> _confirmAndDeleteGroup(String groupName) async {
+    final confirmController = TextEditingController();
+    final shouldDelete = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) {
+            return AlertDialog(
+              title: const Text('Eliminar grupo'),
+              content: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Vas a eliminar "$groupName".\n'
+                      'Se borrarán el chat, las fotos y la membresía de todos los miembros.',
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: confirmController,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: const InputDecoration(
+                        labelText: 'Escribe ELIMINAR para confirmar',
+                      ),
+                      autofocus: true,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Cancelar'),
+                ),
+                ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: confirmController,
+                  builder: (context, value, _) {
+                    final canDelete = value.text.trim().toUpperCase() == 'ELIMINAR';
+                    return FilledButton(
+                      onPressed: canDelete ? () => Navigator.of(dialogContext).pop(true) : null,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: VibeColors.dangerRed,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Eliminar'),
+                    );
+                  },
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+
+    confirmController.dispose();
+    if (!shouldDelete || !mounted) {
+      return;
+    }
+
+    try {
+      await ref.read(groupsRepositoryProvider).deleteGroup(widget.groupId);
+      if (!mounted) return;
+      context.go('/groups');
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo eliminar el grupo: $error')),
+      );
+    }
+  }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
@@ -1320,6 +1392,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       : memberCount == 1
                           ? '1 miembro'
                           : '$memberCount miembros';
+                  final isGroupOwner = currentUserId != null &&
+                      groupSnapshot.data?.createdBy.trim() == currentUserId.trim();
 
                   return StreamBuilder<List<AnonymousMessageModel>>(
                     stream: _anonymousMessagesStream,
@@ -1392,6 +1466,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             onTap: () => _toggleAnonymousBubble(anonymousMessages),
                             onTapOutside: () => _closeAnonymousBubble(anonymousMessages),
                           ),
+
                           const SizedBox(width: 12),
                           _ExpandableHeaderActionMenu(
                             screenshotLabel: 'Captura',
@@ -1410,6 +1485,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             onInviteTap: _shareInviteLink,
                             onShareTap: _shareWebInviteLink,
                             onPhotosTap: () => context.push('/groups/${widget.groupId}/photos'),
+                            showDeleteAction: isGroupOwner,
+                            onDeleteTap: () => _confirmAndDeleteGroup(groupSnapshot.data?.name ?? 'este grupo'),
                           ),
                         ],
                       );
@@ -1668,6 +1745,8 @@ class _ExpandableHeaderActionMenu extends StatefulWidget {
     required this.onInviteTap,
     required this.onShareTap,
     required this.onPhotosTap,
+    required this.showDeleteAction,
+    this.onDeleteTap,
   });
 
   final String screenshotLabel;
@@ -1686,6 +1765,8 @@ class _ExpandableHeaderActionMenu extends StatefulWidget {
   final VoidCallback onInviteTap;
   final VoidCallback onShareTap;
   final VoidCallback onPhotosTap;
+  final bool showDeleteAction;
+  final VoidCallback? onDeleteTap;
 
   @override
   State<_ExpandableHeaderActionMenu> createState() => _ExpandableHeaderActionMenuState();
@@ -1843,7 +1924,7 @@ class _ExpandableHeaderActionMenuState extends State<_ExpandableHeaderActionMenu
                       heightFactor: eased,
                       child: TapRegion(
                         groupId: _tapRegionGroupId,
-                        child: _buildMenuPanel(
+            child: _buildMenuPanel(
                           context: overlayContext,
                           panelBg: panelBg,
                           panelBorder: panelBorder,
@@ -1867,92 +1948,98 @@ class _ExpandableHeaderActionMenuState extends State<_ExpandableHeaderActionMenu
     required Color panelBorder,
     required double menuWidth,
   }) {
-    return Stack(
-      clipBehavior: Clip.none,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Positioned(
-          top: -7,
-          right: 28,
-          child: Transform.rotate(
-            angle: 0.7853981633974483,
-            child: Container(
-              width: 14,
-              height: 14,
-              decoration: BoxDecoration(
-                color: panelBg,
-                border: Border.all(color: panelBorder),
-                borderRadius: BorderRadius.circular(3),
-              ),
-            ),
-          ),
-        ),
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () {},
-          child: Container(
-            width: menuWidth,
-            constraints: const BoxConstraints(minWidth: 318, maxWidth: 392),
-            padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
-            decoration: BoxDecoration(
-              color: panelBg,
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: panelBorder),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.28 : 0.10),
-                  blurRadius: 22,
-                  offset: const Offset(0, 14),
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              top: -7,
+              right: 28,
+              child: Transform.rotate(
+                angle: 0.7853981633974483,
+                child: Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: panelBg,
+                    border: Border.all(color: panelBorder),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
                 ),
-              ],
-            ),
-            child: DefaultTextStyle.merge(
-              style: const TextStyle(decoration: TextDecoration.none),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _HeaderActionTile(
-                      label: widget.screenshotLabel,
-                      iconAsset: widget.screenshotIconAsset,
-                      color: widget.screenshotColor,
-                      onTap: () => _triggerAction(widget.onScreenshotTap),
-                      compact: true,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _HeaderActionTile(
-                      label: widget.inviteLabel,
-                      iconAsset: widget.inviteIconAsset,
-                      color: widget.inviteColor,
-                      onTap: () => _triggerAction(widget.onInviteTap),
-                      compact: true,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _HeaderActionTile(
-                      label: widget.shareLabel,
-                      iconAsset: widget.shareIconAsset,
-                      color: widget.shareColor,
-                      onTap: () => _triggerAction(widget.onShareTap),
-                      compact: true,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _HeaderActionTile(
-                      label: widget.photosLabel,
-                      iconAsset: widget.photosIconAsset,
-                      color: widget.photosColor,
-                      onTap: () => _triggerAction(widget.onPhotosTap),
-                      compact: true,
-                    ),
-                  ),
-                ],
               ),
             ),
-          ),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {},
+              child: Container(
+                width: menuWidth,
+                constraints: const BoxConstraints(minWidth: 318, maxWidth: 392),
+                padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
+                decoration: BoxDecoration(
+                  color: panelBg,
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: panelBorder),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.28 : 0.10),
+                      blurRadius: 22,
+                      offset: const Offset(0, 14),
+                    ),
+                  ],
+                ),
+                child: DefaultTextStyle.merge(
+                  style: const TextStyle(decoration: TextDecoration.none),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _HeaderActionTile(
+                          label: widget.screenshotLabel,
+                          iconAsset: widget.screenshotIconAsset,
+                          color: widget.screenshotColor,
+                          onTap: () => _triggerAction(widget.onScreenshotTap),
+                          compact: true,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _HeaderActionTile(
+                          label: widget.inviteLabel,
+                          iconAsset: widget.inviteIconAsset,
+                          color: widget.inviteColor,
+                          onTap: () => _triggerAction(widget.onInviteTap),
+                          compact: true,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _HeaderActionTile(
+                          label: widget.shareLabel,
+                          iconAsset: widget.shareIconAsset,
+                          color: widget.shareColor,
+                          onTap: () => _triggerAction(widget.onShareTap),
+                          compact: true,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _HeaderActionTile(
+                          label: widget.photosLabel,
+                          iconAsset: widget.photosIconAsset,
+                          color: widget.photosColor,
+                          onTap: () => _triggerAction(widget.onPhotosTap),
+                          compact: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
+
       ],
     );
   }

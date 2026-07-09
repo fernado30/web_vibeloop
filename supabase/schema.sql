@@ -17,7 +17,8 @@ create table if not exists public.groups (
   created_by uuid references public.users(id),
   invite_code text unique default substr(md5(random()::text), 1, 10),
   invite_paused boolean not null default false,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  last_activity_at timestamptz not null default now()
 );
 
 create table if not exists public.group_members (
@@ -328,6 +329,45 @@ begin
 end;
 $$;
 
+create or replace function private.touch_group_last_activity()
+returns trigger
+language plpgsql
+security definer
+set search_path = private, public, pg_temp
+as $$
+begin
+  update public.groups
+  set last_activity_at = clock_timestamp()
+  where id = new.group_id;
+
+  return new;
+end;
+$$;
+
+create or replace function private.touch_group_last_activity_from_reaction()
+returns trigger
+language plpgsql
+security definer
+set search_path = private, public, pg_temp
+as $$
+declare
+  v_group_id uuid;
+begin
+  select m.group_id
+  into v_group_id
+  from public.messages m
+  where m.id = new.message_id;
+
+  if v_group_id is not null then
+    update public.groups
+    set last_activity_at = clock_timestamp()
+    where id = v_group_id;
+  end if;
+
+  return new;
+end;
+$$;
+
 drop policy if exists "user_hidden_words_select_own" on public.user_hidden_words;
 create policy "user_hidden_words_select_own"
 on public.user_hidden_words
@@ -442,6 +482,14 @@ create policy "groups_insert_by_owner"
 on public.groups
 for insert
 with check (auth.uid() = created_by);
+
+drop policy if exists "groups_delete_by_owner" on public.groups;
+create policy "groups_delete_by_owner"
+on public.groups
+for delete
+using (auth.uid() = created_by);
+
+grant delete on public.groups to authenticated;
 
 drop policy if exists "group_members_select_own_or_group_owner" on public.group_members;
 create policy "group_members_select_own_or_group_owner"
@@ -772,3 +820,33 @@ create trigger guard_group_photos_insert
 before insert on public.group_photos
 for each row
 execute function private.guard_group_photo_creation();
+
+drop trigger if exists touch_group_activity_messages on public.messages;
+create trigger touch_group_activity_messages
+after insert on public.messages
+for each row
+execute function private.touch_group_last_activity();
+
+drop trigger if exists touch_group_activity_anonymous_messages on public.anonymous_messages;
+create trigger touch_group_activity_anonymous_messages
+after insert or update on public.anonymous_messages
+for each row
+execute function private.touch_group_last_activity();
+
+drop trigger if exists touch_group_activity_group_photos on public.group_photos;
+create trigger touch_group_activity_group_photos
+after insert on public.group_photos
+for each row
+execute function private.touch_group_last_activity();
+
+drop trigger if exists touch_group_activity_group_members on public.group_members;
+create trigger touch_group_activity_group_members
+after insert on public.group_members
+for each row
+execute function private.touch_group_last_activity();
+
+drop trigger if exists touch_group_activity_reactions on public.reactions;
+create trigger touch_group_activity_reactions
+after insert or update on public.reactions
+for each row
+execute function private.touch_group_last_activity_from_reaction();

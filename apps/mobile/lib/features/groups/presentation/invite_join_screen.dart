@@ -8,6 +8,8 @@ import '../../auth/data/auth_repository.dart';
 import '../data/groups_repository.dart';
 import '../../../core/widgets/vibe_ui.dart';
 import '../../../core/utils/error_helper.dart';
+import '../../../core/theme/vibe_tokens.dart';
+import '../../stitch/presentation/stitch_onboarding_flow.dart';
 
 class InviteJoinScreen extends ConsumerStatefulWidget {
   const InviteJoinScreen({super.key, required this.inviteCode});
@@ -93,48 +95,59 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Accediendo al grupo')),
-      bottomNavigationBar: const SafeArea(
-        top: false,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
-          child: VibeLoopBannerAd(),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return OnboardingShell(
+      backgroundSeed: 3,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        bottomNavigationBar: const SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: VibeLoopBannerAd(),
+          ),
         ),
-      ),
-      body: SafeArea(
-        child: _loading
-            ? const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Abriendo el chat...'),
-                  ],
-                ),
-              )
-            : Padding(
-                padding: const EdgeInsets.all(24),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 560),
-                    child: Column(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Center(
+              child: _loading
+                  ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (_error != null) ...[
-                          ErrorStateCard(
-                            title: 'No pudimos acceder al grupo',
-                            body: _error!,
-                            onRetry: () => _bootstrap(),
+                        const CircularProgressIndicator(
+                          color: VibeColors.primaryViolet,
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Abriendo el chat...',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : VibeColors.textPrimary,
                           ),
-                        ],
+                        ),
                       ],
+                    )
+                  : ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 560),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_error != null) ...[
+                            ErrorStateCard(
+                              title: 'No pudimos acceder al grupo',
+                              body: _error!,
+                              onRetry: () => _bootstrap(),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
+            ),
+          ),
+        ),
       ),
     );
   }

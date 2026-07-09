@@ -23,6 +23,49 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
+  Future<void> _handleSignOut(BuildContext context, WidgetRef ref) async {
+    final shouldSignOut = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) {
+            return AlertDialog(
+              title: const Text('Cerrar sesión'),
+              content: const Text(
+                '¿Estás seguro de que quieres cerrar la sesión actual? Podrás volver a iniciar sesión o usar otra cuenta.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: VibeColors.dangerRed,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Cerrar sesión'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+
+    if (!shouldSignOut || !context.mounted) {
+      return;
+    }
+
+    try {
+      await ref.read(authStateProvider.notifier).signOut();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al cerrar sesión: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authStateProvider);
@@ -171,6 +214,14 @@ class SettingsScreen extends ConsumerWidget {
                   iconColor: VibeColors.dangerRed,
                   onTap: () => context.push('/groups/settings/delete-account'),
                 ),
+              _SettingsRow(
+                icon: Icons.logout_rounded,
+                title: 'Cerrar sesión',
+                subtitle: 'Salir o cambiar de cuenta',
+                titleColor: VibeColors.dangerRed,
+                iconColor: VibeColors.dangerRed,
+                onTap: () => _handleSignOut(context, ref),
+              ),
             ],
           ),
         ],

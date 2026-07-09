@@ -192,8 +192,7 @@
 <!-- END: Central Graphic -->
 <!-- BEGIN: Bottom Actions -->
 <footer class="mt-auto flex flex-col gap-4 z-20" data-purpose="onboarding-actions">
-<!-- Explorar Button -->
-<button class="w-full bg-transparent hover:bg-white/5 text-white h-14 rounded-3xl font-bold border border-white/20 flex items-center justify-center relative transition-transform active:scale-[0.98]">
+<button id="explore-button" onclick="if(window.VibeLoop && window.VibeLoop.postMessage) { window.VibeLoop.postMessage('explore'); }" class="w-full bg-transparent hover:bg-white/5 text-white h-14 rounded-3xl font-bold border border-white/20 flex items-center justify-center relative transition-transform active:scale-[0.98]">
 <span class="">Explorar</span>
 <svg class="w-5 h-5 absolute right-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
