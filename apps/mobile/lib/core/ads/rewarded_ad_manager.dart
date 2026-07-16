@@ -20,7 +20,7 @@ class RewardedAdManager {
   }
 
   Future<void> preload() async {
-    if (!AdConfig.shouldLoadAds || _loading || _showing || _ad != null || _isOnCooldown) {
+    if (!AdConfig.shouldLoadRewardedAds || _loading || _showing || _ad != null || _isOnCooldown) {
       return;
     }
 
@@ -47,7 +47,7 @@ class RewardedAdManager {
     required String reason,
     required void Function(RewardItem reward) onUserEarnedReward,
   }) async {
-    if (!AdConfig.shouldLoadAds) {
+    if (!AdConfig.shouldLoadRewardedAds) {
       return false;
     }
 

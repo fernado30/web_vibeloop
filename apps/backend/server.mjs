@@ -1,11 +1,14 @@
 import { createServer } from 'node:http';
-import { randomUUID } from 'node:crypto';
+import { createSign, randomUUID } from 'node:crypto';
 
 const port = Number(process.env.PORT ?? 8787);
 const supabaseUrl = (process.env.SUPABASE_URL ?? '').trim().replace(/\/+$/, '');
 const serviceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? '').trim();
 const anonKey = (process.env.SUPABASE_ANON_KEY ?? '').trim();
 const internalRouteKey = (process.env.BACKEND_INTERNAL_KEY ?? '').trim();
+const firebaseProjectId = (process.env.FIREBASE_PROJECT_ID ?? '').trim();
+const firebaseClientEmail = (process.env.FIREBASE_CLIENT_EMAIL ?? '').trim();
+const firebasePrivateKey = (process.env.FIREBASE_PRIVATE_KEY ?? '').trim().replace(/\\n/g, '\n');
 const allowedOrigins = new Set(
   (process.env.ALLOWED_ORIGINS ?? 'https://web-vibeloop.vercel.app,http://localhost:3000,http://localhost:4173,http://localhost:8080')
     .split(',')
@@ -171,6 +174,211 @@ async function supabaseRest(path, init = {}, useServiceRole = true) {
   });
 }
 
+let firebaseAccessTokenCache = null;
+let firebaseAccessTokenExpiresAt = 0;
+
+function base64UrlEncode(input) {
+  const buffer = Buffer.isBuffer(input) ? input : Buffer.from(input);
+  return buffer
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+}
+
+function hasFirebaseConfig() {
+  return Boolean(firebaseProjectId && firebaseClientEmail && firebasePrivateKey);
+}
+
+async function getFirebaseAccessToken() {
+  if (!hasFirebaseConfig()) {
+    return null;
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  if (firebaseAccessTokenCache && firebaseAccessTokenExpiresAt - 60 > now) {
+    return firebaseAccessTokenCache;
+  }
+
+  const header = base64UrlEncode(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const payload = base64UrlEncode(JSON.stringify({
+    iss: firebaseClientEmail,
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600,
+  }));
+  const unsignedToken = `${header}.${payload}`;
+  const signer = createSign('RSA-SHA256');
+  signer.update(unsignedToken);
+  signer.end();
+
+  const signedToken = signer.sign(firebasePrivateKey);
+  const assertion = `${unsignedToken}.${base64UrlEncode(signedToken)}`;
+
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion,
+    }),
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = await response.json().catch(() => null);
+  const accessToken = data?.access_token?.toString().trim();
+  const expiresIn = Number(data?.expires_in ?? 0);
+  if (!accessToken || !Number.isFinite(expiresIn) || expiresIn <= 0) {
+    return null;
+  }
+
+  firebaseAccessTokenCache = accessToken;
+  firebaseAccessTokenExpiresAt = now + expiresIn;
+  return accessToken;
+}
+
+async function sendFirebaseMessageToToken({
+  token,
+  title,
+  body,
+  route,
+  groupId,
+  category,
+  soundEnabled,
+}) {
+  const accessToken = await getFirebaseAccessToken();
+  if (!accessToken) {
+    return false;
+  }
+
+  const response = await fetch(`https://fcm.googleapis.com/v1/projects/${firebaseProjectId}/messages:send`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      message: {
+        token,
+        notification: {
+          title,
+          body,
+        },
+        data: {
+          route,
+          groupId,
+          category,
+        },
+        android: {
+          priority: 'HIGH',
+          notification: {
+            channel_id: 'vibeloop_activity',
+            ...(soundEnabled ? { sound: 'default' } : {}),
+          },
+        },
+        apns: {
+          payload: {
+            aps: {
+              ...(soundEnabled ? { sound: 'default' } : {}),
+            },
+          },
+        },
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '');
+    console.warn('[push] FCM send failed:', response.status, errorText);
+    return false;
+  }
+
+  return true;
+}
+
+async function dispatchGroupPush({
+  groupId,
+  senderId = null,
+  title,
+  body,
+  route,
+  category,
+  groupName = '',
+}) {
+  if (!hasFirebaseConfig()) {
+    return;
+  }
+
+  const membersResponse = await supabaseRest(
+    `/rest/v1/group_members?select=user_id&group_id=eq.${encodeURIComponent(groupId)}`,
+    { method: 'GET' },
+  );
+
+  if (!membersResponse.ok) {
+    const errorText = await membersResponse.text().catch(() => '');
+    console.warn('[push] Could not load group members:', errorText);
+    return;
+  }
+
+  const members = await membersResponse.json().catch(() => []);
+  const recipientIds = Array.isArray(members)
+    ? members
+        .map((row) => row?.user_id?.toString().trim())
+        .filter((userId) => userId && userId !== senderId)
+    : [];
+
+  if (recipientIds.length === 0) {
+    return;
+  }
+
+  for (const recipientId of recipientIds) {
+    const devicesResponse = await supabaseRest(
+      `/rest/v1/user_push_devices?select=fcm_token,show_message_previews,sounds_enabled,vibration_enabled&user_id=eq.${encodeURIComponent(recipientId)}&notifications_enabled=eq.true`,
+      { method: 'GET' },
+    );
+
+    if (!devicesResponse.ok) {
+      const errorText = await devicesResponse.text().catch(() => '');
+      console.warn('[push] Could not load push devices:', errorText);
+      continue;
+    }
+
+    const devices = await devicesResponse.json().catch(() => []);
+    for (const device of Array.isArray(devices) ? devices : []) {
+      const token = device?.fcm_token?.toString().trim();
+      if (!token) {
+        continue;
+      }
+
+      const showPreviews = device?.show_message_previews !== false;
+      const soundEnabled = device?.sounds_enabled !== false;
+      const notificationBody = showPreviews
+        ? category === 'anonymous'
+          ? (groupName ? `Te han enviado un mensaje anónimo en ${groupName}` : 'Te han enviado un mensaje anónimo')
+          : (groupName ? `Tienes un mensaje nuevo en ${groupName}` : 'Tienes un mensaje nuevo')
+        : category === 'anonymous'
+          ? 'Te han enviado un mensaje anónimo'
+          : 'Tienes un mensaje nuevo';
+
+      await sendFirebaseMessageToToken({
+        token,
+        title,
+        body: notificationBody,
+        route,
+        groupId,
+        category,
+        soundEnabled,
+      });
+    }
+  }
+}
+
 async function claimAnonymousMessageRateLimit(req, inviteCode) {
   const response = await supabaseRest('/rest/v1/rpc/claim_anonymous_message_rate_limit', {
     method: 'POST',
@@ -238,7 +446,7 @@ async function handleSendAnonymousMessage(req) {
   }
 
   const groupResponse = await supabaseRest(
-    `/rest/v1/groups?select=id,invite_paused&invite_code=eq.${encodeURIComponent(inviteCode)}&limit=1`,
+    `/rest/v1/groups?select=id,name,invite_paused&invite_code=eq.${encodeURIComponent(inviteCode)}&limit=1`,
     { method: 'GET' },
   );
 
@@ -278,7 +486,143 @@ async function handleSendAnonymousMessage(req) {
   const data = await insertResponse.json().catch(() => []);
   const message = Array.isArray(data) ? data[0] : data;
 
+  await dispatchGroupPush({
+    groupId: group.id,
+    title: 'Mensaje anónimo',
+    body: 'Te han enviado un mensaje anónimo',
+    route: `/groups/${group.id}/anonymous`,
+    category: 'anonymous',
+    groupName: String(group.name ?? '').trim(),
+  });
+
   return jsonResponse({ success: true, id: message?.id ?? null }, 200);
+}
+
+async function handleSendMessage(req) {
+  const token = getAuthToken(req);
+  if (!token) {
+    return jsonResponse({ error: 'Unauthorized' }, 401);
+  }
+
+  const userResponse = await supabaseRest(
+    '/auth/v1/user',
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+    false,
+  );
+
+  if (!userResponse.ok) {
+    return jsonResponse({ error: 'Unauthorized' }, 401);
+  }
+
+  const user = await userResponse.json();
+  if (!user?.id) {
+    return jsonResponse({ error: 'Unauthorized' }, 401);
+  }
+
+  const body = await readJson(req);
+  const groupId = String(body.groupId ?? '').trim();
+  const content = String(body.content ?? '').trim();
+  const type = String(body.type ?? 'text').trim() || 'text';
+  const anonymousMessageId = String(body.anonymousMessageId ?? '').trim();
+
+  if (!groupId) {
+    return jsonResponse({ error: 'groupId is required' }, 400);
+  }
+
+  if (content.length < 1 || content.length > 500) {
+    return jsonResponse({ error: 'content must be between 1 and 500 characters' }, 400);
+  }
+
+  const membershipResponse = await supabaseRest(
+    `/rest/v1/group_members?select=id&group_id=eq.${encodeURIComponent(groupId)}&user_id=eq.${encodeURIComponent(user.id)}&limit=1`,
+    { method: 'GET' },
+  );
+
+  if (!membershipResponse.ok) {
+    return jsonResponse({ error: 'Could not verify membership' }, 502);
+  }
+
+  const memberships = await membershipResponse.json().catch(() => []);
+  if (!Array.isArray(memberships) || memberships.length === 0) {
+    return jsonResponse({ error: 'Forbidden' }, 403);
+  }
+
+  let finalContent = content;
+  let finalType = type;
+
+  if (anonymousMessageId) {
+    const anonymousResponse = await supabaseRest(
+      `/rest/v1/anonymous_messages?select=id,group_id,content&group_id=eq.${encodeURIComponent(groupId)}&id=eq.${encodeURIComponent(anonymousMessageId)}&limit=1`,
+      { method: 'GET' },
+    );
+
+    if (!anonymousResponse.ok) {
+      return jsonResponse({ error: 'Could not load anonymous message' }, 502);
+    }
+
+    const anonymousMessages = await anonymousResponse.json().catch(() => []);
+    const anonymousMessage = Array.isArray(anonymousMessages) ? anonymousMessages[0] : null;
+    if (!anonymousMessage) {
+      return jsonResponse({ error: 'Anonymous message not found' }, 404);
+    }
+
+    finalContent = String(anonymousMessage.content ?? finalContent).trim();
+    finalType = 'text';
+  }
+
+  const insertResponse = await supabaseRest('/rest/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify({
+      group_id: groupId,
+      sender_id: user.id,
+      content: finalContent,
+      type: finalType,
+    }),
+  });
+
+  if (!insertResponse.ok) {
+    const errorText = await insertResponse.text();
+    return jsonResponse({ error: errorText || 'No se pudo enviar el mensaje.' }, 502);
+  }
+
+  if (anonymousMessageId) {
+    await supabaseRest(
+      `/rest/v1/anonymous_messages?id=eq.${encodeURIComponent(anonymousMessageId)}`,
+      { method: 'DELETE' },
+    );
+  }
+
+  const groupsResponse = await supabaseRest(
+    `/rest/v1/groups?select=id,name&id=eq.${encodeURIComponent(groupId)}&limit=1`,
+    { method: 'GET' },
+  );
+  const groups = groupsResponse.ok ? await groupsResponse.json().catch(() => []) : [];
+  const group = Array.isArray(groups) ? groups[0] : null;
+
+  if (group) {
+    await dispatchGroupPush({
+      groupId,
+      senderId: user.id,
+      title: 'Nuevo mensaje',
+      body: 'Tienes un mensaje nuevo',
+      route: `/groups/${groupId}/chat`,
+      category: 'message',
+      groupName: String(group?.name ?? '').trim(),
+    });
+  }
+
+  const data = await insertResponse.json().catch(() => []);
+  const message = Array.isArray(data) ? data[0] : data;
+  return jsonResponse({ success: true, message }, 200);
 }
 
 async function handleResolveInvite(req) {
@@ -385,6 +729,7 @@ async function handleDeleteAccount(req) {
     supabaseRest('/rest/v1/user_blocked_users?user_id=eq.' + encodeURIComponent(userId), { method: 'DELETE' }),
     supabaseRest('/rest/v1/user_message_filter_settings?user_id=eq.' + encodeURIComponent(userId), { method: 'DELETE' }),
     supabaseRest('/rest/v1/notifications?user_id=eq.' + encodeURIComponent(userId), { method: 'DELETE' }),
+    supabaseRest('/rest/v1/user_push_devices?user_id=eq.' + encodeURIComponent(userId), { method: 'DELETE' }),
     supabaseRest('/rest/v1/reactions?user_id=eq.' + encodeURIComponent(userId), { method: 'DELETE' }),
     supabaseRest('/rest/v1/group_members?user_id=eq.' + encodeURIComponent(userId), { method: 'DELETE' }),
     supabaseRest('/rest/v1/group_photos?uploaded_by=eq.' + encodeURIComponent(userId), { method: 'DELETE' }),
@@ -705,6 +1050,12 @@ const server = createServer(async (req, res) => {
 
     if (url.pathname === '/functions/v1/send-anonymous-message') {
       const response = await handleSendAnonymousMessage(req);
+      await sendResponse(req, res, response);
+      return;
+    }
+
+    if (url.pathname === '/functions/v1/send-message') {
+      const response = await handleSendMessage(req);
       await sendResponse(req, res, response);
       return;
     }

@@ -75,6 +75,19 @@ create table if not exists public.notifications (
   created_at timestamptz default now()
 );
 
+create table if not exists public.user_push_devices (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references public.users(id) on delete cascade,
+  fcm_token text unique not null,
+  platform text not null,
+  notifications_enabled boolean not null default true,
+  show_message_previews boolean not null default true,
+  sounds_enabled boolean not null default true,
+  vibration_enabled boolean not null default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 create table if not exists public.user_hidden_words (
   id uuid primary key default uuid_generate_v4(),
   user_id uuid references public.users(id) on delete cascade,
@@ -107,6 +120,7 @@ alter table public.reactions enable row level security;
 alter table public.anonymous_messages enable row level security;
 alter table public.group_photos enable row level security;
 alter table public.notifications enable row level security;
+alter table public.user_push_devices enable row level security;
 alter table public.user_hidden_words enable row level security;
 alter table public.user_blocked_users enable row level security;
 alter table public.user_message_filter_settings enable row level security;
@@ -483,6 +497,13 @@ on public.groups
 for insert
 with check (auth.uid() = created_by);
 
+drop policy if exists "groups_update_by_owner" on public.groups;
+create policy "groups_update_by_owner"
+on public.groups
+for update
+using (auth.uid() = created_by)
+with check (auth.uid() = created_by);
+
 drop policy if exists "groups_delete_by_owner" on public.groups;
 create policy "groups_delete_by_owner"
 on public.groups
@@ -699,6 +720,33 @@ on public.notifications
 for update
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
+
+drop policy if exists "user_push_devices_select_own" on public.user_push_devices;
+create policy "user_push_devices_select_own"
+on public.user_push_devices
+for select
+using (auth.uid() = user_id);
+
+drop policy if exists "user_push_devices_insert_own" on public.user_push_devices;
+create policy "user_push_devices_insert_own"
+on public.user_push_devices
+for insert
+with check (auth.uid() = user_id);
+
+drop policy if exists "user_push_devices_update_own" on public.user_push_devices;
+create policy "user_push_devices_update_own"
+on public.user_push_devices
+for update
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+drop policy if exists "user_push_devices_delete_own" on public.user_push_devices;
+create policy "user_push_devices_delete_own"
+on public.user_push_devices
+for delete
+using (auth.uid() = user_id);
+
+grant select, insert, update, delete on public.user_push_devices to authenticated;
 
 insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)

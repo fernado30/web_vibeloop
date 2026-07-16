@@ -30,7 +30,7 @@ class AdService {
 
     if (!AdConfig.shouldLoadAds) {
       _initialized = true;
-      debugPrint('AdMob disabled in release/profile. Using placeholders.');
+      debugPrint('AdMob disabled for this build. Using placeholders.');
       return;
     }
 

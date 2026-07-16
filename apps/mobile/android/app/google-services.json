@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "620834239326",
+    "project_id": "vibeloop-84fe4",
+    "storage_bucket": "vibeloop-84fe4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:620834239326:android:98347ab2adf8587e3e95cf",
+        "android_client_info": {
+          "package_name": "com.vibeloop.vibeloop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCTVMVxJYks4EYjgOA1qyFx3MxvE8s6ZJk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -236,6 +236,7 @@ class AuthRepository {
       _bestEffort(() => _supabase.from('user_blocked_users').delete().eq('user_id', user.id)),
       _bestEffort(() => _supabase.from('user_message_filter_settings').delete().eq('user_id', user.id)),
       _bestEffort(() => _supabase.from('notifications').delete().eq('user_id', user.id)),
+      _bestEffort(() => _supabase.from('user_push_devices').delete().eq('user_id', user.id)),
       _bestEffort(() => _supabase.from('reactions').delete().eq('user_id', user.id)),
       _bestEffort(() => _supabase.from('group_members').delete().eq('user_id', user.id)),
       _bestEffort(() => _supabase.from('group_photos').delete().eq('uploaded_by', user.id)),

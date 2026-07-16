@@ -46,7 +46,7 @@ class AppPreferencesRepository {
   Future<NotificationPreferences> loadNotificationPreferences() async {
     final prefs = await _prefs;
     return NotificationPreferences(
-      notificationsEnabled: prefs.getBool(_notificationsEnabledKey) ?? true,
+      notificationsEnabled: prefs.getBool(_notificationsEnabledKey) ?? false,
       showMessagePreviews: prefs.getBool(_messagePreviewsKey) ?? true,
       soundsEnabled: prefs.getBool(_soundsEnabledKey) ?? true,
       vibrationEnabled: prefs.getBool(_vibrationEnabledKey) ?? true,
@@ -159,7 +159,7 @@ class AppPreferencesState {
 
 class NotificationPreferences {
   const NotificationPreferences({
-    this.notificationsEnabled = true,
+    this.notificationsEnabled = false,
     this.showMessagePreviews = true,
     this.soundsEnabled = true,
     this.vibrationEnabled = true,

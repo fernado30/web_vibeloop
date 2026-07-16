@@ -1,0 +1,175 @@
+{"kind":"deck","id":"pr/14roae","name":"Deck"}
+{"kind":"layout","layoutId":"a9cc535e-7ebc-4555-a63e-c5bf358627e3","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"18504553-9ef0-4230-9424-348049a29961","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/gk0zaw","slide":1,"title":"VibeLoop","textShapes":6}
+{"kind":"shape","id":"sh/65kzqpsv","slide":1,"bbox":[0,0,320,320]}
+{"kind":"shape","id":"sh/t8bi14bm","slide":1,"bbox":[860,340,360,360]}
+{"kind":"shape","id":"sh/s72hsza1","slide":1,"bbox":[960,0,260,260]}
+{"kind":"shape","id":"sh/fut03etc","slide":1,"bbox":[74,72,72,72]}
+{"kind":"textbox","id":"sh/hwvi54bi","slide":1,"text":"VibeLoop","textPreview":"VibeLoop","textChars":8,"textLines":1,"bbox":[74,168,560,176]}
+{"kind":"textbox","id":"sh/gv21wjax","slide":1,"text":"Comunidades privadas que vuelven a conversar.","textPreview":"Comunidades privadas que vuelven a conversar.","textChars":45,"textLines":1,"bbox":[74,342,560,120]}
+{"kind":"textbox","id":"sh/vy90rat8","slide":1,"text":"Grupos, chat en tiempo real, fotos, invitaciones y buzón anónimo dentro de una sola experiencia.","textPreview":"Grupos, chat en tiempo real, fotos, invitaciones y buzón anónimo dentro de una sola experiencia.","textChars":96,"textLines":1,"bbox":[74,428,540,100]}
+{"kind":"textbox","id":"sh/ad0zi5cn","slide":1,"text":"Grupos privados","textPreview":"Grupos privados","textChars":15,"textLines":1,"bbox":[74,548,146,38]}
+{"kind":"textbox","id":"sh/gn6hore5","slide":1,"text":"Chat en tiempo real","textPreview":"Chat en tiempo real","textChars":19,"textLines":1,"bbox":[230,548,174,38]}
+{"kind":"textbox","id":"sh/h8fyxwvq","slide":1,"text":"Buzón anónimo","textPreview":"Buzón anónimo","textChars":13,"textLines":1,"bbox":[414,548,174,38]}
+{"kind":"shape","id":"sh/ulofm1wz","slide":1,"bbox":[744,54,430,612]}
+{"kind":"image","id":"im/zaho3i58","slide":1,"name":"","geometry":"ellipse","alt":"VibeLoop logo","bbox":[85,83,50,50]}
+{"kind":"image","id":"im/0vy18rux","slide":1,"name":"","geometry":"roundRect","alt":"Pantalla de bienvenida de VibeLoop","bbox":[772,82,374,556]}
+{"kind":"notes","id":"nt/gk0zaw","slide":1,"text":""}
+{"kind":"slide","id":"sl/kbxpa9","slide":2,"title":"02  Qué es","textShapes":9}
+{"kind":"shape","id":"sh/7i9cf6p0","slide":2,"bbox":[0,0,260,260]}
+{"kind":"shape","id":"sh/8j2d8bql","slide":2,"bbox":[920,420,300,300]}
+{"kind":"textbox","id":"sh/tkbuhg76","slide":2,"text":"02  Qué es","textPreview":"02  Qué es","textChars":10,"textLines":1,"bbox":[72,44,1080,28]}
+{"kind":"textbox","id":"sh/yd0b218j","slide":2,"text":"VibeLoop es una plataforma social para comunidades privadas.","textPreview":"VibeLoop es una plataforma social para comunidades privadas.","textChars":60,"textLines":1,"bbox":[72,84,730,132]}
+{"kind":"textbox","id":"sh/je9cb694","slide":2,"text":"La experiencia empieza por invitación y sigue dentro del grupo: conversar, compartir fotos, reaccionar y abrir el buzón anónimo sin salir del mismo loop.","textPreview":"La experiencia empieza por invitación y sigue dentro del grupo: conversar, compartir fotos, reaccionar y abrir el buzón anónimo sin salir...","textChars":153,"textLines":1,"bbox":[72,214,720,110]}
+{"kind":"shape","id":"sh/kfit4bqp","slide":2,"bbox":[72,360,212,180]}
+{"kind":"shape","id":"sh/lgrudwra","slide":2,"bbox":[206,348,120,120]}
+{"kind":"textbox","id":"sh/apgbyh87","slide":2,"text":"Grupos","textPreview":"Grupos","textChars":6,"textLines":1,"bbox":[94,378,170,40]}
+{"kind":"textbox","id":"sh/bqpc7m9s","slide":2,"text":"Cada comunidad vive en un espacio propio, con miembros, portada, invitación y control de acceso.","textPreview":"Cada comunidad vive en un espacio propio, con miembros, portada, invitación y control de acceso.","textChars":96,"textLines":1,"bbox":[94,422,170,102]}
+{"kind":"shape","id":"sh/rmhgb2p0","slide":2,"bbox":[304,360,212,180]}
+{"kind":"shape","id":"sh/ql8zixov","slide":2,"bbox":[438,348,120,120]}
+{"kind":"textbox","id":"sh/dojidc76","slide":2,"text":"Chat","textPreview":"Chat","textChars":4,"textLines":1,"bbox":[326,378,170,40]}
+{"kind":"textbox","id":"sh/cnahk76l","slide":2,"text":"Las conversaciones pasan en tiempo real y mantienen a la comunidad conectada en el día a día.","textPreview":"Las conversaciones pasan en tiempo real y mantienen a la comunidad conectada en el día a día.","textChars":93,"textLines":1,"bbox":[326,422,170,102]}
+{"kind":"shape","id":"sh/zq10f2pc","slide":2,"bbox":[536,360,212,180]}
+{"kind":"shape","id":"sh/epszmhor","slide":2,"bbox":[670,348,120,120]}
+{"kind":"textbox","id":"sh/lsjihc7i","slide":2,"text":"Anónimo","textPreview":"Anónimo","textChars":7,"textLines":1,"bbox":[558,378,170,40]}
+{"kind":"textbox","id":"sh/0raho76x","slide":2,"text":"El buzón anónimo abre una capa de participación más honesta y más privada.","textPreview":"El buzón anónimo abre una capa de participación más honesta y más privada.","textChars":74,"textLines":1,"bbox":[558,422,170,102]}
+{"kind":"shape","id":"sh/fuxg3ip8","slide":2,"bbox":[808,120,400,500]}
+{"kind":"image","id":"im/107y1wzm","slide":2,"name":"","geometry":"roundRect","alt":"Pantalla de grupo en VibeLoop","bbox":[834,144,348,452]}
+{"kind":"notes","id":"nt/kbxpa9","slide":2,"text":""}
+{"kind":"slide","id":"sl/ywtxst","slide":3,"title":"03  Cómo entra el usuario","textShapes":13}
+{"kind":"textbox","id":"sh/7qdkratw","slide":3,"text":"03  Cómo entra el usuario","textPreview":"03  Cómo entra el usuario","textChars":25,"textLines":1,"bbox":[72,44,1080,28]}
+{"kind":"textbox","id":"sh/8bm1kfuh","slide":3,"text":"El acceso arranca con una invitación y termina dentro del chat.","textPreview":"El acceso arranca con una invitación y termina dentro del chat.","textChars":63,"textLines":1,"bbox":[72,86,610,140]}
+{"kind":"textbox","id":"sh/9cv2tkb2","slide":3,"text":"Si la persona no tiene cuenta, VibeLoop puede resolver la entrada como invitado. El objetivo es que entrar al grupo sea rápido y sin fricción.","textPreview":"Si la persona no tiene cuenta, VibeLoop puede resolver la entrada como invitado. El objetivo es que entrar al grupo sea rápido y sin fric...","textChars":142,"textLines":1,"bbox":[72,220,580,92]}
+{"kind":"shape","id":"sh/ud4jmpcn","slide":3,"bbox":[72,344,176,198]}
+{"kind":"shape","id":"sh/vedkvut8","slide":3,"bbox":[90,362,50,50]}
+{"kind":"textbox","id":"sh/wfmlozut","slide":3,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[90,360,60,28]}
+{"kind":"textbox","id":"sh/hgv2x4by","slide":3,"text":"Recibe un enlace","textPreview":"Recibe un enlace","textChars":16,"textLines":1,"bbox":[90,408,140,58]}
+{"kind":"textbox","id":"sh/ah0jalcj","slide":3,"text":"El usuario abre una invitación compartida por el creador del grupo.","textPreview":"El usuario abre una invitación compartida por el creador del grupo.","textChars":67,"textLines":1,"bbox":[90,468,140,64]}
+{"kind":"shape","id":"sh/bitkjqto","slide":3,"bbox":[280,344,176,198]}
+{"kind":"shape","id":"sh/ra5onmps","slide":3,"bbox":[298,362,50,50]}
+{"kind":"textbox","id":"sh/qpw7eh87","slide":3,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[298,360,60,28]}
+{"kind":"textbox","id":"sh/dc76pc7y","slide":3,"text":"Se resuelve el acceso","textPreview":"Se resuelve el acceso","textChars":21,"textLines":1,"bbox":[298,408,140,58]}
+{"kind":"textbox","id":"sh/sbypgrqd","slide":3,"text":"La app valida la invitación y puede entrar como invitado si hace falta.","textPreview":"La app valida la invitación y puede entrar como invitado si hace falta.","textChars":71,"textLines":1,"bbox":[298,468,140,64]}
+{"kind":"shape","id":"sh/3m5oj29w","slide":3,"bbox":[488,344,176,198]}
+{"kind":"shape","id":"sh/ilw7ax8b","slide":3,"bbox":[506,362,50,50]}
+{"kind":"textbox","id":"sh/5on6lc7m","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[506,360,60,28]}
+{"kind":"textbox","id":"sh/4nepc7q1","slide":3,"text":"Llega al chat","textPreview":"Llega al chat","textChars":13,"textLines":1,"bbox":[506,408,140,58]}
+{"kind":"textbox","id":"sh/vilof29k","slide":3,"text":"La pantalla final es el grupo: conversación, fotos y acciones rápidas.","textPreview":"La pantalla final es el grupo: conversación, fotos y acciones rápidas.","textChars":70,"textLines":1,"bbox":[506,468,140,64]}
+{"kind":"shape","id":"sh/uhc76x8z","slide":3,"bbox":[244,414,34,34]}
+{"kind":"shape","id":"sh/ydc7yxs7","slide":3,"bbox":[452,414,34,34]}
+{"kind":"shape","id":"sh/jel8r2tc","slide":3,"bbox":[744,118,468,514]}
+{"kind":"textbox","id":"sh/lg3qtsbi","slide":3,"text":"La invitación puede abrir el grupo desde web o deep link.","textPreview":"La invitación puede abrir el grupo desde web o deep link.","textChars":57,"textLines":1,"bbox":[744,650,468,26]}
+{"kind":"image","id":"im/jad0bmds","slide":3,"name":"","geometry":"roundRect","alt":"Flujo de invitación en VibeLoop","bbox":[770,140,416,470]}
+{"kind":"notes","id":"nt/ywtxst","slide":3,"text":""}
+{"kind":"slide","id":"sl/b8ppkr","slide":4,"title":"04  Qué hace dentro","textShapes":15}
+{"kind":"textbox","id":"sh/j6twb2ds","slide":4,"text":"04  Qué hace dentro","textPreview":"04  Qué hace dentro","textChars":19,"textLines":1,"bbox":[72,44,1080,28]}
+{"kind":"textbox","id":"sh/k72dk7ud","slide":4,"text":"Dentro del grupo, VibeLoop concentra todas las acciones importantes en un solo lugar.","textPreview":"Dentro del grupo, VibeLoop concentra todas las acciones importantes en un solo lugar.","textChars":85,"textLines":1,"bbox":[72,84,640,118]}
+{"kind":"textbox","id":"sh/l8bedcvy","slide":4,"text":"La experiencia está pensada para que la comunidad no tenga que saltar entre varias apps: conversa, comparte y vuelve a entrar al mismo espacio.","textPreview":"La experiencia está pensada para que la comunidad no tenga que saltar entre varias apps: conversa, comparte y vuelve a entrar al mismo es...","textChars":143,"textLines":1,"bbox":[72,210,620,84]}
+{"kind":"shape","id":"sh/a10vexcb","slide":4,"bbox":[72,332,100,110]}
+{"kind":"shape","id":"sh/b2tc72dw","slide":4,"bbox":[94,346,56,56]}
+{"kind":"textbox","id":"sh/w32dg7u1","slide":4,"text":"Pantallazo","textPreview":"Pantallazo","textChars":10,"textLines":1,"bbox":[82,404,80,28]}
+{"kind":"shape","id":"sh/x4be9svm","slide":4,"bbox":[190,332,100,110]}
+{"kind":"shape","id":"sh/md0vadcz","slide":4,"bbox":[212,346,56,56]}
+{"kind":"textbox","id":"sh/ne9c3idk","slide":4,"text":"Invitar","textPreview":"Invitar","textChars":7,"textLines":1,"bbox":[200,404,80,28]}
+{"kind":"shape","id":"sh/7qpgrqd0","slide":4,"bbox":[308,332,100,110]}
+{"kind":"shape","id":"sh/mpgzylcf","slide":4,"bbox":[330,346,56,56]}
+{"kind":"textbox","id":"sh/9s7ytgv6","slide":4,"text":"Link web","textPreview":"Link web","textChars":8,"textLines":1,"bbox":[318,404,80,28]}
+{"kind":"shape","id":"sh/8ryh0bul","slide":4,"bbox":[426,332,100,110]}
+{"kind":"shape","id":"sh/vepgvqdc","slide":4,"bbox":[448,346,56,56]}
+{"kind":"textbox","id":"sh/udgz2lcr","slide":4,"text":"Fotos","textPreview":"Fotos","textChars":5,"textLines":1,"bbox":[436,404,80,28]}
+{"kind":"shape","id":"sh/hgryx0v2","slide":4,"bbox":[72,498,10,10]}
+{"kind":"textbox","id":"sh/wfyh4vuh","slide":4,"text":"Chat en tiempo real","textPreview":"Chat en tiempo real","textChars":19,"textLines":1,"bbox":[96,492,540,42]}
+{"kind":"textbox","id":"sh/bi5gj6ds","slide":4,"text":"Las conversaciones se mantienen vivas dentro del grupo.","textPreview":"Las conversaciones se mantienen vivas dentro del grupo.","textChars":55,"textLines":1,"bbox":[96,518,540,24]}
+{"kind":"shape","id":"sh/axwfq1w7","slide":4,"bbox":[72,552,10,10]}
+{"kind":"textbox","id":"sh/edkjy9wv","slide":4,"text":"Fotos del grupo","textPreview":"Fotos del grupo","textChars":15,"textLines":1,"bbox":[96,546,540,42]}
+{"kind":"textbox","id":"sh/fetk7exg","slide":4,"text":"La comunidad comparte momentos sin perder el contexto.","textPreview":"La comunidad comparte momentos sin perder el contexto.","textChars":54,"textLines":1,"bbox":[96,572,540,24]}
+{"kind":"shape","id":"sh/gfm10ze1","slide":4,"bbox":[72,606,10,10]}
+{"kind":"textbox","id":"sh/1gv294fm","slide":4,"text":"Reacciones y presencia","textPreview":"Reacciones y presencia","textChars":22,"textLines":1,"bbox":[96,600,540,42]}
+{"kind":"textbox","id":"sh/69kjupwz","slide":4,"text":"La interacción no se limita al texto.","textPreview":"La interacción no se limita al texto.","textChars":37,"textLines":1,"bbox":[96,626,540,24]}
+{"kind":"shape","id":"sh/rat03uxk","slide":4,"bbox":[72,660,10,10]}
+{"kind":"textbox","id":"sh/sb21wzep","slide":4,"text":"Acciones rápidas","textPreview":"Acciones rápidas","textChars":16,"textLines":1,"bbox":[96,654,540,42]}
+{"kind":"textbox","id":"sh/tcb254fa","slide":4,"text":"Captura, invitar, link web y fotos están a un toque.","textPreview":"Captura, invitar, link web y fotos están a un toque.","textChars":52,"textLines":1,"bbox":[96,680,540,24]}
+{"kind":"shape","id":"sh/il0jqpwn","slide":4,"bbox":[752,112,456,530]}
+{"kind":"image","id":"im/kritkbqx","slide":4,"name":"","geometry":"roundRect","alt":"Grupo abierto dentro de VibeLoop","bbox":[776,134,408,486]}
+{"kind":"notes","id":"nt/b8ppkr","slide":4,"text":""}
+{"kind":"slide","id":"sl/b9sx4z","slide":5,"title":"05  La capa anónima","textShapes":10}
+{"kind":"textbox","id":"sh/qpcjylgz","slide":5,"text":"05  La capa anónima","textPreview":"05  La capa anónima","textChars":19,"textLines":1,"bbox":[72,44,1080,28]}
+{"kind":"textbox","id":"sh/dcn2tgzq","slide":5,"text":"El buzón anónimo le da otra voz al grupo.","textPreview":"El buzón anónimo le da otra voz al grupo.","textChars":41,"textLines":1,"bbox":[72,84,620,120]}
+{"kind":"textbox","id":"sh/sbe10by5","slide":5,"text":"Quien escribe no expone su nombre ni su usuario dentro del flujo del mensaje. Eso permite preguntar, opinar o compartir algo sensible con más libertad.","textPreview":"Quien escribe no expone su nombre ni su usuario dentro del flujo del mensaje. Eso permite preguntar, opinar o compartir algo sensible con...","textChars":151,"textLines":1,"bbox":[72,212,620,118]}
+{"kind":"shape","id":"sh/jml0n6ho","slide":5,"bbox":[72,364,176,164]}
+{"kind":"shape","id":"sh/ilcju1g3","slide":5,"bbox":[170,352,120,120]}
+{"kind":"textbox","id":"sh/5o32pgze","slide":5,"text":"Privacidad","textPreview":"Privacidad","textChars":10,"textLines":1,"bbox":[94,382,134,40]}
+{"kind":"textbox","id":"sh/4nu1wby9","slide":5,"text":"La identidad se mantiene fuera del mensaje publicado.","textPreview":"La identidad se mantiene fuera del mensaje publicado.","textChars":53,"textLines":1,"bbox":[94,426,134,86]}
+{"kind":"shape","id":"sh/vi10jmhc","slide":5,"bbox":[266,364,176,164]}
+{"kind":"shape","id":"sh/uhsjq1gr","slide":5,"bbox":[364,352,120,120]}
+{"kind":"textbox","id":"sh/wrmhczyt","slide":5,"text":"Confianza","textPreview":"Confianza","textChars":9,"textLines":1,"bbox":[288,382,134,40]}
+{"kind":"textbox","id":"sh/hcvy54ze","slide":5,"text":"La conversación puede sentirse más cercana y más honesta.","textPreview":"La conversación puede sentirse más cercana y más honesta.","textChars":57,"textLines":1,"bbox":[288,426,134,86]}
+{"kind":"shape","id":"sh/up4za9g3","slide":5,"bbox":[460,364,176,164]}
+{"kind":"shape","id":"sh/vqdg3eho","slide":5,"bbox":[558,352,120,120]}
+{"kind":"textbox","id":"sh/8nmh8zyx","slide":5,"text":"Cuidado","textPreview":"Cuidado","textChars":7,"textLines":1,"bbox":[482,382,134,40]}
+{"kind":"textbox","id":"sh/9ovy14zi","slide":5,"text":"La función está pensada para convivir, no para abusar.","textPreview":"La función está pensada para convivir, no para abusar.","textChars":54,"textLines":1,"bbox":[482,426,134,86]}
+{"kind":"shape","id":"sh/mlkz6pgr","slide":5,"bbox":[742,94,474,560]}
+{"kind":"textbox","id":"sh/sj6hk3y1","slide":5,"text":"VibeLoop publica el mensaje en el grupo sin mostrar tu identidad dentro del flujo.","textPreview":"VibeLoop publica el mensaje en el grupo sin mostrar tu identidad dentro del flujo.","textChars":82,"textLines":1,"bbox":[742,666,474,22]}
+{"kind":"image","id":"im/8fqdk7ip","slide":5,"name":"","geometry":"roundRect","alt":"Buzón anónimo dentro de VibeLoop","bbox":[768,122,424,504]}
+{"kind":"notes","id":"nt/b9sx4z","slide":5,"text":""}
+{"kind":"slide","id":"sl/2z4xix","slide":6,"title":"06  Monetización actual","textShapes":10}
+{"kind":"shape","id":"sh/pcz2d43e","slide":6,"bbox":[0,0,280,280]}
+{"kind":"shape","id":"sh/298329k3","slide":6,"bbox":[860,360,360,360]}
+{"kind":"textbox","id":"sh/3ahkbelo","slide":6,"text":"06  Monetización actual","textPreview":"06  Monetización actual","textChars":23,"textLines":1,"bbox":[72,44,1080,28]}
+{"kind":"textbox","id":"sh/g7610z2x","slide":6,"text":"El producto ya puede monetizarse con anuncios integrados en puntos concretos del flujo.","textPreview":"El producto ya puede monetizarse con anuncios integrados en puntos concretos del flujo.","textChars":87,"textLines":1,"bbox":[72,84,620,132]}
+{"kind":"textbox","id":"sh/18z2943i","slide":6,"text":"En el código del producto ya existe soporte para banners y acciones que disparan interstitials, como crear un grupo o compartir una invitación.","textPreview":"En el código del producto ya existe soporte para banners y acciones que disparan interstitials, como crear un grupo o compartir una invit...","textChars":143,"textLines":1,"bbox":[72,218,590,110]}
+{"kind":"shape","id":"sh/e5ojypkr","slide":6,"bbox":[72,364,188,176]}
+{"kind":"shape","id":"sh/f6xk7ulc","slide":6,"bbox":[182,352,120,120]}
+{"kind":"textbox","id":"sh/s361wf21","slide":6,"text":"Banners","textPreview":"Banners","textChars":7,"textLines":1,"bbox":[94,382,146,40]}
+{"kind":"textbox","id":"sh/t4f25k36","slide":6,"text":"Se muestran en pantallas donde no interrumpen el momento principal.","textPreview":"Se muestran en pantallas donde no interrumpen el momento principal.","textChars":67,"textLines":1,"bbox":[94,426,146,98]}
+{"kind":"shape","id":"sh/50je1ofa","slide":6,"bbox":[282,364,188,176]}
+{"kind":"shape","id":"sh/4zadsjep","slide":6,"bbox":[392,352,120,120]}
+{"kind":"textbox","id":"sh/jy1wzex4","slide":6,"text":"Interstitials","textPreview":"Interstitials","textChars":13,"textLines":1,"bbox":[304,382,146,40]}
+{"kind":"textbox","id":"sh/ixsvq9wj","slide":6,"text":"Pueden aparecer después de acciones de alto valor, como crear o invitar.","textPreview":"Pueden aparecer después de acciones de alto valor, como crear o invitar.","textChars":72,"textLines":1,"bbox":[304,426,146,98]}
+{"kind":"shape","id":"sh/hwjex4fy","slide":6,"bbox":[492,364,188,176]}
+{"kind":"shape","id":"sh/wvqdozed","slide":6,"bbox":[602,352,120,120]}
+{"kind":"textbox","id":"sh/vuhwvuxs","slide":6,"text":"Activación por configuración","textPreview":"Activación por configuración","textChars":28,"textLines":1,"bbox":[514,382,146,40]}
+{"kind":"textbox","id":"sh/u98vmpwn","slide":6,"text":"La monetización puede prenderse o apagarse según el despliegue.","textPreview":"La monetización puede prenderse o apagarse según el despliegue.","textChars":63,"textLines":1,"bbox":[514,426,146,98]}
+{"kind":"shape","id":"sh/98zut4f2","slide":6,"bbox":[714,108,496,554]}
+{"kind":"textbox","id":"sh/0bud0zmd","slide":6,"text":"La monetización está integrada en el producto, no añadida como un parche.","textPreview":"La monetización está integrada en el producto, no añadida como un parche.","textChars":73,"textLines":1,"bbox":[714,666,496,18]}
+{"kind":"image","id":"im/3i1gnqpg","slide":6,"name":"","geometry":"roundRect","alt":"Pantalla de inicio con banner publicitario","bbox":[742,132,440,498]}
+{"kind":"notes","id":"nt/2z4xix","slide":6,"text":""}
+{"kind":"slide","id":"sl/qfavlx","slide":7,"title":"07  Monetización a futuro","textShapes":12}
+{"kind":"textbox","id":"sh/yhkvatoz","slide":7,"text":"07  Monetización a futuro","textPreview":"07  Monetización a futuro","textChars":25,"textLines":1,"bbox":[72,44,1080,28]}
+{"kind":"textbox","id":"sh/lkvu58na","slide":7,"text":"A medida que la comunidad crece, VibeLoop puede convertirse en una plataforma con varias líneas de ingreso.","textPreview":"A medida que la comunidad crece, VibeLoop puede convertirse en una plataforma con varias líneas de ingreso.","textChars":107,"textLines":1,"bbox":[72,84,720,120]}
+{"kind":"textbox","id":"sh/kjmdc365","slide":7,"text":"La oportunidad está en expandir el valor para usuarios, administradores, creadores y marcas sin romper la lógica de comunidad privada.","textPreview":"La oportunidad está en expandir el valor para usuarios, administradores, creadores y marcas sin romper la lógica de comunidad privada.","textChars":134,"textLines":1,"bbox":[72,212,680,92]}
+{"kind":"shape","id":"sh/7mdc7i5g","slide":7,"bbox":[72,346,220,160]}
+{"kind":"shape","id":"sh/ml4vedov","slide":7,"bbox":[214,334,120,120]}
+{"kind":"textbox","id":"sh/98vu98nm","slide":7,"text":"Premium","textPreview":"Premium","textChars":7,"textLines":1,"bbox":[94,364,178,40]}
+{"kind":"textbox","id":"sh/8nmdg3m1","slide":7,"text":"Membresías con funciones avanzadas y comunidades más controladas.","textPreview":"Membresías con funciones avanzadas y comunidades más controladas.","textChars":65,"textLines":1,"bbox":[94,408,178,82]}
+{"kind":"shape","id":"sh/vaxcbi5s","slide":7,"bbox":[322,346,220,160]}
+{"kind":"shape","id":"sh/u94vid47","slide":7,"bbox":[464,334,120,120]}
+{"kind":"textbox","id":"sh/onqtorqt","slide":7,"text":"Creator tools","textPreview":"Creator tools","textChars":13,"textLines":1,"bbox":[344,364,178,40]}
+{"kind":"textbox","id":"sh/pozuhwre","slide":7,"text":"Herramientas para quienes administran o activan grupos con más frecuencia.","textPreview":"Herramientas para quienes administran o activan grupos con más frecuencia.","textChars":74,"textLines":1,"bbox":[344,408,178,82]}
+{"kind":"shape","id":"sh/2l8bm183","slide":7,"bbox":[72,530,220,160]}
+{"kind":"shape","id":"sh/3mhcfm9o","slide":7,"bbox":[214,518,120,120]}
+{"kind":"textbox","id":"sh/cratsbq5","slide":7,"text":"Espacios patrocinados","textPreview":"Espacios patrocinados","textChars":21,"textLines":1,"bbox":[94,548,178,40]}
+{"kind":"textbox","id":"sh/dsjulgrq","slide":7,"text":"Grupos o experiencias destacadas para marcas y partners.","textPreview":"Grupos o experiencias destacadas para marcas y partners.","textChars":56,"textLines":1,"bbox":[94,592,178,82]}
+{"kind":"shape","id":"sh/qpsbq18z","slide":7,"bbox":[322,530,220,160]}
+{"kind":"shape","id":"sh/bq1cj69k","slide":7,"bbox":[464,518,120,120]}
+{"kind":"textbox","id":"sh/0fadwbq1","slide":7,"text":"B2B","textPreview":"B2B","textChars":3,"textLines":1,"bbox":[344,548,178,40]}
+{"kind":"textbox","id":"sh/lgjupgrm","slide":7,"text":"Soluciones para eventos, comunidades cerradas y programas internos.","textPreview":"Soluciones para eventos, comunidades cerradas y programas internos.","textChars":67,"textLines":1,"bbox":[344,592,178,82]}
+{"kind":"shape","id":"sh/90f2tcfu","slide":7,"bbox":[610,300,578,318]}
+{"kind":"textbox","id":"sh/mx43ihw3","slide":7,"text":"La base ya existe: ahora se trata de escalar el modelo sin perder la esencia.","textPreview":"La base ya existe: ahora se trata de escalar el modelo sin perder la esencia.","textChars":77,"textLines":1,"bbox":[610,620,578,44]}
+{"kind":"image","id":"im/3yhcb6hg","slide":7,"name":"","geometry":"roundRect","alt":"Pantalla de inicio de VibeLoop con monetización visible","bbox":[636,326,220,270]}
+{"kind":"image","id":"im/4zqdkby1","slide":7,"name":"","geometry":"roundRect","alt":"Chat y buzón anónimo de VibeLoop","bbox":[876,326,286,270]}
+{"kind":"notes","id":"nt/qfavlx","slide":7,"text":""}
+{"kind":"slide","id":"sl/bzg9b9","slide":8,"title":"VibeLoop convierte una comunidad privada en un producto vivo.","textShapes":6}
+{"kind":"shape","id":"sh/x03id43e","slide":8,"bbox":[960,0,320,320]}
+{"kind":"shape","id":"sh/axcji9kn","slide":8,"bbox":[0,420,360,300]}
+{"kind":"textbox","id":"sh/kne1oj25","slide":8,"text":"VibeLoop convierte una comunidad privada en un producto vivo.","textPreview":"VibeLoop convierte una comunidad privada en un producto vivo.","textChars":61,"textLines":1,"bbox":[72,168,640,132]}
+{"kind":"textbox","id":"sh/loniho3a","slide":8,"text":"Entrar, participar, compartir, invitar y volver a entrar. Ese es el loop que la experiencia quiere sostener.","textPreview":"Entrar, participar, compartir, invitar y volver a entrar. Ese es el loop que la experiencia quiere sostener.","textChars":108,"textLines":1,"bbox":[72,298,600,130]}
+{"kind":"textbox","id":"sh/ylcjm9kz","slide":8,"text":"Comunidad","textPreview":"Comunidad","textChars":9,"textLines":1,"bbox":[72,470,142,38]}
+{"kind":"textbox","id":"sh/zml0felk","slide":8,"text":"Privacidad","textPreview":"Privacidad","textChars":10,"textLines":1,"bbox":[226,470,122,38]}
+{"kind":"textbox","id":"sh/8re1sj21","slide":8,"text":"Negocio","textPreview":"Negocio","textChars":7,"textLines":1,"bbox":[360,470,126,38]}
+{"kind":"shape","id":"sh/tsn2lo3m","slide":8,"bbox":[742,112,418,496]}
+{"kind":"textbox","id":"sh/0365wjal","slide":8,"text":"Listo para presentar","textPreview":"Listo para presentar","textChars":20,"textLines":1,"bbox":[742,628,418,30]}
+{"kind":"image","id":"im/qx47ih47","slide":8,"name":"","geometry":"ellipse","alt":"VibeLoop logo","bbox":[72,70,68,68]}
+{"kind":"image","id":"im/6xovqlgz","slide":8,"name":"","geometry":"roundRect","alt":"VibeLoop launch screen","bbox":[768,136,366,446]}
+{"kind":"notes","id":"nt/bzg9b9","slide":8,"text":""}

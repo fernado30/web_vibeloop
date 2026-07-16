@@ -21,7 +21,7 @@ class InterstitialAdManager {
   }
 
   Future<void> preload({bool bypassCooldown = false}) async {
-    if (!AdConfig.shouldLoadAds || _loading || _showing || _ad != null || (!bypassCooldown && _isOnCooldown)) {
+    if (!AdConfig.shouldLoadInterstitialAds || _loading || _showing || _ad != null || (!bypassCooldown && _isOnCooldown)) {
       return;
     }
 
@@ -49,7 +49,7 @@ class InterstitialAdManager {
     bool bypassCooldown = false,
     bool waitForDismissal = false,
   }) async {
-    if (!AdConfig.shouldLoadAds) {
+    if (!AdConfig.shouldLoadInterstitialAds) {
       return false;
     }
 

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -69,7 +68,7 @@ class ChatRepository {
   Future<void> sendMessage(String groupId, String content, String type) async {
     final user = _supabase.auth.currentUser;
     if (user == null) {
-      throw AuthException('Debes iniciar sesión para enviar mensajes.');
+      throw const AuthException('Debes iniciar sesión para enviar mensajes.');
     }
 
     await _supabase.from('messages').insert({
@@ -83,7 +82,7 @@ class ChatRepository {
   Future<void> reactToMessage(String messageId, String emoji) async {
     final user = _supabase.auth.currentUser;
     if (user == null) {
-      throw AuthException('Debes iniciar sesión para reaccionar.');
+      throw const AuthException('Debes iniciar sesión para reaccionar.');
     }
 
     await _supabase.from('reactions').upsert({

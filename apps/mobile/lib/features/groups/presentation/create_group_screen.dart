@@ -409,11 +409,6 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                   ],
                 ),
               ),
-            Positioned(
-              top: 12,
-              left: 12,
-              child: _FloatingBackButton(onTap: () => context.pop(), isDark: isDark),
-            ),
             Positioned.fill(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
@@ -781,6 +776,20 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                     ),
                   ),
                 ),
+              ),
+            ),
+            Positioned(
+              top: 12,
+              left: 12,
+              child: _FloatingBackButton(
+                onTap: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/groups');
+                  }
+                },
+                isDark: isDark,
               ),
             ),
           ],

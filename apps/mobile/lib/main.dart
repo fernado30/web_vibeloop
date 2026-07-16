@@ -1,40 +1,91 @@
+import 'dart:async';
+import 'dart:ui' as ui;
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/ads/ad_service.dart';
+import 'core/notifications/app_notification_service.dart';
 import 'core/router/app_router.dart';
 import 'core/router/deep_link_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/supabase/supabase_config.dart';
 import 'core/settings/app_preferences_repository.dart';
+import 'firebase_options.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+}
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  try {
-    final config = await SupabaseConfig.load();
-    await Supabase.initialize(
-      url: config.url,
-      anonKey: config.anonKey,
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
     );
+
+    await FirebaseCrashlytics.instance
+        .setCrashlyticsCollectionEnabled(true);
+
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    ui.PlatformDispatcher.instance.onError = (error, stackTrace) {
+      FirebaseCrashlytics.instance.recordError(error, stackTrace, fatal: true);
+      return true;
+    };
+
     try {
-      await AdService.instance.initialize();
-    } catch (error) {
-      debugPrint('AdMob init failed: $error');
-    }
-    runApp(const ProviderScope(child: VibeloopApp()));
-  } catch (error, stackTrace) {
-    runApp(
-      MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: _BootstrapErrorScreen(
-          error: error,
-          stackTrace: stackTrace,
+      final config = await SupabaseConfig.load();
+      await Supabase.initialize(
+        url: config.url,
+        anonKey: config.anonKey,
+      );
+
+      try {
+        await AdService.instance.initialize();
+      } catch (error, stackTrace) {
+        await FirebaseCrashlytics.instance.recordError(
+          error,
+          stackTrace,
+          fatal: false,
+        );
+        debugPrint('AdMob init failed: $error');
+      }
+
+      runApp(const ProviderScope(child: VibeloopApp()));
+    } catch (error, stackTrace) {
+      await FirebaseCrashlytics.instance.recordError(
+        error,
+        stackTrace,
+        fatal: true,
+      );
+      runApp(
+        MaterialApp(
+          debugShowCheckedModeBanner: false,
+          home: _BootstrapErrorScreen(
+            error: error,
+            stackTrace: stackTrace,
+          ),
         ),
-      ),
+      );
+    }
+  }, (error, stackTrace) async {
+    await FirebaseCrashlytics.instance.recordError(
+      error,
+      stackTrace,
+      fatal: true,
     );
-  }
+  });
 }
 
 class VibeloopApp extends ConsumerStatefulWidget {
@@ -59,6 +110,12 @@ class _VibeloopAppState extends ConsumerState<VibeloopApp> {
     }
 
     return MaterialApp.router(
+      builder: (context, child) {
+        return NotificationBootstrap(
+          router: router,
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       debugShowCheckedModeBanner: false,
       title: 'VIBELOOP',
       locale: const Locale('es', 'ES'),

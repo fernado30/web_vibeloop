@@ -28,7 +28,7 @@ class _VibeLoopBannerAdState extends State<VibeLoopBannerAd> {
   }
 
   Future<void> _loadBanner(int width) async {
-    if (!mounted || !AdConfig.shouldLoadAds || width <= 0) {
+    if (!mounted || !AdConfig.shouldLoadBannerAds || width <= 0) {
       return;
     }
 
@@ -119,7 +119,7 @@ class _VibeLoopBannerAdState extends State<VibeLoopBannerAd> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth.truncate();
-        if (AdConfig.shouldLoadAds && width > 0 && _lastRequestedWidth != width && !_loading) {
+        if (AdConfig.shouldLoadBannerAds && width > 0 && _lastRequestedWidth != width && !_loading) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               _loadBanner(width);
@@ -143,7 +143,7 @@ class _VibeLoopBannerAdState extends State<VibeLoopBannerAd> {
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 180),
           child: SizedBox(
-            key: ValueKey(showAd ? 'ad' : 'placeholder-${AdConfig.shouldLoadAds}'),
+            key: ValueKey(showAd ? 'ad' : 'placeholder-${AdConfig.shouldLoadBannerAds}'),
             width: double.infinity,
             height: showAd ? adHeight : 64,
             child: Center(child: child),

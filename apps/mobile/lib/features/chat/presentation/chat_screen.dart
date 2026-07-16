@@ -6,6 +6,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
@@ -180,12 +181,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       await ref.read(chatRepositoryProvider).sendMessage(widget.groupId, text, 'text');
       _textController.clear();
       await _setTyping(false);
-    } catch (error) {
+    } catch (error, stackTrace) {
+      await FirebaseCrashlytics.instance.recordError(
+        error,
+        stackTrace,
+        reason: 'Error enviando mensaje al chat del grupo',
+        fatal: false,
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_friendlyChatError(error))),
       );
     }
+  }
+
+  void _refreshAnonymousMessagesStream() {
+    _anonymousMessagesStream = ref.read(anonymousRepositoryProvider).watchAnonymousMessages(widget.groupId);
   }
 
   Future<void> _reactToMessage(String messageId, String emoji) async {
@@ -1121,6 +1132,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (!mounted) return;
       setState(() {
         _anonymousBubbleOpen = true;
+        _refreshAnonymousMessagesStream();
         _messagesStream = ref.read(chatRepositoryProvider).watchMessages(widget.groupId);
       });
       _scrollToBottom();

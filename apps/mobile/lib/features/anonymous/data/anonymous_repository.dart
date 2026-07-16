@@ -51,7 +51,7 @@ class AnonymousRepository {
   Future<void> publishAnonymousMessage(AnonymousMessageModel message) async {
     final user = _supabase.auth.currentUser;
     if (user == null) {
-      throw AuthException('Debes iniciar sesión para publicar un mensaje.');
+      throw const AuthException('Debes iniciar sesion para publicar un mensaje.');
     }
 
     await _supabase.from('messages').insert({
@@ -77,37 +77,28 @@ class AnonymousRepository {
       controller.add(cache);
     }
 
-    Future<void> refreshSingle(String messageId) async {
+    Future<AnonymousMessageModel?> parseFilteredMessage(Map<String, dynamic> json) async {
+      final message = AnonymousMessageModel.fromJson(json);
+      final filtered = await SafetyRepository(_supabase).filterAnonymousMessages([message]);
+      return filtered.isEmpty ? null : filtered.first;
+    }
+
+    Future<void> upsertFromRecord(Map<String, dynamic> record, {bool placeAtFront = true}) async {
       if (!loaded || controller.isClosed) {
         await emit();
         return;
       }
 
-      final row = await _supabase
-          .from('anonymous_messages')
-          .select('id, group_id, content, reactions, created_at')
-          .eq('id', messageId)
-          .maybeSingle();
-
-      if (row == null) {
-        await emit();
-        return;
-      }
-
-      final json = Map<String, dynamic>.from(row as Map);
+      final json = Map<String, dynamic>.from(record);
       json['reactions'] = _reactionCounts(json['reactions']);
-      final filtered = await SafetyRepository(_supabase).filterAnonymousMessages([
-        AnonymousMessageModel.fromJson(json),
-      ]);
+      final message = await parseFilteredMessage(json);
 
-      if (filtered.isEmpty) {
-        cache = cache.where((item) => item.id != messageId).toList();
+      if (message == null) {
+        cache = cache.where((item) => item.id != json['id']?.toString()).toList();
       } else {
-        final message = filtered.first;
         final existingIndex = cache.indexWhere((item) => item.id == message.id);
-
         if (existingIndex == -1) {
-          cache = [message, ...cache];
+          cache = placeAtFront ? [message, ...cache] : [...cache, message];
         } else {
           cache = [
             ...cache.take(existingIndex),
@@ -122,18 +113,41 @@ class AnonymousRepository {
       }
     }
 
+    Future<void> removeFromCache(String? messageId) async {
+      if (!loaded || controller.isClosed) {
+        await emit();
+        return;
+      }
+
+      if (messageId == null || messageId.isEmpty) {
+        await emit();
+        return;
+      }
+
+      final nextCache = cache.where((item) => item.id != messageId).toList();
+      if (nextCache.length == cache.length) {
+        await emit();
+        return;
+      }
+
+      cache = nextCache;
+      if (!controller.isClosed) {
+        controller.add(cache);
+      }
+    }
+
     channel.onPostgresChanges(
       event: PostgresChangeEvent.insert,
       schema: 'public',
       table: 'anonymous_messages',
       filter: PostgresChangeFilter(column: 'group_id', value: groupId, type: PostgresChangeFilterType.eq),
       callback: (payload) {
-        final messageId = payload.newRecord['id']?.toString();
-        if (messageId == null || messageId.isEmpty) {
+        final record = payload.newRecord;
+        if (record.isEmpty) {
           emit();
           return;
         }
-        refreshSingle(messageId);
+        upsertFromRecord(Map<String, dynamic>.from(record));
       },
     );
 
@@ -143,12 +157,12 @@ class AnonymousRepository {
       table: 'anonymous_messages',
       filter: PostgresChangeFilter(column: 'group_id', value: groupId, type: PostgresChangeFilterType.eq),
       callback: (payload) {
-        final messageId = payload.newRecord['id']?.toString();
-        if (messageId == null || messageId.isEmpty) {
+        final record = payload.newRecord;
+        if (record.isEmpty) {
           emit();
           return;
         }
-        refreshSingle(messageId);
+        upsertFromRecord(Map<String, dynamic>.from(record), placeAtFront: false);
       },
     );
 
@@ -157,7 +171,15 @@ class AnonymousRepository {
       schema: 'public',
       table: 'anonymous_messages',
       filter: PostgresChangeFilter(column: 'group_id', value: groupId, type: PostgresChangeFilterType.eq),
-      callback: (_) => emit(),
+      callback: (payload) {
+        final record = payload.oldRecord;
+        final messageId = record['id']?.toString();
+        if (messageId == null || messageId.isEmpty) {
+          emit();
+          return;
+        }
+        removeFromCache(messageId);
+      },
     );
 
     channel.subscribe();
