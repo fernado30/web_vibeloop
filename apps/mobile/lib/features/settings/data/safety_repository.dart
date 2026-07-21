@@ -8,6 +8,10 @@ final safetyRepositoryProvider = Provider<SafetyRepository>((ref) {
   return SafetyRepository(Supabase.instance.client);
 });
 
+/// Increments whenever a personal safety filter changes so active feeds can
+/// re-apply the filter without requiring the user to leave and reopen them.
+final safetyFiltersRevisionProvider = StateProvider<int>((ref) => 0);
+
 class SafetyRepository {
   SafetyRepository(this._client);
 

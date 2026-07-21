@@ -25,6 +25,7 @@ import '../../groups/data/groups_repository.dart';
 import '../../groups/domain/group_model.dart';
 import '../data/chat_repository.dart';
 import '../domain/message_model.dart';
+import '../../settings/data/safety_repository.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key, required this.groupId});
@@ -152,6 +153,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    ref.listenManual<int>(safetyFiltersRevisionProvider, (_, __) {
+      if (!mounted) return;
+      setState(() {
+        _messagesStream = ref.read(chatRepositoryProvider).watchMessages(widget.groupId);
+        _anonymousMessagesStream = ref.read(anonymousRepositoryProvider).watchAnonymousMessages(widget.groupId);
+      });
+    });
     _messagesStream = ref.read(chatRepositoryProvider).watchMessages(widget.groupId);
     _anonymousMessagesStream = ref.read(anonymousRepositoryProvider).watchAnonymousMessages(widget.groupId);
     _inviteLinksFuture = ref.read(groupsRepositoryProvider).generateInviteLinks(widget.groupId);

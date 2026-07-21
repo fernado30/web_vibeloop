@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/vibe_ui.dart';
 import '../data/anonymous_repository.dart';
 import '../domain/anonymous_message_model.dart';
+import '../../settings/data/safety_repository.dart';
 
 class AnonymousInboxScreen extends ConsumerStatefulWidget {
   const AnonymousInboxScreen({super.key, required this.groupId});
@@ -20,6 +21,12 @@ class _AnonymousInboxScreenState extends ConsumerState<AnonymousInboxScreen> {
   @override
   void initState() {
     super.initState();
+    ref.listenManual<int>(safetyFiltersRevisionProvider, (_, __) {
+      if (!mounted) return;
+      setState(() {
+        _messagesStream = ref.read(anonymousRepositoryProvider).watchAnonymousMessages(widget.groupId);
+      });
+    });
     _messagesStream = ref.read(anonymousRepositoryProvider).watchAnonymousMessages(widget.groupId);
   }
 

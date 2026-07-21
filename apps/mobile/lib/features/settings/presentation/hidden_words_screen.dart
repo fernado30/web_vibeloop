@@ -36,18 +36,34 @@ class _HiddenWordsScreenState extends ConsumerState<HiddenWordsScreen> {
     final value = _controller.text.trim();
     if (value.isEmpty) return;
 
-    await ref.read(safetyRepositoryProvider).addHiddenWord(value);
-    _controller.clear();
-    await _load();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Palabra oculta guardada')),
-    );
+    try {
+      await ref.read(safetyRepositoryProvider).addHiddenWord(value);
+      ref.read(safetyFiltersRevisionProvider.notifier).state++;
+      _controller.clear();
+      await _load();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Palabra oculta guardada')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo guardar la palabra: $error')),
+      );
+    }
   }
 
   Future<void> _removeWord(String word) async {
-    await ref.read(safetyRepositoryProvider).removeHiddenWord(word);
-    await _load();
+    try {
+      await ref.read(safetyRepositoryProvider).removeHiddenWord(word);
+      ref.read(safetyFiltersRevisionProvider.notifier).state++;
+      await _load();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo eliminar la palabra: $error')),
+      );
+    }
   }
 
   @override
