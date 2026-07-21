@@ -10,7 +10,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'core/ads/ad_service.dart';
 import 'core/notifications/app_notification_service.dart';
 import 'core/router/app_router.dart';
 import 'core/router/deep_link_service.dart';
@@ -36,7 +35,7 @@ Future<void> main() async {
     );
 
     await FirebaseCrashlytics.instance
-        .setCrashlyticsCollectionEnabled(true);
+        .setCrashlyticsCollectionEnabled(false);
 
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
     ui.PlatformDispatcher.instance.onError = (error, stackTrace) {
@@ -50,17 +49,6 @@ Future<void> main() async {
         url: config.url,
         anonKey: config.anonKey,
       );
-
-      try {
-        await AdService.instance.initialize();
-      } catch (error, stackTrace) {
-        await FirebaseCrashlytics.instance.recordError(
-          error,
-          stackTrace,
-          fatal: false,
-        );
-        debugPrint('AdMob init failed: $error');
-      }
 
       runApp(const ProviderScope(child: VibeloopApp()));
     } catch (error, stackTrace) {

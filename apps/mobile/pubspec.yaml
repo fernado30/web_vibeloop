@@ -1,7 +1,7 @@
 name: vibeloop_mobile
 description: VIBELOOP mobile app
 publish_to: "none"
-version: 1.0.0+2
+version: 1.0.0+3
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
@@ -27,6 +27,7 @@ dependencies:
   flutter_svg: ^2.0.17
   webview_flutter: ^4.10.0
   flutter_local_notifications: ^17.2.3
+  package_info_plus: ^10.2.1
   freezed_annotation: ^2.4.1
   json_annotation: ^4.9.0
   app_links: ^7.0.0

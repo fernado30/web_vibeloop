@@ -5,6 +5,8 @@ create table if not exists public.users (
   username text unique not null,
   display_name text,
   avatar_url text,
+  privacy_consent_at timestamptz,
+  privacy_policy_version text,
   emoji text not null default '🙂',
   created_at timestamptz default now()
 );
@@ -554,6 +556,28 @@ create policy "messages_insert_if_member"
 on public.messages
 for insert
 with check (
+  auth.uid() = sender_id
+  and private.is_group_member(group_id)
+);
+
+drop policy if exists "messages_update_own" on public.messages;
+create policy "messages_update_own"
+on public.messages
+for update
+using (
+  auth.uid() = sender_id
+  and private.is_group_member(group_id)
+)
+with check (
+  auth.uid() = sender_id
+  and private.is_group_member(group_id)
+);
+
+drop policy if exists "messages_delete_own" on public.messages;
+create policy "messages_delete_own"
+on public.messages
+for delete
+using (
   auth.uid() = sender_id
   and private.is_group_member(group_id)
 );

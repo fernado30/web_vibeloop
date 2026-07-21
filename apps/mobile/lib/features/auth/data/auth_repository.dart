@@ -40,9 +40,13 @@ class AuthRepository {
       if (user != null) {
         final existingProfile = await _supabase
             .from('users')
-            .select('display_name, emoji')
+            .select('display_name, emoji, account_status, is_under_13')
             .eq('id', user.id)
             .maybeSingle();
+        if (existingProfile?['is_under_13'] == true || existingProfile?['account_status'] == 'blocked_under_13') {
+          await _supabase.auth.signOut();
+          throw AuthException('Esta cuenta está bloqueada por protección de menores. Solicita la eliminación de sus datos a soporte@vibeloop.app.');
+        }
         await _ensureProfile(
           user,
           displayName: (existingProfile?['display_name']?.toString() ??
@@ -62,13 +66,18 @@ class AuthRepository {
     required String name,
     required String email,
     required String password,
+    required DateTime birthDate,
     String? emoji,
+    String? privacyPolicyVersion,
   }) async {
     final response = await _supabase.auth.signUp(
       email: email,
       password: password,
       data: {
         'display_name': name,
+        'is_under_13': false,
+        if (privacyPolicyVersion != null) 'privacy_policy_version': privacyPolicyVersion,
+        if (privacyPolicyVersion != null) 'privacy_consent_at': DateTime.now().toUtc().toIso8601String(),
         if (emoji != null) 'emoji': emoji,
       },
     );
@@ -79,10 +88,22 @@ class AuthRepository {
         user,
         displayName: name,
         emoji: emoji ?? emojiForSeed(user.id),
+        privacyPolicyVersion: privacyPolicyVersion,
       );
     }
 
     return response;
+  }
+
+  Future<void> recordPrivacyConsent({
+    required String policyVersion,
+    required User user,
+  }) async {
+    await _ensureProfile(
+      user,
+      displayName: user.userMetadata?['display_name']?.toString() ?? user.email?.split('@').first ?? 'Usuario',
+      privacyPolicyVersion: policyVersion,
+    );
   }
 
   Future<AuthResponse> signInAnonymously() {
@@ -91,6 +112,12 @@ class AuthRepository {
 
   Future<void> signOut() {
     return _supabase.auth.signOut();
+  }
+
+  Future<void> requestChildDataDeletion() async {
+    final response = await _supabase.rpc('request_child_data_deletion');
+    if (response == null) throw StateError('No se pudo registrar la solicitud de eliminación.');
+    await signOut();
   }
 
   Future<void> deleteAccount({
@@ -295,6 +322,7 @@ class AuthRepository {
     required String displayName,
     String? avatarUrl,
     String? emoji,
+    String? privacyPolicyVersion,
   }) async {
     final usernameBase = displayName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]+'), '_');
     final username = '${usernameBase}_${user.id.substring(0, 8)}';
@@ -309,6 +337,9 @@ class AuthRepository {
       'display_name': displayName,
       'avatar_url': avatarUrl,
       'emoji': emoji ?? existingProfile?['emoji']?.toString() ?? emojiForSeed(user.id),
+      'is_under_13': false,
+      if (privacyPolicyVersion != null) 'privacy_policy_version': privacyPolicyVersion,
+      if (privacyPolicyVersion != null) 'privacy_consent_at': DateTime.now().toUtc().toIso8601String(),
     });
   }
 }
@@ -332,8 +363,8 @@ class AuthController extends StateNotifier<local_auth.AuthState> {
     await _repository.signInWithEmail(email: email, password: password);
   }
 
-  Future<void> signUpWithEmail(String name, String email, String password) async {
-    await _repository.signUpWithEmail(name: name, email: email, password: password);
+  Future<void> signUpWithEmail(String name, String email, String password, DateTime birthDate) async {
+    await _repository.signUpWithEmail(name: name, email: email, password: password, birthDate: birthDate);
   }
 
   Future<void> signInAnonymously() async {

@@ -46,6 +46,87 @@ class _ChatFeedEntry {
   DateTime get createdAt => message.createdAt;
 }
 
+sealed class _MessageMenuSelection {
+  const _MessageMenuSelection();
+}
+
+final class _MessageMenuReactionSelection extends _MessageMenuSelection {
+  const _MessageMenuReactionSelection(this.emoji);
+
+  final String emoji;
+}
+
+final class _MessageMenuActionSelection extends _MessageMenuSelection {
+  const _MessageMenuActionSelection(this.action);
+
+  final _MessageMenuAction action;
+}
+
+enum _MessageMenuAction { edit, delete }
+
+class _EditMessageDialog extends StatefulWidget {
+  const _EditMessageDialog({required this.initialText});
+
+  final String initialText;
+
+  @override
+  State<_EditMessageDialog> createState() => _EditMessageDialogState();
+}
+
+class _EditMessageDialogState extends State<_EditMessageDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialText);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final value = _controller.text.trim();
+    if (value.isEmpty || value == widget.initialText) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    Navigator.of(context).pop(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Editar mensaje'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        maxLines: 4,
+        minLines: 1,
+        maxLength: 500,
+        textCapitalization: TextCapitalization.sentences,
+        decoration: const InputDecoration(
+          hintText: 'Escribe tu mensaje...',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: _save,
+          child: const Text('Guardar'),
+        ),
+      ],
+    );
+  }
+}
+
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final GlobalKey _screenshotKey = GlobalKey();
   late Stream<List<MessageModel>> _messagesStream;
@@ -60,6 +141,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _anonymousBubbleOpen = false;
   DateTime? _lastAnonymousSeenAt;
   final Object _anonymousTapRegionGroupId = Object();
+  final Set<String> _deletedMessageIds = <String>{};
   OverlayEntry? _anonymousBubbleOverlayEntry;
   List<AnonymousMessageModel> _latestAnonymousMessages = const <AnonymousMessageModel>[];
   bool _anonymousOverlayRefreshScheduled = false;
@@ -201,6 +283,234 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Future<void> _reactToMessage(String messageId, String emoji) async {
     await ref.read(chatRepositoryProvider).reactToMessage(messageId, emoji);
+  }
+
+  Future<String?> _showReactionPicker(BuildContext context, ColorScheme colorScheme) async {
+    const reactionOptions = [
+      '\u{1F44D}',
+      '\u{2764}\u{FE0F}',
+      '\u{1F602}',
+      '\u{1F62E}',
+      '\u{1F622}',
+      '\u{1F525}',
+    ];
+
+    return showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: colorScheme.surface,
+      builder: (context) {
+        return SafeArea(
+          top: false,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.55),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: reactionOptions
+                    .map(
+                      (emoji) => ActionChip(
+                        label: Text(emoji, style: const TextStyle(fontSize: 20)),
+                        onPressed: () => Navigator.of(context).pop(emoji),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<_MessageMenuSelection?> _showMessageMenu(
+    BuildContext context, {
+    required ColorScheme colorScheme,
+    required bool allowEditAndDelete,
+  }) {
+    const reactionOptions = [
+      '\u{1F44D}',
+      '\u{2764}\u{FE0F}',
+      '\u{1F602}',
+      '\u{1F62E}',
+      '\u{1F622}',
+      '\u{1F525}',
+    ];
+
+    return showModalBottomSheet<_MessageMenuSelection>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: colorScheme.surface,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final actionColor = isDark ? Colors.white.withValues(alpha: 0.86) : colorScheme.onSurface;
+
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  alignment: WrapAlignment.center,
+                  children: reactionOptions
+                      .map(
+                        (emoji) => ActionChip(
+                          label: Text(emoji, style: const TextStyle(fontSize: 20)),
+                          onPressed: () => Navigator.of(context).pop(_MessageMenuReactionSelection(emoji)),
+                        ),
+                      )
+                      .toList(),
+                ),
+                if (allowEditAndDelete) ...[
+                  const SizedBox(height: 16),
+                  Divider(height: 1, color: colorScheme.outline.withValues(alpha: 0.18)),
+                  const SizedBox(height: 8),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.edit_rounded, color: actionColor),
+                    title: Text(
+                      'Editar mensaje',
+                      style: TextStyle(
+                        color: actionColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    onTap: () => Navigator.of(context).pop(const _MessageMenuActionSelection(_MessageMenuAction.edit)),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.delete_outline_rounded, color: Color(0xFFF43F5E)),
+                    title: const Text(
+                      'Eliminar mensaje',
+                      style: TextStyle(
+                        color: Color(0xFFF43F5E),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    onTap: () => Navigator.of(context).pop(const _MessageMenuActionSelection(_MessageMenuAction.delete)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _handleMessageLongPress(
+    BuildContext context,
+    MessageModel message, {
+    required bool isMine,
+    required ColorScheme colorScheme,
+  }) async {
+    final selection = await _showMessageMenu(
+      context,
+      colorScheme: colorScheme,
+      allowEditAndDelete: isMine,
+    );
+
+    if (selection == null) return;
+
+    if (selection is _MessageMenuReactionSelection) {
+      await _reactToMessage(message.id, selection.emoji);
+      return;
+    }
+
+    if (selection is _MessageMenuActionSelection) {
+      switch (selection.action) {
+        case _MessageMenuAction.edit:
+          await _editMessage(message);
+          break;
+        case _MessageMenuAction.delete:
+          await _deleteMessage(message);
+          break;
+      }
+    }
+  }
+
+  Future<void> _editMessage(MessageModel message) async {
+    try {
+      final updatedContent = await showDialog<String>(
+        context: context,
+        builder: (dialogContext) => _EditMessageDialog(initialText: message.content),
+      );
+
+      if (updatedContent == null) return;
+
+      await ref.read(chatRepositoryProvider).editMessage(message.id, updatedContent);
+    } catch (error, stackTrace) {
+      await FirebaseCrashlytics.instance.recordError(
+        error,
+        stackTrace,
+        reason: 'Error editando mensaje del chat del grupo',
+        fatal: false,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_friendlyChatError(error))),
+      );
+    }
+  }
+
+  Future<void> _deleteMessage(MessageModel message) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Eliminar mensaje'),
+          content: const Text('Este mensaje se borrará para todos los miembros del grupo.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton.tonal(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Eliminar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) return;
+
+    try {
+      if (mounted) {
+        setState(() {
+          _deletedMessageIds.add(message.id);
+        });
+      }
+
+      await ref.read(chatRepositoryProvider).deleteMessage(message.id);
+    } catch (error, stackTrace) {
+      if (mounted) {
+        setState(() {
+          _deletedMessageIds.remove(message.id);
+        });
+      }
+
+      await FirebaseCrashlytics.instance.recordError(
+        error,
+        stackTrace,
+        reason: 'Error eliminando mensaje del chat del grupo',
+        fatal: false,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_friendlyChatError(error))),
+      );
+    }
   }
 
   Future<void> _shareChatScreenshot() async {
@@ -955,47 +1265,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     MessageModel message,
     ColorScheme colorScheme,
   ) {
-    const reactionOptions = [
-      '\u{1F44D}',
-      '\u{2764}\u{FE0F}',
-      '\u{1F602}',
-      '\u{1F62E}',
-      '\u{1F622}',
-      '\u{1F525}',
-    ];
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onLongPress: () async {
-        final reaction = await showModalBottomSheet<String>(
-          context: context,
-          isScrollControlled: true,
-          useSafeArea: true,
-          backgroundColor: colorScheme.surface,
-          builder: (context) {
-            return SafeArea(
-              top: false,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.55),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                  child: Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: reactionOptions
-                        .map(
-                          (emoji) => ActionChip(
-                            label: Text(emoji, style: const TextStyle(fontSize: 20)),
-                            onPressed: () => Navigator.of(context).pop(emoji),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
-              ),
-            );
-          },
-        );
+        final reaction = await _showReactionPicker(context, colorScheme);
 
         if (reaction != null) {
           await _reactToMessage(message.id, reaction);
@@ -1372,15 +1646,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const reactions = [
-      '\u{1F44D}',
-      '\u{2764}\u{FE0F}',
-      '\u{1F602}',
-      '\u{1F62E}',
-      '\u{1F622}',
-      '\u{1F525}',
-    ];
-
     final currentUserId = Supabase.instance.client.auth.currentUser?.id;
     final colorScheme = Theme.of(context).colorScheme;
     final topInset = MediaQuery.of(context).padding.top;
@@ -1531,16 +1796,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           stream: _messagesStream,
                           builder: (context, snapshot) {
                             final messages = snapshot.data ?? const <MessageModel>[];
+                            final visibleMessages =
+                                messages.where((message) => !_deletedMessageIds.contains(message.id)).toList();
 
-                        if (messages.isNotEmpty) {
-                          _scrollToBottom();
-                        }
+                            if (visibleMessages.isNotEmpty) {
+                              _scrollToBottom();
+                            }
 
-                          if (snapshot.connectionState == ConnectionState.waiting && messages.isEmpty) {
+                          if (snapshot.connectionState == ConnectionState.waiting && visibleMessages.isEmpty) {
                             return const Center(child: CircularProgressIndicator());
                           }
 
-                          final feedEntries = _buildFeedEntries(messages);
+                          final feedEntries = _buildFeedEntries(visibleMessages);
 
                           return ListView.separated(
                             controller: _scrollController,
@@ -1565,51 +1832,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               return Align(
                                 alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
                                 child: GestureDetector(
-                                  onLongPress: () async {
-                                    final reaction = await showModalBottomSheet<String>(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      useSafeArea: true,
-                                      backgroundColor: colorScheme.surface,
-                                      builder: (context) {
-                                        return SafeArea(
-                                          top: false,
-                                          child: ConstrainedBox(
-                                            constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.55),
-                                            child: SingleChildScrollView(
-                                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                                              child: Wrap(
-                                                spacing: 12,
-                                                runSpacing: 12,
-                                                children: reactions
-                                                    .map(
-                                                      (emoji) => ActionChip(
-                                                        label: Text(emoji, style: const TextStyle(fontSize: 20)),
-                                                        onPressed: () => Navigator.of(context).pop(emoji),
-                                                      ),
-                                                    )
-                                                    .toList(),
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    );
-
-                                  if (reaction != null) {
-                                    await _reactToMessage(message.id, reaction);
-                                  }
-                                },
-                                child: _buildChatMessageBubble(
-                                  context,
-                                  message: message,
-                                  senderLabel: senderLabel,
-                                  isMine: isMine,
-                                  colorScheme: colorScheme,
+                                  onLongPress: () => _handleMessageLongPress(
+                                    context,
+                                    message,
+                                    isMine: isMine,
+                                    colorScheme: colorScheme,
+                                  ),
+                                  child: _buildChatMessageBubble(
+                                    context,
+                                    message: message,
+                                    senderLabel: senderLabel,
+                                    isMine: isMine,
+                                    colorScheme: colorScheme,
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            },
                           );
                         },
                       ),

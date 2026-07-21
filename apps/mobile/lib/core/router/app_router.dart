@@ -10,6 +10,7 @@ import '../settings/app_preferences_repository.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/legal/presentation/help_screen.dart';
 import '../../features/legal/presentation/security_resources_screen.dart';
+import '../../features/legal/presentation/dmca_screen.dart';
 import '../../features/settings/presentation/hidden_words_screen.dart';
 import '../../features/settings/presentation/blocked_users_screen.dart';
 import '../../features/settings/presentation/pause_link_screen.dart';
@@ -138,6 +139,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'security-resources',
                 builder: (context, state) => const SecurityResourcesScreen(),
+              ),
+              GoRoute(
+                path: 'dmca',
+                builder: (context, state) => const DmcaScreen(),
               ),
               GoRoute(
                 path: 'notifications',

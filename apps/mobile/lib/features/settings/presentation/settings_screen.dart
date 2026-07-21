@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/vibe_tokens.dart';
@@ -13,6 +14,7 @@ class SettingsScreen extends ConsumerWidget {
 
   static final Uri _privacyUrl = Uri.parse('https://web-vibeloop-legal.vercel.app/privacy');
   static final Uri _termsUrl = Uri.parse('https://web-vibeloop-legal.vercel.app/terms');
+  static final Future<PackageInfo> _packageInfoFuture = PackageInfo.fromPlatform();
 
   Future<void> _openExternalLink(BuildContext context, Uri url, String errorMessage) async {
     final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -186,6 +188,12 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () => context.push('/groups/settings/security-resources'),
               ),
               _SettingsRow(
+                icon: Icons.copyright_rounded,
+                title: 'Copyright y DMCA',
+                subtitle: 'Avisos de retirada y contraavisos',
+                onTap: () => context.push('/groups/settings/dmca'),
+              ),
+              _SettingsRow(
                 iconAsset: VibeAssetIcons.settings,
                 title: 'Términos de uso',
                 subtitle: 'Condiciones y límites del servicio',
@@ -223,6 +231,29 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () => _handleSignOut(context, ref),
               ),
             ],
+          ),
+          const SizedBox(height: 18),
+          FutureBuilder<PackageInfo>(
+            future: _packageInfoFuture,
+            builder: (context, snapshot) {
+              final version = snapshot.data;
+              final label = version == null
+                  ? 'Version'
+                  : 'Version ${version.version}+${version.buildNumber}';
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Center(
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),

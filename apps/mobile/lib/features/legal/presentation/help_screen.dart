@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/widgets/vibe_ui.dart';
@@ -7,7 +8,7 @@ import '../../../core/widgets/vibe_ui.dart';
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
 
-  static const String _supportEmail = 'soporte@vibeloop.app';
+  static const String _supportEmail = 'emotivavibeloop@gmail.com';
   static final Uri _emailUri = Uri(
     scheme: 'mailto',
     path: _supportEmail,
@@ -61,6 +62,12 @@ class HelpScreen extends StatelessWidget {
             title: 'Copiar correo',
             subtitle: _supportEmail,
             onTap: () => _copyEmail(context),
+          ),
+          const SizedBox(height: 12),
+          MessageThreadPreview(
+            title: 'Copyright y DMCA',
+            subtitle: 'Enviar avisos de retirada o contraavisos',
+            onTap: () => context.push('/groups/settings/dmca'),
           ),
           const SizedBox(height: 12),
           const ModerationWarningCard(

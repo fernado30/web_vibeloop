@@ -18,6 +18,17 @@ const corsHeaders = {
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function isUnder13(birthDate: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return null;
+  const date = new Date(`${birthDate}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return null;
+  const today = new Date();
+  let age = today.getUTCFullYear() - date.getUTCFullYear();
+  if (today.getUTCMonth() < date.getUTCMonth() ||
+      (today.getUTCMonth() === date.getUTCMonth() && today.getUTCDate() < date.getUTCDate())) age--;
+  return age < 13;
+}
+
 function safeSlug(value: string) {
   return value
     .toLowerCase()
@@ -45,6 +56,12 @@ Deno.serve(async (req) => {
     const email = String(body.email ?? '').trim().toLowerCase();
     const password = String(body.password ?? '').trim();
     const displayName = String(body.displayName ?? '').trim().slice(0, 60) || 'Usuario';
+    const birthDate = String(body.birthDate ?? '').trim();
+    const privacyPolicyVersion = String(body.privacyPolicyVersion ?? '').trim().slice(0, 64);
+    const under13 = isUnder13(birthDate);
+    if (under13 === null) return new Response(JSON.stringify({ error: 'birthDate is required and must use YYYY-MM-DD' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (under13) return new Response(JSON.stringify({ error: 'Vibeloop no está dirigido a menores de 13 años.' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!privacyPolicyVersion) return new Response(JSON.stringify({ error: 'privacyPolicyVersion is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     if (!email || !emailPattern.test(email) || email.length > 254) {
       return new Response(JSON.stringify({ error: 'email is required' }), {
@@ -66,6 +83,7 @@ Deno.serve(async (req) => {
       email_confirm: true,
       user_metadata: {
         display_name: displayName,
+        is_under_13: false,
       },
     });
 
@@ -81,6 +99,9 @@ Deno.serve(async (req) => {
       username,
       display_name: displayName,
       avatar_url: null,
+      is_under_13: false,
+      privacy_policy_version: privacyPolicyVersion,
+      privacy_consent_at: new Date().toISOString(),
     });
 
     if (profileError) {

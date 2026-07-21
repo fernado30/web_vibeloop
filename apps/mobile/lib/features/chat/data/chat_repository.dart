@@ -79,6 +79,28 @@ class ChatRepository {
     });
   }
 
+  Future<void> editMessage(String messageId, String content) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      throw const AuthException('Debes iniciar sesión para editar mensajes.');
+    }
+
+    await _supabase
+        .from('messages')
+        .update({'content': content})
+        .eq('id', messageId)
+        .eq('sender_id', user.id);
+  }
+
+  Future<void> deleteMessage(String messageId) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      throw const AuthException('Debes iniciar sesión para eliminar mensajes.');
+    }
+
+    await _supabase.from('messages').delete().eq('id', messageId).eq('sender_id', user.id);
+  }
+
   Future<void> reactToMessage(String messageId, String emoji) async {
     final user = _supabase.auth.currentUser;
     if (user == null) {

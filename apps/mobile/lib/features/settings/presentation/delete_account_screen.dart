@@ -56,6 +56,15 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     }
   }
 
+  Future<void> _requestChildDeletion() async {
+    try {
+      await ref.read(authRepositoryProvider).requestChildDataDeletion();
+      if (mounted) context.go('/login');
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No se pudo registrar la solicitud: $error')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return VibeScaffold(
@@ -103,6 +112,11 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Text('Eliminar mi cuenta'),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: _isDeleting ? null : _requestChildDeletion,
+                  child: const Text('Solicitar eliminación por protección de menores'),
                 ),
               ],
             ),
