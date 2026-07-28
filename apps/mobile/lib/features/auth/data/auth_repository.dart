@@ -70,29 +70,17 @@ class AuthRepository {
     String? emoji,
     String? privacyPolicyVersion,
   }) async {
-    final response = await _supabase.auth.signUp(
-      email: email,
-      password: password,
-      data: {
-        'display_name': name,
-        'is_under_13': false,
-        if (privacyPolicyVersion != null) 'privacy_policy_version': privacyPolicyVersion,
-        if (privacyPolicyVersion != null) 'privacy_consent_at': DateTime.now().toUtc().toIso8601String(),
-        if (emoji != null) 'emoji': emoji,
-      },
-    );
-
-    final user = response.user;
-    if (user != null && response.session != null) {
-      await _ensureProfile(
-        user,
-        displayName: name,
-        emoji: emoji ?? emojiForSeed(user.id),
-        privacyPolicyVersion: privacyPolicyVersion,
-      );
+    final date = '${birthDate.year.toString().padLeft(4, '0')}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}';
+    final result = await _supabase.functions.invoke('register-user', body: {
+      'email': email, 'password': password, 'displayName': name, 'birthDate': date,
+      'privacyPolicyVersion': privacyPolicyVersion ?? '2026-07-22',
+      'termsAccepted': true, 'termsVersion': '2026-07-22',
+    });
+    if (result.status < 200 || result.status >= 300) {
+      final data = result.data;
+      throw AuthException(data is Map && data['error'] != null ? data['error'].toString() : 'No se pudo crear la cuenta.');
     }
-
-    return response;
+    return _supabase.auth.signInWithPassword(email: email, password: password);
   }
 
   Future<void> recordPrivacyConsent({
@@ -108,6 +96,23 @@ class AuthRepository {
 
   Future<AuthResponse> signInAnonymously() {
     return _supabase.auth.signInAnonymously();
+  }
+
+  Future<void> completeAgeVerification({
+    required DateTime birthDate,
+    required String privacyPolicyVersion,
+    required String termsVersion,
+  }) async {
+    final user = currentUser;
+    if (user == null) throw AuthException('No hay una sesion activa.');
+    await _ensureProfile(user, displayName: user.userMetadata?['display_name']?.toString() ?? 'Invitado', emoji: emojiForSeed(user.id));
+    final date = '${birthDate.year.toString().padLeft(4, '0')}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}';
+    await _supabase.rpc('complete_age_verification', params: {
+      'p_birth_date': date,
+      'p_privacy_policy_version': privacyPolicyVersion,
+      'p_terms_accepted': true,
+      'p_terms_version': termsVersion,
+    });
   }
 
   Future<void> signOut() {

@@ -13,7 +13,7 @@ class SecurityResourcesScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: const [
           SectionIntroCard(
-            title: 'Protege tu experiencia en VIBELOOP',
+            title: 'Protege tu experiencia en Nadien',
             body: 'Aquí reunimos las acciones más útiles para moderar grupos, reducir abuso y mantener tu cuenta bajo control.',
             badge: SafetyBadge(label: 'Seguridad'),
           ),

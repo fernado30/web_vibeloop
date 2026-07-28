@@ -41,6 +41,17 @@ function safeSlug(value: string) {
     .slice(0, 24) || 'invitado';
 }
 
+function isUnder13(birthDate: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return null;
+  const parsed = new Date(`${birthDate}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== birthDate) return null;
+  const today = new Date();
+  let age = today.getUTCFullYear() - parsed.getUTCFullYear();
+  if (today.getUTCMonth() < parsed.getUTCMonth() ||
+      (today.getUTCMonth() === parsed.getUTCMonth() && today.getUTCDate() < parsed.getUTCDate())) age--;
+  return age < 13;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -59,6 +70,17 @@ Deno.serve(async (req) => {
     const imageBase64 = String(body.imageBase64 ?? '').trim();
     const contentType = String(body.contentType ?? 'image/jpeg').trim();
     const filename = String(body.filename ?? 'guest.jpg').trim().slice(0, 80);
+    const birthDate = String(body.birthDate ?? '').trim();
+    const privacyPolicyVersion = String(body.privacyPolicyVersion ?? '').trim().slice(0, 64);
+    const termsAccepted = body.termsAccepted === true;
+    const termsVersion = String(body.termsVersion ?? '').trim().slice(0, 64);
+    const under13 = isUnder13(birthDate);
+
+    // This is intentionally the first state-changing gate: no user, object,
+    // token or profile exists when it returns 403.
+    if (under13 === null) return new Response(JSON.stringify({ error: 'birthDate is required and must use YYYY-MM-DD' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (under13) return new Response(JSON.stringify({ error: 'Vibeloop no esta dirigido a menores de 13 anos.' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!privacyPolicyVersion || !termsAccepted || !termsVersion) return new Response(JSON.stringify({ error: 'Privacy policy and terms acceptance are required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     if (!inviteCode) {
       return new Response(JSON.stringify({ error: 'inviteCode is required' }), {
@@ -153,6 +175,12 @@ Deno.serve(async (req) => {
       username,
       display_name: displayName,
       avatar_url: avatarUrl,
+      age_verified_13_plus: true,
+      age_verified_at: new Date().toISOString(),
+      privacy_consent_at: new Date().toISOString(),
+      privacy_policy_version: privacyPolicyVersion,
+      terms_accepted_at: new Date().toISOString(),
+      terms_version: termsVersion,
     });
 
     if (profileError) {

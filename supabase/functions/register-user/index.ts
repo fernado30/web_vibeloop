@@ -58,10 +58,12 @@ Deno.serve(async (req) => {
     const displayName = String(body.displayName ?? '').trim().slice(0, 60) || 'Usuario';
     const birthDate = String(body.birthDate ?? '').trim();
     const privacyPolicyVersion = String(body.privacyPolicyVersion ?? '').trim().slice(0, 64);
+    const termsAccepted = body.termsAccepted === true;
+    const termsVersion = String(body.termsVersion ?? '').trim().slice(0, 64);
     const under13 = isUnder13(birthDate);
     if (under13 === null) return new Response(JSON.stringify({ error: 'birthDate is required and must use YYYY-MM-DD' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     if (under13) return new Response(JSON.stringify({ error: 'Vibeloop no está dirigido a menores de 13 años.' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    if (!privacyPolicyVersion) return new Response(JSON.stringify({ error: 'privacyPolicyVersion is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!privacyPolicyVersion || !termsAccepted || !termsVersion) return new Response(JSON.stringify({ error: 'Privacy policy and terms acceptance are required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     if (!email || !emailPattern.test(email) || email.length > 254) {
       return new Response(JSON.stringify({ error: 'email is required' }), {
@@ -102,6 +104,10 @@ Deno.serve(async (req) => {
       is_under_13: false,
       privacy_policy_version: privacyPolicyVersion,
       privacy_consent_at: new Date().toISOString(),
+      age_verified_13_plus: true,
+      age_verified_at: new Date().toISOString(),
+      terms_accepted_at: new Date().toISOString(),
+      terms_version: termsVersion,
     });
 
     if (profileError) {

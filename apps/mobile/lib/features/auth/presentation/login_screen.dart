@@ -100,7 +100,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return AuthScreenShell(
-      title: 'VIBELOOP',
+      title: 'Nadien',
       subtitle: 'Vuelve a tu comunidad con una sesión segura y rápida.',
       fields: [
         Form(

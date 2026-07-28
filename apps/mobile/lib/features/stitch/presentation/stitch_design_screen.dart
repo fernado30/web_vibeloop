@@ -31,7 +31,7 @@ class _StitchDesignScreenState extends ConsumerState<StitchDesignScreen> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
       ..addJavaScriptChannel(
-        'VibeLoop',
+        'Nadien',
         onMessageReceived: (message) async {
           final action = message.message.trim();
           if (action == 'continue' || action == 'explore') {

@@ -318,7 +318,7 @@ class _LogoBlock extends StatelessWidget {
           child: Transform.scale(
             scale: 1.34,
             child: Image.asset(
-              'assets/icon/vibeloop_icon.png',
+              'assets/icon/nadien_app_icon.png',
               fit: BoxFit.cover,
             ),
           ),

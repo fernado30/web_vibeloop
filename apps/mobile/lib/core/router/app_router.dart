@@ -12,7 +12,6 @@ import '../../features/legal/presentation/help_screen.dart';
 import '../../features/legal/presentation/security_resources_screen.dart';
 import '../../features/legal/presentation/dmca_screen.dart';
 import '../../features/settings/presentation/hidden_words_screen.dart';
-import '../../features/settings/presentation/blocked_users_screen.dart';
 import '../../features/settings/presentation/pause_link_screen.dart';
 import '../../features/settings/presentation/message_filtering_screen.dart';
 import '../../features/settings/presentation/notifications_screen.dart';
@@ -157,10 +156,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const HiddenWordsScreen(),
               ),
               GoRoute(
-                path: 'blocked-users',
-                builder: (context, state) => const BlockedUsersScreen(),
-              ),
-              GoRoute(
                 path: 'pause-link',
                 builder: (context, state) => const PauseLinkScreen(),
               ),
@@ -260,7 +255,7 @@ class SplashScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'VIBELOOP',
+                'Nadien',
                 style: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.w900,

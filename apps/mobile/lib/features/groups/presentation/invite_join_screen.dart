@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-import '../../../core/ads/vibe_loop_banner_ad.dart';
 import '../../../core/utils/profile_emojis.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/groups_repository.dart';
@@ -10,6 +10,7 @@ import '../../../core/widgets/vibe_ui.dart';
 import '../../../core/utils/error_helper.dart';
 import '../../../core/theme/vibe_tokens.dart';
 import '../../stitch/presentation/stitch_onboarding_flow.dart';
+import '../../auth/domain/age_eligibility.dart';
 
 class InviteJoinScreen extends ConsumerStatefulWidget {
   const InviteJoinScreen({super.key, required this.inviteCode});
@@ -21,25 +22,31 @@ class InviteJoinScreen extends ConsumerStatefulWidget {
 }
 
 class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
-  bool _loading = true;
+  static const _privacyPolicyVersion = '2026-07-22';
+  static const _termsVersion = '2026-07-22';
+  static final _privacyUrl = Uri.parse('https://web-vibeloop-legal.vercel.app/privacy');
+  static final _termsUrl = Uri.parse('https://web-vibeloop-legal.vercel.app/terms');
+  bool _loading = false;
+  bool _confirmed13Plus = false;
+  DateTime? _birthDate;
   String? _error;
 
-  @override
-  void initState() {
-    super.initState();
-    _bootstrap();
-  }
-
   Future<void> _bootstrap() async {
+    if (_birthDate == null) { setState(() => _error = 'Selecciona tu fecha de nacimiento.'); return; }
+    if (!_confirmed13Plus) { setState(() => _error = 'Debes confirmar que tienes 13 años o más.'); return; }
+    if (isUnder13(_birthDate!)) { setState(() => _error = ageGateMessage()); return; }
     try {
       if (mounted) {
-        setState(() => _error = null);
+        setState(() { _error = null; _loading = true; });
       }
 
       final authRepo = ref.read(authRepositoryProvider);
       if (authRepo.currentUser == null) {
         await _signInGuestAccount(authRepo);
       }
+      await authRepo.completeAgeVerification(
+        birthDate: _birthDate!, privacyPolicyVersion: _privacyPolicyVersion, termsVersion: _termsVersion,
+      );
 
       final group = await ref.read(groupsRepositoryProvider).getGroupByInviteCode(widget.inviteCode);
       final invitePaused = await ref.read(groupsRepositoryProvider).isInvitePausedForCode(widget.inviteCode);
@@ -100,13 +107,6 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
       backgroundSeed: 3,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        bottomNavigationBar: const SafeArea(
-          top: false,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
-            child: VibeLoopBannerAd(),
-          ),
-        ),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -135,7 +135,30 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          const Text('Antes de entrar', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 12),
+                          const Text('Usamos tu fecha únicamente para verificar que cumples la edad mínima. No la guardamos.'),
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.cake_outlined),
+                            title: Text(_birthDate == null ? 'Fecha de nacimiento' : 'Fecha de nacimiento: ${_birthDate!.day}/${_birthDate!.month}/${_birthDate!.year}'),
+                            onTap: () async {
+                              final date = await showDatePicker(context: context, firstDate: DateTime(1900), lastDate: DateTime.now(), initialDate: _birthDate ?? DateTime(DateTime.now().year - 13));
+                              if (date != null && mounted) setState(() => _birthDate = date);
+                            },
+                          ),
+                          CheckboxListTile(
+                            contentPadding: EdgeInsets.zero, controlAffinity: ListTileControlAffinity.leading,
+                            value: _confirmed13Plus, onChanged: (value) => setState(() => _confirmed13Plus = value ?? false),
+                            title: const Text('Confirmo que tengo 13 años o más y acepto los Términos de servicio.'),
+                          ),
+                          Wrap(children: [
+                            TextButton(onPressed: () => launchUrl(_privacyUrl, mode: LaunchMode.externalApplication), child: const Text('Política de privacidad')),
+                            TextButton(onPressed: () => launchUrl(_termsUrl, mode: LaunchMode.externalApplication), child: const Text('Términos de servicio')),
+                          ]),
+                          FilledButton(onPressed: _bootstrap, child: const Text('Entrar al grupo')),
                           if (_error != null) ...[
+                            const SizedBox(height: 16),
                             ErrorStateCard(
                               title: 'No pudimos acceder al grupo',
                               body: _error!,

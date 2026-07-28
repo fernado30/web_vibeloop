@@ -29,7 +29,7 @@ class AppNotificationService {
 
   static const AndroidNotificationChannel _androidChannel = AndroidNotificationChannel(
     'vibeloop_activity',
-    'Actividad de VIBELOOP',
+    'Actividad de Nadien',
     description: 'Avisos de mensajes nuevos y mensajes anónimos.',
     importance: Importance.high,
   );

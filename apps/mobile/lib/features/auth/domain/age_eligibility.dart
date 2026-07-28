@@ -7,4 +7,10 @@ bool isUnder13(DateTime birthDate, {DateTime? today}) {
   return age < 13;
 }
 
-String ageGateMessage() => 'Vibeloop no está dirigido a menores de 13 años.';
+bool canSubmitAgeVerification({
+  required DateTime? birthDate,
+  required bool confirmed13Plus,
+  required bool termsAccepted,
+}) => birthDate != null && !isUnder13(birthDate) && confirmed13Plus && termsAccepted;
+
+String ageGateMessage() => 'Nadien no está dirigido a menores de 13 años.';

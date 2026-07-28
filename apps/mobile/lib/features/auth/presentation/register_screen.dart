@@ -115,9 +115,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     return AuthScreenShell(
       title: 'Crea tu cuenta',
-      subtitle: 'Únete a Vibeloop y conecta con tu comunidad.',
+      subtitle: 'Únete a Nadien y conecta con tu comunidad.',
       fields: [
-        const Text('Vibeloop no está dirigido a menores de 13 años.'),
+        const Text('Nadien no está dirigido a menores de 13 años.'),
         const SizedBox(height: 12),
         Form(
           key: _formKey,

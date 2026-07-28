@@ -44,9 +44,8 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/icon/vibeloop_icon.png
-  adaptive_icon_background: "#0A84FF"
-  adaptive_icon_foreground: assets/icon/vibeloop_foreground.png
+  image_path: assets/icon/nadien_app_icon.png
+  adaptive_icon_background: "#06020D"
   remove_alpha_ios: true
 
 flutter:

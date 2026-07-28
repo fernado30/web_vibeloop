@@ -12,7 +12,7 @@ Puedes desplegar esta carpeta como sitio estático independiente o servirla en l
 
 ## Contacto
 
-El correo actual del sitio es `soporte@vibeloop.app`.
+El correo actual del sitio es `emotivanadien@gmail.com`.
 
 ## Nota
 

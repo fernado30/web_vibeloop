@@ -143,12 +143,6 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () => context.push('/groups/settings/hidden-words'),
               ),
               _SettingsRow(
-                iconAsset: VibeAssetIcons.blocked,
-                title: 'Usuarios bloqueados',
-                subtitle: 'Gestiona tu espacio con más calma',
-                onTap: () => context.push('/groups/settings/blocked-users'),
-              ),
-              _SettingsRow(
                 iconAsset: VibeAssetIcons.pause,
                 title: 'Pausa mi enlace',
                 subtitle: 'Detén nuevas entradas por invitación',

@@ -5,6 +5,7 @@
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' https://cdn.tailwindcss.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
+<link rel="icon" type="image/png" href="/vibeloop-icon.png">
 <title>Buzón Seguro - Anónimo</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
@@ -78,8 +79,8 @@
 <!-- Keep hidden landing/error elements that app.js expects -->
 <section id="landingView" class="hidden max-w-md mx-auto px-margin-page pt-8 pb-32">
   <div class="glass-card ios-shadow rounded-3xl p-gutter-card border border-white/40 text-center">
-    <div class="mb-6">
-      <span class="material-symbols-outlined text-[64px] text-primary">launch</span>
+     <div class="mb-6 flex justify-center">
+       <img src="/vibeloop-icon.png" alt="Nadien" class="h-24 w-24 rounded-3xl shadow-lg object-cover">
     </div>
     <h1 class="text-headline-sm font-semibold text-on-surface mb-3">Abrir el grupo en la app</h1>
     <p class="text-on-surface-variant mb-6">Si tienes la app instalada, te llevaremos directo al grupo. Si no, te daremos la opción de instalarla.</p>
@@ -93,8 +94,8 @@
 <!-- Target Info Card (contains `groupName` and `groupDescription` for app.js) -->
 <section class="mb-8">
 <div class="glass-card ios-shadow rounded-3xl p-gutter-card flex items-center gap-4 border border-white/40">
-<div class="w-14 h-14 rounded-full vibrant-gradient flex items-center justify-center shadow-lg">
-<span class="material-symbols-outlined text-white text-[32px]" data-icon="account_circle" style="font-variation-settings: &quot;FILL&quot; 1;">account_circle</span>
+<div class="w-14 h-14 rounded-2xl overflow-hidden shadow-lg">
+<img src="/vibeloop-icon.png" alt="Nadien" class="w-full h-full object-cover">
 </div>
 <div>
 <span class="font-label-md text-label-md text-primary font-semibold">Anónimo para:</span>
