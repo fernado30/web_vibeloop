@@ -95,7 +95,7 @@ BEGIN
             VALUE "InternalName", "vibeloop" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.vibeloop. All rights reserved." "\0"
             VALUE "OriginalFilename", "vibeloop.exe" "\0"
-            VALUE "ProductName", "vibeloop" "\0"
+            VALUE "ProductName", "Nadie" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

@@ -13,7 +13,7 @@ class DmcaScreen extends StatelessWidget {
         path: _supportEmail,
         queryParameters: {
           'subject': subject,
-          'body': 'Nombre completo:\nEntidad (si aplica):\nDirección:\nTeléfono:\n\nObra protegida: \nUbicación exacta del contenido en Nadien: \nURL o identificador del grupo/contenido: \n\nDeclaro de buena fe que el uso descrito no está autorizado por el titular, su agente o la ley.\n\nFirma electrónica (escribe tu nombre):',
+          'body': 'Nombre completo:\nEntidad (si aplica):\nDirección:\nTeléfono:\n\nObra protegida: \nUbicación exacta del contenido en Nadie: \nURL o identificador del grupo/contenido: \n\nDeclaro de buena fe que el uso descrito no está autorizado por el titular, su agente o la ley.\n\nFirma electrónica (escribe tu nombre):',
         },
       );
 
@@ -35,7 +35,7 @@ class DmcaScreen extends StatelessWidget {
         children: [
           const SectionIntroCard(
             title: 'Avisos de copyright',
-            body: 'Nadien respeta los derechos de autor. Si crees que un contenido alojado en la app infringe tus derechos, puedes enviar un aviso para que lo revisemos.',
+            body: 'Nadie respeta los derechos de autor. Si crees que un contenido alojado en la app infringe tus derechos, puedes enviar un aviso para que lo revisemos.',
           ),
           const SizedBox(height: 12),
           _DmcaCard(
@@ -59,7 +59,7 @@ class DmcaScreen extends StatelessWidget {
           const SizedBox(height: 12),
           const SectionIntroCard(
             title: 'Uso responsable',
-            body: 'Los avisos falsos o presentados de mala fe pueden generar responsabilidad. Nadien puede solicitar información adicional y tomar medidas sobre cuentas que infrinjan repetidamente derechos de autor.',
+            body: 'Los avisos falsos o presentados de mala fe pueden generar responsabilidad. Nadie puede solicitar información adicional y tomar medidas sobre cuentas que infrinjan repetidamente derechos de autor.',
           ),
         ],
       ),

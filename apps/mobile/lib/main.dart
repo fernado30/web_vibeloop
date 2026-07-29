@@ -105,7 +105,7 @@ class _VibeloopAppState extends ConsumerState<VibeloopApp> {
         );
       },
       debugShowCheckedModeBanner: false,
-      title: 'Nadien',
+      title: 'Nadie',
       locale: const Locale('es', 'ES'),
       supportedLocales: const [
         Locale('es', 'ES'),
@@ -150,7 +150,7 @@ class _BootstrapErrorScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'No pudimos iniciar Nadien',
+                    'No pudimos iniciar Nadie',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,

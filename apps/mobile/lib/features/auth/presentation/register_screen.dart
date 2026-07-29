@@ -16,7 +16,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
-  static final Uri _privacyUrl = Uri.parse('https://web-vibeloop-legal.vercel.app/privacy');
+  static final Uri _privacyUrl = Uri.parse('https://web-legal-nadie.vercel.app/privacy');
   static const String _privacyPolicyVersion = '2026-07-17';
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
@@ -115,9 +115,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     return AuthScreenShell(
       title: 'Crea tu cuenta',
-      subtitle: 'Únete a Nadien y conecta con tu comunidad.',
+      subtitle: 'Únete a Nadie y conecta con tu comunidad.',
       fields: [
-        const Text('Nadien no está dirigido a menores de 13 años.'),
+        const Text('Nadie no está dirigido a menores de 13 años.'),
         const SizedBox(height: 12),
         Form(
           key: _formKey,

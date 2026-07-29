@@ -13,4 +13,4 @@ bool canSubmitAgeVerification({
   required bool termsAccepted,
 }) => birthDate != null && !isUnder13(birthDate) && confirmed13Plus && termsAccepted;
 
-String ageGateMessage() => 'Nadien no está dirigido a menores de 13 años.';
+String ageGateMessage() => 'Nadie no está dirigido a menores de 13 años.';

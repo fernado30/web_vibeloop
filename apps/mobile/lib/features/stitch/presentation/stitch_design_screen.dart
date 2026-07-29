@@ -31,19 +31,19 @@ class _StitchDesignScreenState extends ConsumerState<StitchDesignScreen> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
       ..addJavaScriptChannel(
-        'Nadien',
+        'Nadie',
         onMessageReceived: (message) async {
           final action = message.message.trim();
           if (action == 'continue' || action == 'explore') {
             await _continue();
           } else if (action == 'privacy') {
             await launchUrl(
-              Uri.parse('https://web-vibeloop-legal-1cu5ygsqc-fernando-s-projects-4ac4887a.vercel.app/'),
+              Uri.parse('https://web-legal-nadie.vercel.app/'),
               mode: LaunchMode.externalApplication,
             );
           } else if (action == 'terms') {
             await launchUrl(
-              Uri.parse('https://web-vibeloop-legal-1cu5ygsqc-fernando-s-projects-4ac4887a.vercel.app/'),
+              Uri.parse('https://web-legal-nadie.vercel.app/'),
               mode: LaunchMode.externalApplication,
             );
           }

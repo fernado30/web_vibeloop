@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -24,8 +25,6 @@ import '../../features/groups/presentation/group_photos_screen.dart';
 import '../../features/anonymous/presentation/anonymous_inbox_screen.dart';
 import '../../features/stitch/presentation/stitch_design_screen.dart';
 import '../../features/stitch/presentation/stitch_onboarding_flow.dart';
-import '../theme/vibe_tokens.dart';
-import '../widgets/vibe_ui.dart';
 
 String? resolveAppRedirect({
   required String matchedLocation,
@@ -248,28 +247,98 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: VibeBackdrop(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+    return const Scaffold(
+      backgroundColor: Colors.transparent,
+      body: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          systemNavigationBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          systemNavigationBarIconBrightness: Brightness.light,
+          systemStatusBarContrastEnforced: false,
+          systemNavigationBarContrastEnforced: false,
+        ),
+        child: _SplashBackdrop(),
+      ),
+    );
+  }
+}
+
+class _SplashBackdrop extends StatelessWidget {
+  const _SplashBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF14002C),
+            Color(0xFF2B0054),
+            Color(0xFF730069),
+            Color(0xFFF1007D),
+          ],
+          stops: [0.0, 0.36, 0.70, 1.0],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final logoSize =
+              (constraints.maxWidth * 0.36).clamp(120.0, 310.0).toDouble();
+
+          return Stack(
+            fit: StackFit.expand,
             children: [
-              Text(
-                'Nadien',
-                style: TextStyle(
-                  fontSize: 34,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2,
-                  color: Theme.of(context).colorScheme.onSurface,
+              Align(
+                alignment: Alignment.center,
+                child: _SplashLogoGlow(size: logoSize),
+              ),
+              Align(
+                alignment: Alignment.center,
+                child: SizedBox(
+                  width: logoSize,
+                  height: logoSize,
+                  child: Image.asset(
+                    'assets/icon/nadie_app_icon.png',
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
-              const SizedBox(height: 24),
-              const CircularProgressIndicator(
-                color: VibeColors.primaryViolet,
-                strokeWidth: 3,
-              ),
             ],
-          ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SplashLogoGlow extends StatelessWidget {
+  const _SplashLogoGlow({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size * 1.18,
+        height: size * 1.18,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFB000FF).withValues(alpha: 0.30),
+              blurRadius: size * 0.30,
+              spreadRadius: size * 0.10,
+            ),
+            BoxShadow(
+              color: const Color(0xFFFF008C).withValues(alpha: 0.22),
+              blurRadius: size * 0.52,
+              spreadRadius: size * 0.05,
+            ),
+          ],
         ),
       ),
     );

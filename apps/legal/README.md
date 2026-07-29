@@ -32,9 +32,9 @@ Recommended project setup:
 Suggested domain split:
 
 - Main app web: `www.vibeloop.app`
-- Legal site: `legal.vibeloop.app`
+- Legal site: `https://web-legal-nadie.vercel.app/`
 
 If you prefer a simpler setup:
 
 - Main app web: `vibeloop.app`
-- Legal site: `legal.vibeloop.app`
+- Legal site: `https://web-legal-nadie.vercel.app/`

@@ -15,7 +15,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  static final Uri _privacyUrl = Uri.parse('https://web-vibeloop-legal.vercel.app/privacy');
+  static final Uri _privacyUrl = Uri.parse('https://web-legal-nadie.vercel.app/privacy');
   static const String _privacyPolicyVersion = '2026-07-17';
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
@@ -100,7 +100,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return AuthScreenShell(
-      title: 'Nadien',
+      title: 'Nadie',
       subtitle: 'Vuelve a tu comunidad con una sesión segura y rápida.',
       fields: [
         Form(

@@ -172,7 +172,7 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
       return emailName[0].toUpperCase() + emailName.substring(1);
     }
 
-    return 'Nadiener';
+    return 'Nadie';
   }
 
   Future<void> _showDeleteConfirmation(BuildContext context, GroupModel group) async {

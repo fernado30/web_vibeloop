@@ -18,7 +18,7 @@ class AppearanceScreen extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
           const SectionIntroCard(
-            title: 'Controla como se ve Nadien',
+            title: 'Controla como se ve Nadie',
             body: 'Puedes cambiar entre modo claro, oscuro o seguir el sistema. El cambio se guarda y se aplica en toda la app al instante.',
             badge: SafetyBadge(label: 'Tema'),
           ),

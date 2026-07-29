@@ -12,8 +12,8 @@ import '../../auth/data/auth_repository.dart';
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
-  static final Uri _privacyUrl = Uri.parse('https://web-vibeloop-legal.vercel.app/privacy');
-  static final Uri _termsUrl = Uri.parse('https://web-vibeloop-legal.vercel.app/terms');
+  static final Uri _privacyUrl = Uri.parse('https://web-legal-nadie.vercel.app/privacy');
+  static final Uri _termsUrl = Uri.parse('https://web-legal-nadie.vercel.app/terms');
   static final Future<PackageInfo> _packageInfoFuture = PackageInfo.fromPlatform();
 
   Future<void> _openExternalLink(BuildContext context, Uri url, String errorMessage) async {

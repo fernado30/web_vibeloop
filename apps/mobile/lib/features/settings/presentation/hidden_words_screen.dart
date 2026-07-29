@@ -75,7 +75,7 @@ class _HiddenWordsScreenState extends ConsumerState<HiddenWordsScreen> {
         children: [
           const SectionIntroCard(
             title: 'Filtra palabras que no quieras ver',
-      body: 'Cuando una palabra oculta coincida con un mensaje, Nadien puede reemplazarlo por un aviso corto para que el chat se mantenga más cómodo para ti.',
+      body: 'Cuando una palabra oculta coincida con un mensaje, Nadie puede reemplazarlo por un aviso corto para que el chat se mantenga más cómodo para ti.',
             badge: SafetyBadge(label: 'Filtro personal'),
           ),
           const SizedBox(height: 16),

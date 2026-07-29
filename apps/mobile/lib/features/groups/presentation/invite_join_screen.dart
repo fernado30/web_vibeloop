@@ -24,8 +24,8 @@ class InviteJoinScreen extends ConsumerStatefulWidget {
 class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
   static const _privacyPolicyVersion = '2026-07-22';
   static const _termsVersion = '2026-07-22';
-  static final _privacyUrl = Uri.parse('https://web-vibeloop-legal.vercel.app/privacy');
-  static final _termsUrl = Uri.parse('https://web-vibeloop-legal.vercel.app/terms');
+  static final _privacyUrl = Uri.parse('https://web-legal-nadie.vercel.app/privacy');
+  static final _termsUrl = Uri.parse('https://web-legal-nadie.vercel.app/terms');
   bool _loading = false;
   bool _confirmed13Plus = false;
   DateTime? _birthDate;

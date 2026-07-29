@@ -543,7 +543,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path)],
-        text: 'Captura del chat de Nadien',
+        text: 'Captura del chat de Nadie',
         ),
       );
     } catch (error) {
@@ -1545,7 +1545,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ).toString();
     await SharePlus.instance.share(
       ShareParams(
-        text: 'Únete a mi grupo en Nadien: $inviteLink',
+        text: 'Únete a mi grupo en Nadie: $inviteLink',
       ),
     );
     unawaited(AdService.instance.showInterstitialAfterInviteShared());

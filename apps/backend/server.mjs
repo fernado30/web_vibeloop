@@ -10,7 +10,7 @@ const firebaseProjectId = (process.env.FIREBASE_PROJECT_ID ?? '').trim();
 const firebaseClientEmail = (process.env.FIREBASE_CLIENT_EMAIL ?? '').trim();
 const firebasePrivateKey = (process.env.FIREBASE_PRIVATE_KEY ?? '').trim().replace(/\\n/g, '\n');
 const allowedOrigins = new Set(
-  (process.env.ALLOWED_ORIGINS ?? 'https://web-vibeloop.vercel.app,http://localhost:3000,http://localhost:4173,http://localhost:8080')
+  (process.env.ALLOWED_ORIGINS ?? 'https://web-nadie.vercel.app,http://localhost:3000,http://localhost:4173,http://localhost:8080')
     .split(',')
     .map((origin) => origin.trim().replace(/\/+$/, ''))
     .filter(Boolean),

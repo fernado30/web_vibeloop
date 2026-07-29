@@ -50,7 +50,7 @@ class _StitchPlatformOnboardingScreenState extends ConsumerState<StitchPlatformO
                     _GradientHeadline(
                       firstLine: '¿Dónde quieres',
                       secondLine: 'utilizar ',
-                      gradientWord: 'Nadien',
+                      gradientWord: 'Nadie',
                       trailing: '?',
                     ),
                     const SizedBox(height: 14),

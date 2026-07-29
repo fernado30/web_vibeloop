@@ -13,8 +13,8 @@ class HelpScreen extends StatelessWidget {
     scheme: 'mailto',
     path: _supportEmail,
     queryParameters: {
-      'subject': 'Ayuda con Nadien',
-      'body': 'Hola equipo de Nadien,\n\nNecesito ayuda con:\n\n- Descripcion del problema:\n- Grupo afectado (si aplica):\n- Dispositivo:\n- Captura o detalle adicional:\n',
+      'subject': 'Ayuda con Nadie',
+      'body': 'Hola equipo de Nadie,\n\nNecesito ayuda con:\n\n- Descripcion del problema:\n- Grupo afectado (si aplica):\n- Dispositivo:\n- Captura o detalle adicional:\n',
     },
   );
 
