@@ -30,6 +30,7 @@ async function main() {
   // document and is reached only through the token routes configured in Vercel.
   await mkdir(join(distDir, 'buzon'), { recursive: true });
   await copyFile(join(root, '..', 'landing', 'index.html'), join(distDir, 'index.html'));
+  await copyFile(join(root, '..', 'landing', 'hero-sculpture-v1.png'), join(distDir, 'hero-sculpture-v1.png'));
   await copyFile(join(root, 'index.html'), join(distDir, 'buzon', 'index.html'));
   await copyFile(join(root, 'styles.css'), join(distDir, 'styles.css'));
   await copyFile(join(root, 'app.js'), join(distDir, 'app.js'));
