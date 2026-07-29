@@ -7,19 +7,19 @@
   "rewrites": [
     {
       "source": "/open/:code",
-      "destination": "/index.html"
+      "destination": "/buzon/index.html"
     },
     {
       "source": "/join/:code",
-      "destination": "/index.html"
+      "destination": "/buzon/index.html"
     },
     {
       "source": "/invite/:code",
-      "destination": "/index.html"
+      "destination": "/buzon/index.html"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/buzon/:code",
+      "destination": "/buzon/index.html"
     }
   ]
 }

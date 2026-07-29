@@ -26,7 +26,11 @@ async function main() {
   await mkdir(distDir, { recursive: true });
   await mkdir(join(distDir, '.well-known'), { recursive: true });
 
-  await copyFile(join(root, 'index.html'), join(distDir, 'index.html'));
+  // The root domain is the public landing page. The inbox remains a separate
+  // document and is reached only through the token routes configured in Vercel.
+  await mkdir(join(distDir, 'buzon'), { recursive: true });
+  await copyFile(join(root, '..', 'landing', 'index.html'), join(distDir, 'index.html'));
+  await copyFile(join(root, 'index.html'), join(distDir, 'buzon', 'index.html'));
   await copyFile(join(root, 'styles.css'), join(distDir, 'styles.css'));
   await copyFile(join(root, 'app.js'), join(distDir, 'app.js'));
   await copyFile(join(root, 'vibeloop-icon.png'), join(distDir, 'vibeloop-icon.png'));
