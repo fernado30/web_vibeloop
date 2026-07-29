@@ -19,7 +19,7 @@ void main() {
     ).readAsStringSync();
 
     expect(groupsRepository.contains("final appLink = 'vibeloop://invite/\$token';"), isTrue);
-    expect(groupsRepository.contains("final webLink = '\$normalizedWebUrl/buzon/\$token';"), isTrue);
+    expect(groupsRepository.contains("final webLink = '\$normalizedWebUrl/open/\$token';"), isTrue);
 
     expect(appRouter.contains("path: '/join/:code'"), isTrue);
     expect(appRouter.contains("return InviteJoinScreen(inviteCode: inviteCode);"), isTrue);

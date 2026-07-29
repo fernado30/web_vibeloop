@@ -431,7 +431,11 @@ class GroupsRepository {
     final token = '${_safeSlug(displayName)}-$inviteNumber-$inviteCode';
     final normalizedWebUrl = config.webUrl.replaceAll(RegExp(r'/+$'), '');
     final appLink = 'vibeloop://invite/$token';
-    final webLink = '$normalizedWebUrl/buzon/$token';
+    // The shareable HTTPS invite must try the native app first. If the app is
+    // missing, the web /open route falls back to the public landing page.
+    // Keep /buzon/:token available for direct web inbox access, but do not use
+    // it as the primary invitation link because it bypasses that fallback.
+    final webLink = '$normalizedWebUrl/open/$token';
 
     return InviteLinks(appLink: appLink, webLink: webLink);
   }

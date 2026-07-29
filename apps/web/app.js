@@ -11,11 +11,9 @@ const charCountEl = document.getElementById('charCount');
 const sendButtonEl = document.getElementById('sendButton');
 const feedbackEl = document.getElementById('feedback');
 const openNativeButtonEl = document.getElementById('openNativeButton');
-const landingHintEl = document.getElementById('landingHint');
 
 const MAX_MESSAGE_LENGTH = 500;
 const ANDROID_PACKAGE = 'com.vibeloop.vibeloop';
-const ANDROID_PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.vibeloop.vibeloop';
 
 function requireConfig() {
   const missing = [];
@@ -75,7 +73,10 @@ function getInviteCode(token) {
 }
 
 function buildNativeIntentUrl(token) {
-  const fallbackUrl = `${window.location.origin}/invite/${token}?no_redirect=true`;
+  // If the native app cannot handle the invite, show the public landing page.
+  // The token is kept in the query string so the landing can offer the web
+  // guest flow without sending the visitor to the old inbox screen directly.
+  const fallbackUrl = `${window.location.origin}/?invite=${encodeURIComponent(token)}`;
   return `intent://invite/${token}#Intent;scheme=vibeloop;package=${ANDROID_PACKAGE};S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
 }
 
@@ -184,15 +185,14 @@ async function loadAnonymousInbox(token) {
 
 function attemptNativeOpen(token) {
   const intentUrl = buildNativeIntentUrl(token);
+  const landingFallbackUrl = `${window.location.origin}/?invite=${encodeURIComponent(token)}`;
   window.location.href = intentUrl;
 
   window.setTimeout(() => {
     if (document.visibilityState === 'visible') {
-      landingHintEl.textContent = 'No detectamos la app. Si quieres entrar al chat del grupo, instalala primero.';
-      openNativeButtonEl.textContent = 'Instalar la app';
-      openNativeButtonEl.onclick = () => {
-        window.location.href = ANDROID_PLAY_STORE_URL;
-      };
+      // Some browsers do not honor Android intent fallback URLs (for example
+      // iOS and desktop browsers). Send those visitors to the same landing.
+      window.location.replace(landingFallbackUrl);
     }
   }, 1500);
 }
