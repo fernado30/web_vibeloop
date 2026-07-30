@@ -40,6 +40,7 @@ async function main() {
   await copyFile(join(root, 'styles.css'), join(distDir, 'styles.css'));
   await copyFile(join(root, 'app.js'), join(distDir, 'app.js'));
   await copyFile(join(root, 'vibeloop-icon.png'), join(distDir, 'vibeloop-icon.png'));
+  await copyFile(join(root, 'nadie-icon.png'), join(distDir, 'nadie-icon.png'));
   try {
     await access(join(root, '.well-known', 'assetlinks.json'), constants.R_OK);
     await copyFile(join(root, '.well-known', 'assetlinks.json'), join(distDir, '.well-known', 'assetlinks.json'));
