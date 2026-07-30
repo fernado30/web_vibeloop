@@ -35,6 +35,7 @@ async function main() {
   await copyFile(join(root, '..', 'landing', 'nadie-galeria-usuario.jpeg'), join(distDir, 'nadie-galeria-usuario.jpeg'));
   await copyFile(join(root, '..', 'landing', 'nadie-crea-grupo.jpeg'), join(distDir, 'nadie-crea-grupo.jpeg'));
   await copyFile(join(root, '..', 'landing', 'nadie-invitar.jpeg'), join(distDir, 'nadie-invitar.jpeg'));
+  await copyFile(join(root, '..', 'landing', 'nadie-crea-grupo-reference.png'), join(distDir, 'nadie-crea-grupo-reference.png'));
   await copyFile(join(root, 'index.html'), join(distDir, 'buzon', 'index.html'));
   await copyFile(join(root, 'styles.css'), join(distDir, 'styles.css'));
   await copyFile(join(root, 'app.js'), join(distDir, 'app.js'));
