@@ -19,11 +19,9 @@ let currentTab = 'pending';
 let activeReports = [];
 let selectedReport = null;
 
-// Initialize app when DOM & Supabase JS are ready
 async function initApp() {
   const client = getSupabase();
   if (!client) {
-    // Retry if CDN script is still loading
     setTimeout(initApp, 150);
     return;
   }
@@ -81,7 +79,6 @@ async function verifyAdminAndLoad(user) {
       return;
     }
 
-    // Success: Admin Verified
     document.getElementById('admin-email-tag').textContent = `@${userData.username || user.email}`;
     showDashboardView();
     await loadReports();
@@ -247,32 +244,19 @@ async function resolveTargetDetails(reports) {
     else if (r.target_type === 'user') userIds.push(r.target_id);
   });
 
-  const reportGroupNames = {};
+  const reportGroupIds = {};
   const reportPreviews = {};
-
-  if (groupIds.size > 0) {
-    const { data: groups } = await client
-      .from('groups')
-      .select('id, name')
-      .in('id', Array.from(groupIds));
-    (groups || []).forEach(g => {
-      reports.forEach(r => {
-        if (r.target_type === 'group' && r.target_id === g.id) {
-          reportGroupNames[r.id] = g.name;
-        }
-      });
-    });
-  }
 
   if (messageIds.length > 0) {
     const { data: msgs } = await client
       .from('messages')
-      .select('id, content, group_id, groups(name)')
+      .select('id, content, group_id')
       .in('id', messageIds);
     (msgs || []).forEach(m => {
+      if (m.group_id) groupIds.add(m.group_id);
       reports.forEach(r => {
         if (r.target_type === 'message' && r.target_id === m.id) {
-          if (m.groups && m.groups.name) reportGroupNames[r.id] = m.groups.name;
+          if (m.group_id) reportGroupIds[r.id] = m.group_id;
           if (m.content) reportPreviews[r.id] = m.content;
         }
       });
@@ -282,12 +266,13 @@ async function resolveTargetDetails(reports) {
   if (anonMessageIds.length > 0) {
     const { data: anons } = await client
       .from('anonymous_messages')
-      .select('id, content, group_id, groups(name)')
+      .select('id, content, group_id')
       .in('id', anonMessageIds);
     (anons || []).forEach(m => {
+      if (m.group_id) groupIds.add(m.group_id);
       reports.forEach(r => {
         if (r.target_type === 'anonymous_message' && r.target_id === m.id) {
-          if (m.groups && m.groups.name) reportGroupNames[r.id] = m.groups.name;
+          if (m.group_id) reportGroupIds[r.id] = m.group_id;
           if (m.content) reportPreviews[r.id] = m.content;
         }
       });
@@ -297,33 +282,49 @@ async function resolveTargetDetails(reports) {
   if (photoIds.length > 0) {
     const { data: photos } = await client
       .from('group_photos')
-      .select('id, group_id, groups(name)')
+      .select('id, group_id')
       .in('id', photoIds);
     (photos || []).forEach(p => {
+      if (p.group_id) groupIds.add(p.group_id);
       reports.forEach(r => {
         if (r.target_type === 'group_photo' && r.target_id === p.id) {
-          if (p.groups && p.groups.name) reportGroupNames[r.id] = p.groups.name;
+          if (p.group_id) reportGroupIds[r.id] = p.group_id;
         }
       });
     });
   }
 
+  const groupMap = {};
+  if (groupIds.size > 0) {
+    const { data: groups } = await client
+      .from('groups')
+      .select('id, name')
+      .in('id', Array.from(groupIds));
+    (groups || []).forEach(g => {
+      groupMap[g.id] = g.name;
+    });
+  }
+
+  const userMap = {};
   if (userIds.length > 0) {
     const { data: users } = await client
       .from('users')
       .select('id, display_name, username')
       .in('id', userIds);
     (users || []).forEach(u => {
-      reports.forEach(r => {
-        if (r.target_type === 'user' && r.target_id === u.id) {
-          reportGroupNames[r.id] = `Usuario: @${u.username || u.display_name}`;
-        }
-      });
+      userMap[u.id] = `@${u.username || u.display_name || 'usuario'}`;
     });
   }
 
   reports.forEach(r => {
-    r.resolved_group_name = reportGroupNames[r.id] || 'Grupo no disponible';
+    if (r.target_type === 'group') {
+      r.resolved_group_name = groupMap[r.target_id] || 'Grupo desconocido';
+    } else if (r.target_type === 'user') {
+      r.resolved_group_name = userMap[r.target_id] ? `Usuario: ${userMap[r.target_id]}` : 'Usuario desconocido';
+    } else {
+      const gId = reportGroupIds[r.id];
+      r.resolved_group_name = gId && groupMap[gId] ? groupMap[gId] : 'Grupo no especificado';
+    }
     r.resolved_preview = reportPreviews[r.id] || null;
   });
 }
@@ -374,7 +375,12 @@ function renderReports() {
 
       <div class="report-group-row">
         <span class="icon">📌</span>
-        <strong>${escapeHtml(r.resolved_group_name)}</strong>
+        <strong>Grupo: ${escapeHtml(r.resolved_group_name)}</strong>
+      </div>
+
+      <div class="report-reason-box">
+        <span class="reason-label">🚨 Causa de la denuncia:</span>
+        <span class="reason-text">${escapeHtml(r.reason)}</span>
       </div>
 
       ${r.resolved_preview ? `
@@ -383,10 +389,11 @@ function renderReports() {
         </blockquote>
       ` : ''}
 
-      <div class="report-body">
-        <p class="report-reason"><strong>Motivo:</strong> ${escapeHtml(r.reason)}</p>
-        ${r.details ? `<p class="report-details"><strong>Detalles:</strong> ${escapeHtml(r.details)}</p>` : ''}
-      </div>
+      ${r.details ? `
+        <div class="report-body">
+          <p class="report-details"><strong>Detalles adicionales:</strong> ${escapeHtml(r.details)}</p>
+        </div>
+      ` : ''}
 
       <div class="report-meta">
         <span>Denunciado el ${new Date(r.created_at).toLocaleString()}</span>
@@ -412,9 +419,9 @@ function openResolutionModal(reportId) {
   if (!selectedReport) return;
 
   document.getElementById('modal-target-badge').textContent = formatTargetTypeLabel(selectedReport.target_type);
-  document.getElementById('modal-group-name').textContent = `📌 ${selectedReport.resolved_group_name}`;
+  document.getElementById('modal-group-name').textContent = `📌 Grupo: ${selectedReport.resolved_group_name}`;
   document.getElementById('modal-content-snippet').textContent = selectedReport.resolved_preview ? `"${selectedReport.resolved_preview}"` : '';
-  document.getElementById('modal-reason-text').textContent = `Motivo: ${selectedReport.reason}`;
+  document.getElementById('modal-reason-text').textContent = `🚨 Causa: ${selectedReport.reason}`;
   document.getElementById('mod-notes').value = '';
 
   document.getElementById('resolution-modal').classList.remove('hidden');

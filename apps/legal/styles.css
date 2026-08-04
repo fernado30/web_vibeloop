@@ -638,6 +638,28 @@ a {
   color: var(--text);
 }
 
+.report-reason-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(255, 59, 92, 0.08);
+  border: 1px solid rgba(255, 59, 92, 0.2);
+  border-radius: 12px;
+  font-size: 0.92rem;
+}
+
+.reason-label {
+  font-weight: 700;
+  color: #ff3b5c;
+  font-size: 0.88rem;
+}
+
+.reason-text {
+  font-weight: 600;
+  color: var(--text);
+}
+
 .report-quote {
   margin: 0;
   padding: 10px 14px;
