@@ -660,15 +660,53 @@ a {
   color: var(--text);
 }
 
+.reported-content-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.content-box-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--brand-violet);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .report-quote {
   margin: 0;
-  padding: 10px 14px;
+  padding: 12px 16px;
   background: var(--bg);
-  border-left: 3px solid var(--brand-violet);
-  border-radius: 0 10px 10px 0;
+  border-left: 4px solid var(--brand-violet);
+  border-radius: 0 12px 12px 0;
   font-style: italic;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 500;
   color: var(--text);
+}
+
+.image-preview-wrapper {
+  padding: 8px;
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  display: inline-block;
+  max-width: 280px;
+}
+
+.reported-image-preview {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.invalid-img-msg {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-style: italic;
 }
 
 .report-body {

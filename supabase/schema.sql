@@ -141,6 +141,7 @@ create table if not exists public.content_reports (
   target_id uuid not null,
   reason text not null,
   details text,
+  content_snapshot text,
   status text not null default 'pending',
   created_at timestamptz default now()
 );

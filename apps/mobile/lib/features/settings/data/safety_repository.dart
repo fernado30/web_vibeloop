@@ -462,6 +462,7 @@ class SafetyRepository {
     required String targetId,
     required String reason,
     String? details,
+    String? contentSnapshot,
   }) async {
     final userId = await _currentUserId();
     if (userId == null) {
@@ -479,6 +480,7 @@ class SafetyRepository {
       'target_id': targetId,
       'reason': trimmedReason,
       if (details != null && details.trim().isNotEmpty) 'details': details.trim(),
+      if (contentSnapshot != null && contentSnapshot.trim().isNotEmpty) 'content_snapshot': contentSnapshot.trim(),
     };
 
     await _supabase.from('content_reports').insert(payload);
@@ -605,6 +607,7 @@ class ContentReportModel {
     required this.targetId,
     required this.reason,
     this.details,
+    this.contentSnapshot,
     required this.status,
     required this.createdAt,
     this.moderatorId,
@@ -620,6 +623,7 @@ class ContentReportModel {
   final String targetId;
   final String reason;
   final String? details;
+  final String? contentSnapshot;
   final String status;
   final DateTime createdAt;
   final String? moderatorId;
@@ -639,6 +643,7 @@ class ContentReportModel {
       targetId: targetId,
       reason: reason,
       details: details,
+      contentSnapshot: contentSnapshot,
       status: status,
       createdAt: createdAt,
       moderatorId: moderatorId,
@@ -657,6 +662,7 @@ class ContentReportModel {
       targetId: json['target_id'].toString(),
       reason: json['reason'].toString(),
       details: json['details']?.toString(),
+      contentSnapshot: json['content_snapshot']?.toString(),
       status: json['status']?.toString() ?? 'pending',
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'].toString())
@@ -667,7 +673,7 @@ class ContentReportModel {
           ? DateTime.parse(json['resolved_at'].toString())
           : null,
       groupName: json['group_name']?.toString(),
-      targetPreview: json['target_preview']?.toString(),
+      targetPreview: json['target_preview']?.toString() ?? json['content_snapshot']?.toString(),
     );
   }
 }

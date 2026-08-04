@@ -384,9 +384,18 @@ function renderReports() {
       </div>
 
       ${r.resolved_preview ? `
-        <blockquote class="report-quote">
-          "${escapeHtml(r.resolved_preview)}"
-        </blockquote>
+        <div class="reported-content-box">
+          <span class="content-box-label">💬 Contenido, Imagen o Palabra Denunciada:</span>
+          ${(r.target_type === 'group_photo' || r.resolved_preview.startsWith('http://') || r.resolved_preview.startsWith('https://')) ? `
+            <div class="image-preview-wrapper">
+              <img src="${escapeHtml(r.resolved_preview)}" class="reported-image-preview" alt="Foto denunciada" onerror="this.parentNode.innerHTML='<span class=\"invalid-img-msg\">[Imagen no disponible o enlace expirado]</span>'">
+            </div>
+          ` : `
+            <blockquote class="report-quote">
+              "${escapeHtml(r.resolved_preview)}"
+            </blockquote>
+          `}
+        </div>
       ` : ''}
 
       ${r.details ? `

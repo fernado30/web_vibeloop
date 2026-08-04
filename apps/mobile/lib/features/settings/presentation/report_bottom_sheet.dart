@@ -105,6 +105,7 @@ class _ReportBottomSheetState extends ConsumerState<ReportBottomSheet> {
         targetId: widget.targetId,
         reason: reason,
         details: _detailsController.text.trim(),
+        contentSnapshot: widget.snippet,
       );
 
       if (!mounted) return;
