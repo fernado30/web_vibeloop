@@ -5,6 +5,7 @@ import '../../../core/widgets/vibe_ui.dart';
 import '../data/anonymous_repository.dart';
 import '../domain/anonymous_message_model.dart';
 import '../../settings/data/safety_repository.dart';
+import '../../settings/presentation/report_bottom_sheet.dart';
 
 class AnonymousInboxScreen extends ConsumerStatefulWidget {
   const AnonymousInboxScreen({super.key, required this.groupId});
@@ -87,6 +88,18 @@ class _AnonymousInboxScreenState extends ConsumerState<AnonymousInboxScreen> {
                 return AnonymousMessageCard(
                   content: message.content,
                   reactions: message.reactions,
+                  onReport: () async {
+                    final reported = await ReportBottomSheet.show(
+                      context,
+                      targetType: 'anonymous_message',
+                      targetId: message.id,
+                      title: 'Denunciar mensaje anónimo',
+                      snippet: message.content,
+                    );
+                    if (reported == true && mounted) {
+                      _reload();
+                    }
+                  },
                 );
               },
             );

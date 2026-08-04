@@ -17,6 +17,7 @@ import '../../../core/utils/error_helper.dart';
 import '../data/groups_repository.dart';
 import '../domain/group_model.dart';
 import '../domain/group_photo_model.dart';
+import '../../settings/presentation/report_bottom_sheet.dart';
 
 class GroupPhotosScreen extends ConsumerStatefulWidget {
   const GroupPhotosScreen({super.key, required this.groupId});
@@ -1042,22 +1043,74 @@ class _GroupPhotosScreenState extends ConsumerState<GroupPhotosScreen> {
     await showDialog<void>(
       context: context,
       builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Dialog(
           backgroundColor: Colors.transparent,
           insetPadding: const EdgeInsets.all(16),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(28),
             child: Container(
-              color: Colors.white,
-              child: AspectRatio(
-                aspectRatio: 0.9,
-                child: InteractiveViewer(
-                  minScale: 0.8,
-                  maxScale: 3,
-                  child: Center(
-                    child: _buildPhotoImage(photo),
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AspectRatio(
+                    aspectRatio: 0.9,
+                    child: InteractiveViewer(
+                      minScale: 0.8,
+                      maxScale: 3,
+                      child: Center(
+                        child: _buildPhotoImage(photo),
+                      ),
+                    ),
                   ),
-                ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              photo.uploaderEmoji,
+                              style: const TextStyle(fontSize: 20),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Foto de grupo',
+                              style: TextStyle(
+                                color: isDark ? Colors.white70 : Colors.black87,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                        TextButton.icon(
+                          onPressed: () async {
+                            Navigator.of(context).pop();
+                            final reported = await ReportBottomSheet.show(
+                              context,
+                              targetType: 'group_photo',
+                              targetId: photo.id,
+                              title: 'Denunciar foto',
+                            );
+                            if (reported == true && mounted) {
+                              setState(() {
+                                _hiddenPhotoIds.add(photo.id);
+                              });
+                            }
+                          },
+                          icon: const Icon(Icons.flag_outlined, size: 18, color: Color(0xFFF43F5E)),
+                          label: const Text(
+                            'Denunciar foto',
+                            style: TextStyle(color: Color(0xFFF43F5E), fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vibeloop_mobile/core/router/app_router.dart';
-import 'package:vibeloop_mobile/core/settings/app_preferences_repository.dart';
-import 'package:vibeloop_mobile/features/stitch/presentation/stitch_onboarding_flow.dart';
+import 'package:Nadie_mobile/core/router/app_router.dart';
+import 'package:Nadie_mobile/core/settings/app_preferences_repository.dart';
+import 'package:Nadie_mobile/features/stitch/presentation/stitch_onboarding_flow.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

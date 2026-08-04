@@ -436,11 +436,19 @@ async function handleSendAnonymousMessage(req) {
   }
 
   if (content.length < 1 || content.length > 500) {
-    return jsonResponse({ error: 'content must be between 1 and 500 characters' }, 400);
+    return jsonResponse({ error: 'El mensaje anónimo debe contener entre 1 y 500 caracteres.' }, 400);
   }
 
-  if (/(https?:\/\/|www\.)/i.test(content)) {
-    return jsonResponse({ error: 'URLs are not allowed' }, 400);
+  if (/(https?:\/\/|www\.|t\.me|wa\.me|instagram\.com|tiktok\.com|discord\.gg|discord\.com\/invite|snapchat\.com\/add)/i.test(content)) {
+    return jsonResponse({ error: 'Los mensajes anónimos no pueden incluir enlaces ni redes sociales.' }, 400);
+  }
+
+  if (/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/i.test(content)) {
+    return jsonResponse({ error: 'Los mensajes anónimos no pueden incluir correos electrónicos.' }, 400);
+  }
+
+  if (/(\+?\d{1,4}[\s-]?)?\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{4}|\b\d{8,15}\b/.test(content)) {
+    return jsonResponse({ error: 'Los mensajes anónimos no pueden incluir números telefónicos.' }, 400);
   }
 
   try {

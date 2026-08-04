@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vibeloop_mobile/features/auth/domain/age_eligibility.dart';
+import 'package:Nadie_mobile/features/auth/domain/age_eligibility.dart';
 
 void main() {
   test('permite registrarse al cumplir 13 años', () {

@@ -739,7 +739,7 @@ class AvatarStack extends StatelessWidget {
         children: [
           for (var i = 0; i < preview.length; i++)
             Positioned(
-              left: i * 18,
+              left: i * 18.0,
               child: CircleAvatar(
                 radius: 14,
                 backgroundColor: Theme.of(context).colorScheme.surface,
@@ -757,10 +757,12 @@ class AnonymousMessageCard extends StatelessWidget {
     super.key,
     required this.content,
     required this.reactions,
+    this.onReport,
   });
 
   final String content;
   final Map<String, int> reactions;
+  final VoidCallback? onReport;
 
   @override
   Widget build(BuildContext context) {
@@ -769,8 +771,18 @@ class AnonymousMessageCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: const [
-              SafetyBadge(label: 'Anónimo', color: VibeColors.coralPink),
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const SafetyBadge(label: 'Anónimo', color: VibeColors.coralPink),
+              if (onReport != null)
+                IconButton(
+                  icon: const Icon(Icons.flag_outlined, size: 18, color: VibeColors.textSecondary),
+                  tooltip: 'Denunciar mensaje anónimo',
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: onReport,
+                ),
             ],
           ),
           const SizedBox(height: 12),

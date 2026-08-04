@@ -31,6 +31,6 @@ void main() {
     expect(inviteJoinScreen.contains("context.go('/groups/\${group.id}/chat');"), isTrue);
 
         expect(chatScreen.contains("final webLinkUri = Uri.parse(links.webLink);"), isTrue);
-    expect(chatScreen.contains("text: 'Únete a mi grupo en VIBELOOP: \$inviteLink'"), isTrue);
+    expect(chatScreen.contains("text: 'Únete a mi grupo en Nadie: \$inviteLink'"), isTrue);
   });
 }

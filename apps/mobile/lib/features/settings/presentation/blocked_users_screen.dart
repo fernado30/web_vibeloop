@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/widgets/vibe_ui.dart';
 import '../data/safety_repository.dart';
+import 'report_bottom_sheet.dart';
 
 class BlockedUsersScreen extends ConsumerStatefulWidget {
   const BlockedUsersScreen({super.key});
@@ -98,7 +99,44 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.flag_outlined, size: 20),
+                          color: Theme.of(context).colorScheme.error,
+                          tooltip: 'Denunciar usuario',
+                          onPressed: () async {
+                            final reported = await ReportBottomSheet.show(
+                              context,
+                              targetType: 'user',
+                              targetId: member.id,
+                              title: 'Denunciar usuario',
+                            );
+                            if (reported == true && mounted && !blocked) {
+                              if (!context.mounted) return;
+                              final shouldBlock = await showDialog<bool>(
+                                context: context,
+                                builder: (dialogCtx) => AlertDialog(
+                                  title: const Text('¿Bloquear a este usuario?'),
+                                  content: const Text('Al bloquearlo, sus mensajes se ocultarán de tus chats.'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(dialogCtx).pop(false),
+                                      child: const Text('No'),
+                                    ),
+                                    FilledButton(
+                                      onPressed: () => Navigator.of(dialogCtx).pop(true),
+                                      child: const Text('Bloquear'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (shouldBlock == true) {
+                                await _toggleBlocked(member);
+                              }
+                            }
+                          },
+                        ),
+                        const SizedBox(width: 4),
                         FilledButton.tonal(
                           onPressed: () => _toggleBlocked(member),
                           child: Text(blocked ? 'Desbloquear' : 'Bloquear'),

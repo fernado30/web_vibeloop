@@ -26,6 +26,7 @@ import '../../groups/domain/group_model.dart';
 import '../data/chat_repository.dart';
 import '../domain/message_model.dart';
 import '../../settings/data/safety_repository.dart';
+import '../../settings/presentation/report_bottom_sheet.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key, required this.groupId});
@@ -63,7 +64,7 @@ final class _MessageMenuActionSelection extends _MessageMenuSelection {
   final _MessageMenuAction action;
 }
 
-enum _MessageMenuAction { edit, delete }
+enum _MessageMenuAction { edit, delete, report }
 
 class _EditMessageDialog extends StatefulWidget {
   const _EditMessageDialog({required this.initialText});
@@ -378,10 +379,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       )
                       .toList(),
                 ),
+                const SizedBox(height: 16),
+                Divider(height: 1, color: colorScheme.outline.withValues(alpha: 0.18)),
+                const SizedBox(height: 8),
                 if (allowEditAndDelete) ...[
-                  const SizedBox(height: 16),
-                  Divider(height: 1, color: colorScheme.outline.withValues(alpha: 0.18)),
-                  const SizedBox(height: 8),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: Icon(Icons.edit_rounded, color: actionColor),
@@ -407,6 +408,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     onTap: () => Navigator.of(context).pop(const _MessageMenuActionSelection(_MessageMenuAction.delete)),
                   ),
                 ],
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.flag_outlined, color: Color(0xFFF43F5E)),
+                  title: const Text(
+                    'Denunciar mensaje',
+                    style: TextStyle(
+                      color: Color(0xFFF43F5E),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  onTap: () => Navigator.of(context).pop(const _MessageMenuActionSelection(_MessageMenuAction.report)),
+                ),
               ],
             ),
           ),
@@ -441,6 +454,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           break;
         case _MessageMenuAction.delete:
           await _deleteMessage(message);
+          break;
+        case _MessageMenuAction.report:
+          final reported = await ReportBottomSheet.show(
+            context,
+            targetType: message.type == 'anonymous' ? 'anonymous_message' : 'message',
+            targetId: message.id,
+            title: message.type == 'anonymous' ? 'Denunciar mensaje anónimo' : 'Denunciar mensaje',
+            snippet: message.content,
+          );
+          if (reported == true && mounted) {
+            setState(() {
+              _deletedMessageIds.add(message.id);
+            });
+          }
           break;
       }
     }
@@ -1554,9 +1581,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _shareWebInviteLink() async {
     try {
       final links = await _inviteLinksFuture;
+      final webLinkUri = Uri.parse(links.webLink);
+      final buzonLink = webLinkUri.replace(
+        pathSegments: <String>[
+          'buzon',
+          ...webLinkUri.pathSegments.skip(1),
+        ],
+      ).toString();
       await SharePlus.instance.share(
         ShareParams(
-          text: links.webLink,
+          text: buzonLink,
         ),
       );
       unawaited(AdService.instance.showInterstitialAfterInviteShared());
@@ -1770,6 +1804,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             onInviteTap: _shareInviteLink,
                             onShareTap: _shareWebInviteLink,
                             onPhotosTap: () => context.push('/groups/${widget.groupId}/photos'),
+                            onReportGroupTap: () => ReportBottomSheet.show(
+                              context,
+                              targetType: 'group',
+                              targetId: widget.groupId,
+                              title: 'Denunciar grupo',
+                            ),
                             showDeleteAction: isGroupOwner,
                             onDeleteTap: () => _confirmAndDeleteGroup(groupSnapshot.data?.name ?? 'este grupo'),
                           ),
@@ -2003,6 +2043,7 @@ class _ExpandableHeaderActionMenu extends StatefulWidget {
     required this.onInviteTap,
     required this.onShareTap,
     required this.onPhotosTap,
+    this.onReportGroupTap,
     required this.showDeleteAction,
     this.onDeleteTap,
   });
@@ -2023,6 +2064,7 @@ class _ExpandableHeaderActionMenu extends StatefulWidget {
   final VoidCallback onInviteTap;
   final VoidCallback onShareTap;
   final VoidCallback onPhotosTap;
+  final VoidCallback? onReportGroupTap;
   final bool showDeleteAction;
   final VoidCallback? onDeleteTap;
 
@@ -2206,6 +2248,8 @@ class _ExpandableHeaderActionMenuState extends State<_ExpandableHeaderActionMenu
     required Color panelBorder,
     required double menuWidth,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -2249,47 +2293,116 @@ class _ExpandableHeaderActionMenuState extends State<_ExpandableHeaderActionMenu
                 ),
                 child: DefaultTextStyle.merge(
                   style: const TextStyle(decoration: TextDecoration.none),
-                  child: Row(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        child: _HeaderActionTile(
-                          label: widget.screenshotLabel,
-                          iconAsset: widget.screenshotIconAsset,
-                          color: widget.screenshotColor,
-                          onTap: () => _triggerAction(widget.onScreenshotTap),
-                          compact: true,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _HeaderActionTile(
+                              label: widget.screenshotLabel,
+                              iconAsset: widget.screenshotIconAsset,
+                              color: widget.screenshotColor,
+                              onTap: () => _triggerAction(widget.onScreenshotTap),
+                              compact: true,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _HeaderActionTile(
+                              label: widget.inviteLabel,
+                              iconAsset: widget.inviteIconAsset,
+                              color: widget.inviteColor,
+                              onTap: () => _triggerAction(widget.onInviteTap),
+                              compact: true,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _HeaderActionTile(
+                              label: widget.shareLabel,
+                              iconAsset: widget.shareIconAsset,
+                              color: widget.shareColor,
+                              onTap: () => _triggerAction(widget.onShareTap),
+                              compact: true,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _HeaderActionTile(
+                              label: widget.photosLabel,
+                              iconAsset: widget.photosIconAsset,
+                              color: widget.photosColor,
+                              onTap: () => _triggerAction(widget.onPhotosTap),
+                              compact: true,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _HeaderActionTile(
-                          label: widget.inviteLabel,
-                          iconAsset: widget.inviteIconAsset,
-                          color: widget.inviteColor,
-                          onTap: () => _triggerAction(widget.onInviteTap),
-                          compact: true,
+                      if (widget.onReportGroupTap != null || (widget.showDeleteAction && widget.onDeleteTap != null)) ...[
+                        const SizedBox(height: 10),
+                        Container(
+                          height: 1,
+                          color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE9ECF5),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _HeaderActionTile(
-                          label: widget.shareLabel,
-                          iconAsset: widget.shareIconAsset,
-                          color: widget.shareColor,
-                          onTap: () => _triggerAction(widget.onShareTap),
-                          compact: true,
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            if (widget.onReportGroupTap != null)
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () => _triggerAction(widget.onReportGroupTap!),
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: const [
+                                        Icon(Icons.flag_outlined, size: 16, color: Color(0xFFF43F5E)),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Denunciar grupo',
+                                          style: TextStyle(
+                                            color: Color(0xFFF43F5E),
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            if (widget.showDeleteAction && widget.onDeleteTap != null) ...[
+                              if (widget.onReportGroupTap != null) const SizedBox(width: 6),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () => _triggerAction(widget.onDeleteTap!),
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: const [
+                                        Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFF43F5E)),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Eliminar grupo',
+                                          style: TextStyle(
+                                            color: Color(0xFFF43F5E),
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _HeaderActionTile(
-                          label: widget.photosLabel,
-                          iconAsset: widget.photosIconAsset,
-                          color: widget.photosColor,
-                          onTap: () => _triggerAction(widget.onPhotosTap),
-                          compact: true,
-                        ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

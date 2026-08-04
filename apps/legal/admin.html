@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#fbfaf7">
+  <meta name="description" content="Panel de Administración y Moderación de Contenido de Nadie.">
+  <title>Panel de Moderación - Nadie Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="icon" type="image/png" href="./vibeloop-icon.png">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topbar shell">
+    <a class="brand" href="./index.html" aria-label="Inicio legal de Nadie">
+      <span class="brand-dot"></span>
+      <span>Nadie Admin</span>
+    </a>
+    <nav class="topnav" aria-label="Navegación Admin">
+      <a href="./index.html">Documentos legales</a>
+      <a href="./privacy.html">Privacidad</a>
+      <a href="./terms.html">Términos</a>
+      <button id="logout-btn" class="btn-logout hidden" onclick="handleLogout()">Cerrar sesión</button>
+    </nav>
+  </header>
+
+  <main class="shell admin-shell">
+    <!-- View 1: Admin Login -->
+    <section id="login-view" class="admin-login-card">
+      <div class="login-header">
+        <span class="shield-badge">🛡️ Panel de Moderación</span>
+        <h1>Acceso Administrativo</h1>
+        <p>Inicia sesión con tu cuenta con rol de administrador para acceder a la cola de denuncias y moderación de contenido UGC.</p>
+      </div>
+
+      <form id="login-form" onsubmit="handleLogin(event)" class="login-form">
+        <div id="login-alert" class="alert error hidden"></div>
+
+        <div class="form-group">
+          <label for="email">Correo electrónico de Administrador</label>
+          <input type="email" id="email" required placeholder="admin@nadie.app" autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" required placeholder="••••••••••••" autocomplete="current-password">
+        </div>
+
+        <button type="submit" id="login-btn" class="btn-primary">
+          <span>Ingresar al Panel</span>
+          <div id="login-spinner" class="spinner hidden"></div>
+        </button>
+      </form>
+    </section>
+
+    <!-- View 2: Moderation Dashboard -->
+    <section id="dashboard-view" class="dashboard-container hidden">
+      <div class="dashboard-header">
+        <div>
+          <span class="kicker">Gobernanza & Moderación UGC</span>
+          <h1>Cola de Denuncias y Sanciones</h1>
+        </div>
+        <div class="admin-user-info">
+          <span id="admin-email-tag" class="user-pill">Admin</span>
+        </div>
+      </div>
+
+      <!-- Metrics Summary Cards -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-label">Total Denuncias</span>
+          <strong id="stat-total">0</strong>
+        </div>
+        <div class="metric-card warning">
+          <span class="metric-label">Pendientes</span>
+          <strong id="stat-pending">0</strong>
+        </div>
+        <div class="metric-card danger">
+          <span class="metric-label">Sanciones Aplicadas</span>
+          <strong id="stat-action">0</strong>
+        </div>
+        <div class="metric-card success">
+          <span class="metric-label">Desestimadas</span>
+          <strong id="stat-rejected">0</strong>
+        </div>
+      </div>
+
+      <!-- Tab Filter Bar -->
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="setTab('pending')" id="tab-pending">
+          Pendientes <span id="badge-pending" class="count-badge">0</span>
+        </button>
+        <button class="tab-btn" onclick="setTab('action_taken')" id="tab-action_taken">
+          Sancionados / Acción
+        </button>
+        <button class="tab-btn" onclick="setTab('resolved_rejected')" id="tab-resolved_rejected">
+          Desestimados
+        </button>
+      </div>
+
+      <!-- Reports List Container -->
+      <div id="reports-list" class="reports-list">
+        <div class="loading-state">
+          <div class="spinner dark"></div>
+          <p>Cargando denuncias de la comunidad...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Component for Action Resolution -->
+  <div id="resolution-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeResolutionModal()">✕</button>
+      <h2>Resolver Denuncia</h2>
+      <p class="modal-subtitle">Selecciona la medida disciplinaria o resolución para esta denuncia:</p>
+
+      <div class="target-summary-box">
+        <span id="modal-target-badge" class="target-tag">CHAT</span>
+        <strong id="modal-group-name">Grupo: Cargando...</strong>
+        <p id="modal-content-snippet" class="content-preview"></p>
+        <p id="modal-reason-text" class="reason-preview"></p>
+      </div>
+
+      <form onsubmit="submitResolution(event)">
+        <div class="action-options">
+          <label class="action-option">
+            <input type="radio" name="mod_action" value="dismiss" checked>
+            <div class="option-content">
+              <strong>🚫 Desestimar (Sin Infracción)</strong>
+              <span>La denuncia es rechazada y el contenido permanece visible.</span>
+            </div>
+          </label>
+
+          <label class="action-option">
+            <input type="radio" name="mod_action" value="delete_content">
+            <div class="option-content">
+              <strong>🗑️ Eliminar Contenido</strong>
+              <span>Remueve el contenido denunciado sin sancionar al usuario.</span>
+            </div>
+          </label>
+
+          <label class="action-option">
+            <input type="radio" name="mod_action" value="warn_user">
+            <div class="option-content">
+              <strong>⚠️ Advertir al Usuario</strong>
+              <span>Elimina el contenido y registra una advertencia formal en su perfil.</span>
+            </div>
+          </label>
+
+          <label class="action-option">
+            <input type="radio" name="mod_action" value="mute_user">
+            <div class="option-content">
+              <strong>🔇 Silenciar Usuario (24 Horas)</strong>
+              <span>Elimina el contenido e impide que el usuario publique por 24 horas.</span>
+            </div>
+          </label>
+
+          <label class="action-option">
+            <input type="radio" name="mod_action" value="ban_user">
+            <div class="option-content">
+              <strong>🚫 Banear Usuario (Permanente)</strong>
+              <span>Elimina el contenido y suspende la cuenta del usuario de forma definitiva.</span>
+            </div>
+          </label>
+        </div>
+
+        <div class="form-group margin-top">
+          <label for="mod-notes">Notas operativas (Justificación auditable)</label>
+          <textarea id="mod-notes" rows="2" placeholder="Motivo o explicación de la resolución..."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeResolutionModal()">Cancelar</button>
+          <button type="submit" id="confirm-mod-btn" class="btn-primary">
+            <span>Confirmar Resolución</span>
+            <div id="mod-spinner" class="spinner hidden"></div>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="shell footer">
+    <p>Panel de Control y Gobierno de Moderación de Contenido - Nadie Legal & Compliance.</p>
+  </footer>
+
+  <script src="./admin.js"></script>
+</body>
+</html>

@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/notifications/app_notification_service.dart';
+import 'core/app_update/app_version_gate.dart';
 import 'core/router/app_router.dart';
 import 'core/router/deep_link_service.dart';
 import 'core/theme/app_theme.dart';
@@ -50,7 +51,13 @@ Future<void> main() async {
         anonKey: config.anonKey,
       );
 
-      runApp(const ProviderScope(child: VibeloopApp()));
+      runApp(
+        AppVersionGate(
+          appBuilder: (status) => ProviderScope(
+            child: VibeloopApp(updateStatus: status),
+          ),
+        ),
+      );
     } catch (error, stackTrace) {
       await FirebaseCrashlytics.instance.recordError(
         error,
@@ -77,7 +84,12 @@ Future<void> main() async {
 }
 
 class VibeloopApp extends ConsumerStatefulWidget {
-  const VibeloopApp({super.key});
+  const VibeloopApp({
+    required this.updateStatus,
+    super.key,
+  });
+
+  final AppVersionStatus updateStatus;
 
   @override
   ConsumerState<VibeloopApp> createState() => _VibeloopAppState();
@@ -99,9 +111,13 @@ class _VibeloopAppState extends ConsumerState<VibeloopApp> {
 
     return MaterialApp.router(
       builder: (context, child) {
-        return NotificationBootstrap(
+        final app = NotificationBootstrap(
           router: router,
           child: child ?? const SizedBox.shrink(),
+        );
+        return OptionalUpdateBanner(
+          status: widget.updateStatus,
+          child: app,
         );
       },
       debugShowCheckedModeBanner: false,

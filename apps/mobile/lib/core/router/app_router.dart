@@ -13,6 +13,8 @@ import '../../features/legal/presentation/help_screen.dart';
 import '../../features/legal/presentation/security_resources_screen.dart';
 import '../../features/legal/presentation/dmca_screen.dart';
 import '../../features/settings/presentation/hidden_words_screen.dart';
+import '../../features/settings/presentation/blocked_users_screen.dart';
+import '../../features/settings/presentation/moderation_queue_screen.dart';
 import '../../features/settings/presentation/pause_link_screen.dart';
 import '../../features/settings/presentation/message_filtering_screen.dart';
 import '../../features/settings/presentation/notifications_screen.dart';
@@ -155,6 +157,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const HiddenWordsScreen(),
               ),
               GoRoute(
+                path: 'blocked-users',
+                builder: (context, state) => const BlockedUsersScreen(),
+              ),
+              GoRoute(
+                path: 'moderation-queue',
+                builder: (context, state) => const ModerationQueueScreen(),
+              ),
+              GoRoute(
                 path: 'pause-link',
                 builder: (context, state) => const PauseLinkScreen(),
               ),
@@ -237,108 +247,45 @@ class _AuthCallbackScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: SizedBox.shrink(),
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 }
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  }
+
+  @override
+  void dispose() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      backgroundColor: Colors.transparent,
-      body: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          systemNavigationBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.light,
-          systemNavigationBarIconBrightness: Brightness.light,
-          systemStatusBarContrastEnforced: false,
-          systemNavigationBarContrastEnforced: false,
-        ),
-        child: _SplashBackdrop(),
-      ),
-    );
-  }
-}
-
-class _SplashBackdrop extends StatelessWidget {
-  const _SplashBackdrop();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color(0xFF14002C),
-            Color(0xFF2B0054),
-            Color(0xFF730069),
-            Color(0xFFF1007D),
-          ],
-          stops: [0.0, 0.36, 0.70, 1.0],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final logoSize =
-              (constraints.maxWidth * 0.36).clamp(120.0, 310.0).toDouble();
-
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              Align(
-                alignment: Alignment.center,
-                child: _SplashLogoGlow(size: logoSize),
-              ),
-              Align(
-                alignment: Alignment.center,
-                child: SizedBox(
-                  width: logoSize,
-                  height: logoSize,
-                  child: Image.asset(
-                    'assets/icon/nadie_app_icon.png',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _SplashLogoGlow extends StatelessWidget {
-  const _SplashLogoGlow({required this.size});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size * 1.18,
-        height: size * 1.18,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFB000FF).withValues(alpha: 0.30),
-              blurRadius: size * 0.30,
-              spreadRadius: size * 0.10,
-            ),
-            BoxShadow(
-              color: const Color(0xFFFF008C).withValues(alpha: 0.22),
-              blurRadius: size * 0.52,
-              spreadRadius: size * 0.05,
-            ),
-          ],
+      backgroundColor: Color(0xFF0D0F1D),
+      body: Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            color: Color(0xFF8E5DF8),
+          ),
         ),
       ),
     );
