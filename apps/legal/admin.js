@@ -1,56 +1,93 @@
-// Supabase Client Initialization
+// Supabase Client Configuration
 const SUPABASE_URL = 'https://rkwugxemjrwtfjvtckes.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrd3VneGVtanJ3dGZqdnRja2VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NzUxNjIsImV4cCI6MjA5NDM1MTE2Mn0.d4f7W2TDYJXj-BWfrSraX7tAVfgC_15TZs4CzDFglcs';
 
-const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+let _supabaseClient = null;
+
+function getSupabase() {
+  if (_supabaseClient) return _supabaseClient;
+
+  const sb = window.supabase;
+  if (sb && typeof sb.createClient === 'function') {
+    _supabaseClient = sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return _supabaseClient;
+  }
+  return null;
+}
 
 let currentTab = 'pending';
 let activeReports = [];
 let selectedReport = null;
 
-// On DOM load, check auth state
-document.addEventListener('DOMContentLoaded', async () => {
-  if (!supabase) {
-    console.error('Supabase client failed to load.');
+// Initialize app when DOM & Supabase JS are ready
+async function initApp() {
+  const client = getSupabase();
+  if (!client) {
+    // Retry if CDN script is still loading
+    setTimeout(initApp, 150);
     return;
   }
 
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    await verifyAdminAndLoad(session.user);
-  } else {
-    showLoginView();
-  }
-
-  supabase.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session) {
+  try {
+    const { data: { session } } = await client.auth.getSession();
+    if (session && session.user) {
       await verifyAdminAndLoad(session.user);
-    } else if (event === 'SIGNED_OUT') {
+    } else {
       showLoginView();
     }
-  });
-});
+
+    client.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session && session.user) {
+        await verifyAdminAndLoad(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        showLoginView();
+      }
+    });
+  } catch (err) {
+    console.error('Error during init:', err);
+    showLoginView();
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 async function verifyAdminAndLoad(user) {
+  const client = getSupabase();
+  if (!client || !user) return;
+
   try {
-    const { data: userData, error } = await supabase
+    const { data: userData, error } = await client
       .from('users')
       .select('is_admin, display_name, username')
       .eq('id', user.id)
       .maybeSingle();
 
-    if (error || !userData || !userData.is_admin) {
-      await supabase.auth.signOut();
-      showLoginAlert('Acceso denegado: Tu cuenta no posee permisos de administrador (is_admin = true).');
+    if (error) {
+      console.error('Error checking user admin status:', error);
+      showLoginAlert('Error de base de datos al verificar permisos: ' + error.message);
+      await client.auth.signOut();
       showLoginView();
       return;
     }
 
+    if (!userData || !userData.is_admin) {
+      await client.auth.signOut();
+      showLoginAlert('Acceso denegado: La cuenta ' + user.email + ' no posee rol de administrador (is_admin = true).');
+      showLoginView();
+      return;
+    }
+
+    // Success: Admin Verified
     document.getElementById('admin-email-tag').textContent = `@${userData.username || user.email}`;
     showDashboardView();
     await loadReports();
   } catch (err) {
-    showLoginAlert('Error al verificar permisos de administrador: ' + err.message);
+    console.error('Unexpected error in verifyAdminAndLoad:', err);
+    showLoginAlert('Error al verificar permisos: ' + err.message);
     showLoginView();
   }
 }
@@ -69,45 +106,69 @@ function showDashboardView() {
 
 function showLoginAlert(msg) {
   const alertEl = document.getElementById('login-alert');
-  alertEl.textContent = msg;
-  alertEl.classList.remove('hidden');
+  if (alertEl) {
+    alertEl.textContent = msg;
+    alertEl.classList.remove('hidden');
+  }
 }
 
 function hideLoginAlert() {
-  document.getElementById('login-alert').classList.add('hidden');
+  const alertEl = document.getElementById('login-alert');
+  if (alertEl) {
+    alertEl.classList.add('hidden');
+  }
 }
 
 async function handleLogin(e) {
-  e.preventDefault();
+  if (e) e.preventDefault();
   hideLoginAlert();
 
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
+  const client = getSupabase();
+  if (!client) {
+    showLoginAlert('Conectando con el servidor de autenticación... Por favor intenta en un momento.');
+    return;
+  }
+
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+
+  const email = emailInput ? emailInput.value.trim() : '';
+  const password = passwordInput ? passwordInput.value : '';
+
+  if (!email || !password) {
+    showLoginAlert('Por favor ingresa tu correo y contraseña.');
+    return;
+  }
 
   const btn = document.getElementById('login-btn');
   const spinner = document.getElementById('login-spinner');
-  btn.disabled = true;
-  spinner.classList.remove('hidden');
+  if (btn) btn.disabled = true;
+  if (spinner) spinner.classList.remove('hidden');
 
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await client.auth.signInWithPassword({
       email,
       password
     });
 
     if (error) {
-      showLoginAlert('Error de inicio de sesión: ' + error.message);
+      showLoginAlert('Error de autenticación: ' + (error.message || 'Credenciales no válidas.'));
+    } else if (data && data.user) {
+      await verifyAdminAndLoad(data.user);
     }
   } catch (err) {
-    showLoginAlert('Error inesperado: ' + err.message);
+    showLoginAlert('Error inesperado: ' + (err.message || String(err)));
   } finally {
-    btn.disabled = false;
-    spinner.classList.add('hidden');
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.classList.add('hidden');
   }
 }
 
 async function handleLogout() {
-  await supabase.auth.signOut();
+  const client = getSupabase();
+  if (client) {
+    await client.auth.signOut();
+  }
   showLoginView();
 }
 
@@ -121,6 +182,8 @@ function setTab(tab) {
 
 async function loadReports() {
   const listEl = document.getElementById('reports-list');
+  if (!listEl) return;
+
   listEl.innerHTML = `
     <div class="loading-state">
       <div class="spinner dark"></div>
@@ -128,8 +191,11 @@ async function loadReports() {
     </div>
   `;
 
+  const client = getSupabase();
+  if (!client) return;
+
   try {
-    const { data: reports, error } = await supabase
+    const { data: reports, error } = await client
       .from('content_reports')
       .select('*')
       .order('created_at', { ascending: false });
@@ -164,6 +230,8 @@ async function loadReports() {
 
 async function resolveTargetDetails(reports) {
   if (!reports || reports.length === 0) return;
+  const client = getSupabase();
+  if (!client) return;
 
   const groupIds = new Set();
   const messageIds = [];
@@ -183,7 +251,7 @@ async function resolveTargetDetails(reports) {
   const reportPreviews = {};
 
   if (groupIds.size > 0) {
-    const { data: groups } = await supabase
+    const { data: groups } = await client
       .from('groups')
       .select('id, name')
       .in('id', Array.from(groupIds));
@@ -197,7 +265,7 @@ async function resolveTargetDetails(reports) {
   }
 
   if (messageIds.length > 0) {
-    const { data: msgs } = await supabase
+    const { data: msgs } = await client
       .from('messages')
       .select('id, content, group_id, groups(name)')
       .in('id', messageIds);
@@ -212,7 +280,7 @@ async function resolveTargetDetails(reports) {
   }
 
   if (anonMessageIds.length > 0) {
-    const { data: anons } = await supabase
+    const { data: anons } = await client
       .from('anonymous_messages')
       .select('id, content, group_id, groups(name)')
       .in('id', anonMessageIds);
@@ -227,7 +295,7 @@ async function resolveTargetDetails(reports) {
   }
 
   if (photoIds.length > 0) {
-    const { data: photos } = await supabase
+    const { data: photos } = await client
       .from('group_photos')
       .select('id, group_id, groups(name)')
       .in('id', photoIds);
@@ -241,7 +309,7 @@ async function resolveTargetDetails(reports) {
   }
 
   if (userIds.length > 0) {
-    const { data: users } = await supabase
+    const { data: users } = await client
       .from('users')
       .select('id, display_name, username')
       .in('id', userIds);
@@ -282,6 +350,8 @@ function formatStatusBadge(status) {
 
 function renderReports() {
   const listEl = document.getElementById('reports-list');
+  if (!listEl) return;
+
   const filtered = activeReports.filter(r => r.status === currentTab);
 
   if (filtered.length === 0) {
@@ -356,19 +426,22 @@ function closeResolutionModal() {
 }
 
 async function submitResolution(e) {
-  e.preventDefault();
+  if (e) e.preventDefault();
   if (!selectedReport) return;
+
+  const client = getSupabase();
+  if (!client) return;
 
   const action = document.querySelector('input[name="mod_action"]:checked')?.value || 'dismiss';
   const notes = document.getElementById('mod-notes').value.trim();
 
   const btn = document.getElementById('confirm-mod-btn');
   const spinner = document.getElementById('mod-spinner');
-  btn.disabled = true;
-  spinner.classList.remove('hidden');
+  if (btn) btn.disabled = true;
+  if (spinner) spinner.classList.remove('hidden');
 
   try {
-    const { data, error } = await supabase.rpc('resolve_content_report', {
+    const { data, error } = await client.rpc('resolve_content_report', {
       p_report_id: selectedReport.id,
       p_action: action,
       p_notes: notes || null,
@@ -385,8 +458,8 @@ async function submitResolution(e) {
   } catch (err) {
     alert('❌ Error al resolver la denuncia: ' + err.message);
   } finally {
-    btn.disabled = false;
-    spinner.classList.add('hidden');
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.classList.add('hidden');
   }
 }
 
