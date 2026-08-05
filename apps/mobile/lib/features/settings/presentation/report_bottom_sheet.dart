@@ -54,6 +54,7 @@ class _ReportBottomSheetState extends ConsumerState<ReportBottomSheet> {
   static const _reasons = [
     'Spam o publicidad masiva',
     'Acoso, amenaza o intimidación',
+    'Explotación o abuso sexual infantil (CSAE/CSAM)',
     'Contenido explícito o inapropiado',
     'Discurso de odio o violencia',
     'Suicidio, autolesiones o peligro',

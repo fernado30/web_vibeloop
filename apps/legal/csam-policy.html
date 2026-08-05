@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#fbfaf7">
+  <meta name="description" content="Procedimiento Oficial para la Detección, Retiro y Escalamiento de Material de Abuso Sexual Infantil (CSAM/CSAE) en Nadie.">
+  <title>Procedimiento y Protocolo CSAM/CSAE | Nadie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="icon" type="image/png" href="./vibeloop-icon.png">
+</head>
+<body>
+  <header class="topbar shell">
+    <a class="brand" href="./index.html" aria-label="Inicio legal de Nadie">
+      <span class="brand-dot"></span>
+      <span>Nadie</span>
+    </a>
+    <nav class="topnav" aria-label="Páginas legales">
+      <a href="./privacy.html">Política de privacidad</a>
+      <a href="./terms.html">Términos de servicio</a>
+      <a href="./csam-policy.html" class="active">Seguridad Infantil (CSAM)</a>
+      <a href="./ncmec-evidence.html">Evidencia NCMEC</a>
+      <a href="./delete-account.html">Eliminación de cuenta</a>
+      <a href="./index.html">Inicio</a>
+    </nav>
+  </header>
+
+  <main class="shell document" id="top">
+    <section class="doc-hero">
+      <p class="kicker">seguridad infantil & cumplimiento normativo</p>
+      <h1>Procedimiento Operativo de Detección, Retiro y Escalamiento de CSAM / CSAE</h1>
+      <p class="updated">Última actualización: 22 de julio de 2026</p>
+      <p class="intro">
+        En <strong>Nadie</strong> aplicamos una política de <strong>Tolerancia Cero</strong> absoluta frente al Material de Abuso Sexual Infantil (CSAM) y la Explotación y Abuso Sexual Infantil (CSAE). Este documento detalla el procedimiento estandarizado (SOP) para la detección, retiro inmediato y reporte obligatorio ante autoridades internacionales.
+      </p>
+    </section>
+
+    <section class="doc-section">
+      <h2>1. Definición y Alcance</h2>
+      <p>
+        El término <strong>CSAM/CSAE</strong> incluye cualquier representación visual, imagen, video, enlace o texto que represente o sugiera abuso sexual, explotación, desnudez o conducta explícita que involucre a un menor de edad. Queda estrictamente prohibida su creación, almacenamiento, transmisión o solicitud en cualquier chat interactivo, buzón anónimo o galería de fotos de Nadie.
+      </p>
+    </section>
+
+    <section class="doc-section">
+      <h2>2. Protocolo de 3 Pasos para el Manejo de Incidentes</h2>
+      
+      <h3>Paso 1: Detección y Recepción de Denuncias</h3>
+      <p>
+        Las alertas son canalizadas en tiempo real mediante:
+      </p>
+      <ul>
+        <li><strong>Botonera in-app de denuncia rápida:</strong> Los usuarios pueden reportar mensajes, fotos o perfiles bajo la categoría explícita <em>"Explotación o abuso sexual infantil (CSAE/CSAM)"</em>.</li>
+        <li><strong>Canal de correo prioritario:</strong> Correo especializado de seguridad infantil <a href="mailto:emotivanadie@gmail.com">emotivanadie@gmail.com</a>.</li>
+        <li><strong>Detección de patrones y palabras clave:</strong> Bloqueo automatizado de URLs y cadenas que sugieran explotación de menores.</li>
+      </ul>
+
+      <h3>Paso 2: Retiro Inmediato del Contenido y Suspensión Permanente</h3>
+      <p>
+        Al confirmarse una infracción de seguridad infantil, el equipo de moderación ejecuta inmediatamente las siguientes acciones obligatorias:
+      </p>
+      <ul>
+        <li><strong>Inhabilitación total del contenido:</strong> El mensaje o imagen es removido de forma inmediata de la base de datos y de las réplicas en CDN/Storage para evitar su propagación.</li>
+        <li><strong>Expulsión permanente del usuario:</strong> La cuenta del infractor es baneada de forma definitiva (`account_status = 'blocked_under_13'` o `banned`).</li>
+        <li><strong>Cierre de sesiones concurrentes:</strong> Revocación de todos los tokens de acceso del usuario infractor.</li>
+      </ul>
+
+      <h3>Paso 3: Preservación de Evidencia y Reporte Obligatorio a NCMEC</h3>
+      <p>
+        En cumplimiento con la ley federal de EE. UU. (18 U.S.C. § 2258A) y directrices de Google Play:
+      </p>
+      <ul>
+        <li>Los logs de moderación y la metadata técnica del incidente (ID de cuenta, hash de archivo, timestamp, dirección IP y correo registrado) se aíslan y preservan de forma segura durante 90 días con fines exclusivamente legales.</li>
+        <li>El caso es escalado y reportado formalmente ante el <strong>National Center for Missing & Exploited Children (NCMEC)</strong> a través del portal <a href="https://report.cybertip.org" target="_blank" rel="noopener">CyberTipline</a>.</li>
+        <li>Cuando corresponda, se notificará a la ley local o agencias policiales internacionales (Interpol / Fuerzas Policiales Locales).</li>
+      </ul>
+    </section>
+
+    <section class="doc-section">
+      <h2>3. Canal Directo de Denuncia de Seguridad Infantil</h2>
+      <p>
+        Si eres un usuario, padre, tutor o autoridad policial y necesitas reportar una emergencia o incidente relativo a seguridad de menores en Nadie, escríbenos a:
+      </p>
+      <div class="contact-box">
+        <p><strong>Correo Electrónico de Seguridad Infantil:</strong> <a href="mailto:emotivanadie@gmail.com">emotivanadie@gmail.com</a></p>
+        <p><strong>Asunto recomendado:</strong> <code>[URGENTE CSAM/CSAE] Denuncia de Seguridad Infantil</code></p>
+        <p><strong>Plazo de Respuesta:</strong> Atención prioritaria e inmediata dentro de las 24 horas.</p>
+      </div>
+    </section>
+
+    <div class="doc-footer-nav">
+      <a href="#top" class="back-to-top">↑ Volver arriba</a>
+    </div>
+  </main>
+
+  <footer class="shell footer">
+    <p>Nadie Legal & Compliance — Procedimiento Oficial de Retiro y Escalamiento CSAM.</p>
+  </footer>
+</body>
+</html>

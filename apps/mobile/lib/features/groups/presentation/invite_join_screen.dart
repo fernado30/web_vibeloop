@@ -28,12 +28,16 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
   static final _termsUrl = Uri.parse('https://web-legal-nadie.vercel.app/terms');
   bool _loading = false;
   bool _confirmed13Plus = false;
+  bool _privacyAccepted = false;
+  bool _termsAccepted = false;
   DateTime? _birthDate;
   String? _error;
 
   Future<void> _bootstrap() async {
     if (_birthDate == null) { setState(() => _error = 'Selecciona tu fecha de nacimiento.'); return; }
     if (!_confirmed13Plus) { setState(() => _error = 'Debes confirmar que tienes 13 años o más.'); return; }
+    if (!_privacyAccepted) { setState(() => _error = 'Debes autorizar el tratamiento de tus datos personales.'); return; }
+    if (!_termsAccepted) { setState(() => _error = 'Debes leer y aceptar expresamente los Términos de Servicio.'); return; }
     if (isUnder13(_birthDate!)) { setState(() => _error = ageGateMessage()); return; }
     try {
       if (mounted) {
@@ -45,7 +49,10 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
         await _signInGuestAccount(authRepo);
       }
       await authRepo.completeAgeVerification(
-        birthDate: _birthDate!, privacyPolicyVersion: _privacyPolicyVersion, termsVersion: _termsVersion,
+        birthDate: _birthDate!,
+        privacyPolicyVersion: _privacyPolicyVersion,
+        termsVersion: _termsVersion,
+        termsAccepted: _termsAccepted,
       );
 
       final group = await ref.read(groupsRepositoryProvider).getGroupByInviteCode(widget.inviteCode);
@@ -148,14 +155,51 @@ class _InviteJoinScreenState extends ConsumerState<InviteJoinScreen> {
                             },
                           ),
                           CheckboxListTile(
-                            contentPadding: EdgeInsets.zero, controlAffinity: ListTileControlAffinity.leading,
-                            value: _confirmed13Plus, onChanged: (value) => setState(() => _confirmed13Plus = value ?? false),
-                            title: const Text('Confirmo que tengo 13 años o más y acepto los Términos de servicio.'),
+                            contentPadding: EdgeInsets.zero,
+                            controlAffinity: ListTileControlAffinity.leading,
+                            value: _confirmed13Plus,
+                            onChanged: (value) => setState(() => _confirmed13Plus = value ?? false),
+                            title: const Text('Confirmo que tengo 13 años o más.'),
                           ),
-                          Wrap(children: [
-                            TextButton(onPressed: () => launchUrl(_privacyUrl, mode: LaunchMode.externalApplication), child: const Text('Política de privacidad')),
-                            TextButton(onPressed: () => launchUrl(_termsUrl, mode: LaunchMode.externalApplication), child: const Text('Términos de servicio')),
-                          ]),
+                          CheckboxListTile(
+                            contentPadding: EdgeInsets.zero,
+                            controlAffinity: ListTileControlAffinity.leading,
+                            value: _privacyAccepted,
+                            onChanged: (value) => setState(() => _privacyAccepted = value ?? false),
+                            title: Wrap(
+                              children: [
+                                const Text('Autorizo el tratamiento de mis datos personales según la '),
+                                GestureDetector(
+                                  onTap: () => launchUrl(_privacyUrl, mode: LaunchMode.externalApplication),
+                                  child: const Text(
+                                    'Política de Privacidad',
+                                    style: TextStyle(decoration: TextDecoration.underline, fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                                const Text('.'),
+                              ],
+                            ),
+                          ),
+                          CheckboxListTile(
+                            contentPadding: EdgeInsets.zero,
+                            controlAffinity: ListTileControlAffinity.leading,
+                            value: _termsAccepted,
+                            onChanged: (value) => setState(() => _termsAccepted = value ?? false),
+                            title: Wrap(
+                              children: [
+                                const Text('He leído y acepto expresamente los '),
+                                GestureDetector(
+                                  onTap: () => launchUrl(_termsUrl, mode: LaunchMode.externalApplication),
+                                  child: const Text(
+                                    'Términos de Servicio',
+                                    style: TextStyle(decoration: TextDecoration.underline, fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                                const Text(' de Nadie.'),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
                           FilledButton(onPressed: _bootstrap, child: const Text('Entrar al grupo')),
                           if (_error != null) ...[
                             const SizedBox(height: 16),

@@ -10,6 +10,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'core/ads/ad_service.dart';
 import 'core/notifications/app_notification_service.dart';
 import 'core/app_update/app_version_gate.dart';
 import 'core/router/app_router.dart';
@@ -97,6 +98,12 @@ class VibeloopApp extends ConsumerStatefulWidget {
 
 class _VibeloopAppState extends ConsumerState<VibeloopApp> {
   bool _deepLinkInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(AdService.instance.initialize());
+  }
 
   @override
   Widget build(BuildContext context) {

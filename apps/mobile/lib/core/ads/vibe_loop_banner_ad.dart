@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'ad_config.dart';
+import 'ad_service.dart';
 
 class VibeLoopBannerAd extends StatefulWidget {
   const VibeLoopBannerAd({
@@ -28,7 +29,7 @@ class _VibeLoopBannerAdState extends State<VibeLoopBannerAd> {
   }
 
   Future<void> _loadBanner(int width) async {
-    if (!mounted || !AdConfig.shouldLoadBannerAds || width <= 0) {
+    if (!mounted || !AdConfig.shouldLoadBannerAds || !AdService.instance.canRequestAds || width <= 0) {
       return;
     }
 

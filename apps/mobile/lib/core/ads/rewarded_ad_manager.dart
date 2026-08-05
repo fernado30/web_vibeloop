@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'ad_config.dart';
+import 'ad_service.dart';
 
 class RewardedAdManager {
   static const Duration _cooldown = Duration(minutes: 20);
@@ -20,7 +21,7 @@ class RewardedAdManager {
   }
 
   Future<void> preload() async {
-    if (!AdConfig.shouldLoadRewardedAds || _loading || _showing || _ad != null || _isOnCooldown) {
+    if (!AdConfig.shouldLoadRewardedAds || !AdService.instance.canRequestAds || _loading || _showing || _ad != null || _isOnCooldown) {
       return;
     }
 

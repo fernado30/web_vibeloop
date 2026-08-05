@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/data/auth_repository.dart';
 import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/presentation/oauth_age_gate_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/chat/presentation/chat_screen.dart';
 import '../settings/app_preferences_repository.dart';
@@ -38,6 +39,7 @@ String? resolveAppRedirect({
   required bool goingToAuth,
   required bool isInviteFlow,
   required bool isAuthCallback,
+  bool isOauthAgeGate = false,
   required bool isWelcome,
   required bool isSplash,
 }) {
@@ -45,7 +47,7 @@ String? resolveAppRedirect({
     return null;
   }
 
-  if (!isAuthed && !goingToAuth && !isWelcome && !isInviteFlow && !isAuthCallback && !isSplash) {
+  if (!isAuthed && !goingToAuth && !isWelcome && !isInviteFlow && !isAuthCallback && !isOauthAgeGate && !isSplash) {
     if (matchedLocation == '/groups' && onboardingSeen) {
       return null;
     }
@@ -53,7 +55,7 @@ String? resolveAppRedirect({
   }
 
   if (!onboardingSeen) {
-    if (!isWelcome && !isInviteFlow && !isAuthCallback) {
+    if (!isWelcome && !isInviteFlow && !isAuthCallback && !isOauthAgeGate) {
       return StitchDesignScreen.routeName;
     }
   } else {
@@ -107,6 +109,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/auth-callback',
         builder: (context, state) => const _AuthCallbackScreen(),
+      ),
+      GoRoute(
+        path: '/oauth-age-gate',
+        builder: (context, state) => const OauthAgeGateScreen(),
       ),
       GoRoute(
         path: '/invite/:code',
@@ -219,6 +225,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final goingToAuth = state.matchedLocation == '/login' || state.matchedLocation == '/register';
       final isInviteFlow = state.matchedLocation.startsWith('/invite/') || state.matchedLocation.startsWith('/join/');
       final isAuthCallback = state.matchedLocation == '/auth-callback';
+      final isOauthAgeGate = state.matchedLocation == '/oauth-age-gate';
       final isWelcome = state.matchedLocation == StitchDesignScreen.routeName ||
           state.matchedLocation == StitchPlatformOnboardingScreen.routeName ||
           state.matchedLocation == StitchUsernameOnboardingScreen.routeName;
@@ -234,6 +241,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         goingToAuth: goingToAuth,
         isInviteFlow: isInviteFlow,
         isAuthCallback: isAuthCallback,
+        isOauthAgeGate: isOauthAgeGate,
         isWelcome: isWelcome,
         isSplash: isSplash,
       );
@@ -241,14 +249,57 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class _AuthCallbackScreen extends StatelessWidget {
+class _AuthCallbackScreen extends ConsumerStatefulWidget {
   const _AuthCallbackScreen();
+
+  @override
+  ConsumerState<_AuthCallbackScreen> createState() => _AuthCallbackScreenState();
+}
+
+class _AuthCallbackScreenState extends ConsumerState<_AuthCallbackScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _handleAuthCallback();
+  }
+
+  Future<void> _handleAuthCallback() async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    final authRepo = ref.read(authRepositoryProvider);
+    final user = authRepo.currentUser;
+
+    if (!mounted) return;
+
+    if (user == null) {
+      context.go('/login');
+      return;
+    }
+
+    final isVerified = await authRepo.isAgeVerified();
+    if (!mounted) return;
+
+    if (isVerified) {
+      context.go('/groups');
+    } else {
+      context.go('/oauth-age-gate');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
-        child: CircularProgressIndicator(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text(
+              'Verificando sesión con Google...',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
       ),
     );
   }

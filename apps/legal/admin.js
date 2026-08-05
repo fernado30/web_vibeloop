@@ -414,6 +414,12 @@ function renderReports() {
         </div>
       ` : ''}
 
+      ${(r.reason?.includes('CSAM') || r.reason?.includes('infantil') || r.moderator_notes?.includes('CSAM')) ? `
+        <button class="btn-ncmec-export" onclick="generateNcmecEvidence('${r.id}')" style="margin-top: 10px; background: #991b1b; color: #ffffff; border: none; padding: 10px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+          📥 Exportar Expediente de Evidencia NCMEC (.json)
+        </button>
+      ` : ''}
+
       ${r.status === 'pending' ? `
         <button class="btn-resolve" onclick="openResolutionModal('${r.id}')">
           ⚖️ Resolver Denuncia
@@ -421,6 +427,61 @@ function renderReports() {
       ` : ''}
     </div>
   `).join('');
+}
+
+function generateNcmecEvidence(reportId) {
+  const r = activeReports.find(item => item.id === reportId);
+  if (!r) return;
+
+  const payload = {
+    incident_type: "CSAM / Child Sexual Exploitation Report",
+    ncmec_cybertip_target: "https://report.cybertip.org",
+    generated_at: new Date().toISOString(),
+    service_provider: {
+      app_name: "Nadie",
+      legal_entity: "Nadie Legal & Compliance",
+      contact_email: "emotivanadie@gmail.com"
+    },
+    incident_data: {
+      report_id: r.id,
+      reported_at: r.created_at,
+      target_type: r.target_type,
+      target_id: r.target_id,
+      group_name: r.resolved_group_name || "N/A",
+      reason_category: r.reason,
+      reporter_details: r.details || "N/A",
+      content_snapshot: r.resolved_preview || "Purged / Isolated",
+      moderator_notes: r.moderator_notes || "ESCALADO A NCMEC"
+    },
+    law_enforcement_chain_of_custody: {
+      evidence_preservation_period: "90 días (18 U.S.C. § 2258A)",
+      status: "CONTENT_REMOVED_USER_BANNED_EVIDENCE_ISOLATED"
+    }
+  };
+
+  const jsonStr = JSON.stringify(payload, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `NCMEC_EVIDENCE_${r.id.slice(0, 8)}_${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>"']/g, function(m) {
+    return {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    }[m];
+  });
 }
 
 function openResolutionModal(reportId) {
@@ -448,8 +509,13 @@ async function submitResolution(e) {
   const client = getSupabase();
   if (!client) return;
 
-  const action = document.querySelector('input[name="mod_action"]:checked')?.value || 'dismiss';
-  const notes = document.getElementById('mod-notes').value.trim();
+  const rawAction = document.querySelector('input[name="mod_action"]:checked')?.value || 'dismiss';
+  const isCsam = rawAction === 'csam_escalation';
+  const action = isCsam ? 'ban_user' : rawAction;
+  const userNotes = document.getElementById('mod-notes').value.trim();
+  const notes = isCsam
+    ? `[ESCALAMIENTO OBLIGATORIO CSAM/NCMEC] ${userNotes}`.trim()
+    : userNotes;
 
   const btn = document.getElementById('confirm-mod-btn');
   const spinner = document.getElementById('mod-spinner');
@@ -470,7 +536,11 @@ async function submitResolution(e) {
 
     closeResolutionModal();
     await loadReports();
-    alert('✅ Resolución y sanción aplicadas con éxito.');
+    if (isCsam) {
+      alert('🚨 RETIRO Y ESCALAMIENTO COMPLETADO:\n\n1. Contenido eliminado de la plataforma.\n2. Usuario baneado permanentemente.\n3. Registro preservado para informe oficial.\n\nPor favor, remite los detalles del incidente al portal oficial de NCMEC CyberTipline (https://report.cybertip.org) o autoridad competente.');
+    } else {
+      alert('✅ Resolución y sanción aplicadas con éxito.');
+    }
   } catch (err) {
     alert('❌ Error al resolver la denuncia: ' + err.message);
   } finally {

@@ -935,3 +935,152 @@ a {
   to { transform: rotate(360deg); }
 }
 
+/* Deletion Form Card & Styles */
+.deletion-form-card {
+  margin: 16px 0;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 18px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+}
+
+.deletion-form-card .form-group {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.deletion-form-card label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.deletion-form-card label .req {
+  color: #ff3b5c;
+}
+
+.deletion-form-card .form-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+}
+
+.deletion-form-card .form-input:focus {
+  outline: none;
+  border-color: var(--brand-violet);
+}
+
+.deletion-form-card .form-textarea {
+  resize: vertical;
+}
+
+.form-checkbox-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.form-checkbox-group input[type="checkbox"] {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand-violet);
+}
+
+.form-checkbox-group label {
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.btn-primary-deletion {
+  width: 100%;
+  padding: 14px;
+  background: #ff3b5c;
+  color: white;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.btn-primary-deletion:hover {
+  background: #e02d4c;
+}
+
+.btn-primary-deletion:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.feedback-msg {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  margin-bottom: 14px;
+}
+
+.feedback-msg.error {
+  background: rgba(255, 59, 92, 0.1);
+  color: #ff3b5c;
+  border: 1px solid rgba(255, 59, 92, 0.3);
+}
+
+.deletion-success-card {
+  text-align: center;
+  padding: 24px 16px;
+}
+
+.deletion-success-card .success-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+
+.deletion-success-card h3 {
+  font-size: 1.3rem;
+  margin: 0 0 8px;
+  color: var(--text);
+}
+
+.deletion-success-card p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.ticket-info {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 16px 0;
+  padding: 10px;
+  background: var(--bg);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--brand-violet);
+}
+
+.contact-box {
+  padding: 14px 18px;
+  background: var(--surface-soft);
+  border-radius: 12px;
+  border-left: 4px solid var(--brand-violet);
+  font-weight: 600;
+}
+

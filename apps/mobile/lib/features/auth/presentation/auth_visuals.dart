@@ -9,11 +9,11 @@ class AuthScreenShell extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.fields,
-    required this.primaryLabel,
-    required this.onPrimaryPressed,
-    required this.googleLabel,
-    required this.onGooglePressed,
-    required this.footer,
+    this.primaryLabel,
+    this.onPrimaryPressed,
+    this.googleLabel,
+    this.onGooglePressed,
+    this.footer,
     this.errorText,
     this.primaryIcon,
     this.loading = false,
@@ -22,11 +22,11 @@ class AuthScreenShell extends StatelessWidget {
   final String title;
   final String subtitle;
   final List<Widget> fields;
-  final String primaryLabel;
+  final String? primaryLabel;
   final VoidCallback? onPrimaryPressed;
-  final String googleLabel;
+  final String? googleLabel;
   final VoidCallback? onGooglePressed;
-  final Widget footer;
+  final Widget? footer;
   final String? errorText;
   final Widget? primaryIcon;
   final bool loading;
@@ -84,30 +84,36 @@ class AuthScreenShell extends StatelessWidget {
                               const SizedBox(height: 12),
                               _AuthErrorBanner(message: errorText!),
                             ],
-                            const SizedBox(height: 22),
-                            _AuthGradientButton(
-                              label: primaryLabel,
-                              icon: loading
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.1,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                      ),
-                                    )
-                                  : primaryIcon,
-                              onPressed: loading ? null : onPrimaryPressed,
-                            ),
-                            const SizedBox(height: 30),
-                            const _AuthDivider(),
-                            const SizedBox(height: 24),
-                            _AuthGoogleButton(
-                              label: googleLabel,
-                              onPressed: loading ? null : onGooglePressed,
-                            ),
-                            const SizedBox(height: 28),
-                            footer,
+                            if (primaryLabel != null) ...[
+                              const SizedBox(height: 22),
+                              _AuthGradientButton(
+                                label: primaryLabel!,
+                                icon: loading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.1,
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                        ),
+                                      )
+                                    : primaryIcon,
+                                onPressed: loading ? null : onPrimaryPressed,
+                              ),
+                            ],
+                            if (googleLabel != null) ...[
+                              const SizedBox(height: 30),
+                              const _AuthDivider(),
+                              const SizedBox(height: 24),
+                              _AuthGoogleButton(
+                                label: googleLabel!,
+                                onPressed: loading ? null : onGooglePressed,
+                              ),
+                            ],
+                            if (footer != null) ...[
+                              const SizedBox(height: 28),
+                              footer!,
+                            ],
                             const SizedBox(height: 8),
                           ],
                         ),

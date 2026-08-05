@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'ad_config.dart';
+import 'ad_service.dart';
 
 class InterstitialAdManager {
   static const Duration _cooldown = Duration(minutes: 8);
@@ -21,7 +22,7 @@ class InterstitialAdManager {
   }
 
   Future<void> preload({bool bypassCooldown = false}) async {
-    if (!AdConfig.shouldLoadInterstitialAds || _loading || _showing || _ad != null || (!bypassCooldown && _isOnCooldown)) {
+    if (!AdConfig.shouldLoadInterstitialAds || !AdService.instance.canRequestAds || _loading || _showing || _ad != null || (!bypassCooldown && _isOnCooldown)) {
       return;
     }
 

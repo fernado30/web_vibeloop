@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/ads/ad_service.dart';
 import '../../../core/theme/vibe_tokens.dart';
 import '../../../core/widgets/vibe_svg_icon.dart';
 import '../../../core/widgets/vibe_ui.dart';
@@ -218,6 +219,12 @@ class SettingsScreen extends ConsumerWidget {
                   _privacyUrl,
                   'No se pudo abrir la política de privacidad.',
                 ),
+              ),
+              _SettingsRow(
+                icon: Icons.privacy_tip_outlined,
+                title: 'Opciones de privacidad de anuncios',
+                subtitle: 'Gestiona o modifica tus preferencias de consentimiento UMP',
+                onTap: () => AdService.instance.showPrivacyOptionsForm(context),
               ),
               if (!isUnregistered)
                 _SettingsRow(

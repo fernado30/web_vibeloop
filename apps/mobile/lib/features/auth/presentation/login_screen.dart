@@ -16,12 +16,15 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   static final Uri _privacyUrl = Uri.parse('https://web-legal-nadie.vercel.app/privacy');
-  static const String _privacyPolicyVersion = '2026-07-17';
+  static final Uri _termsUrl = Uri.parse('https://web-legal-nadie.vercel.app/terms');
+  static const String _privacyPolicyVersion = '2026-07-22';
+  static const String _termsVersion = '2026-07-22';
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _loading = false;
   bool _privacyAccepted = false;
+  bool _termsAccepted = false;
   String? _error;
 
   @override
@@ -42,6 +45,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _safeSetState(() => _error = 'Debes autorizar el tratamiento de tus datos personales para continuar.');
       return;
     }
+    if (!_termsAccepted) {
+      _safeSetState(() => _error = 'Debes leer y aceptar expresamente los Términos de Servicio de Nadie para continuar.');
+      return;
+    }
     if (!mounted) return;
     _safeSetState(() {
       _loading = true;
@@ -56,6 +63,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await ref.read(authRepositoryProvider).recordPrivacyConsent(
               policyVersion: _privacyPolicyVersion,
               user: response.user!,
+              termsAccepted: _termsAccepted,
+              termsVersion: _termsVersion,
             );
       }
       if (mounted) context.go('/groups');
@@ -74,6 +83,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _safeSetState(() => _error = 'Debes autorizar el tratamiento de tus datos personales para continuar.');
       return;
     }
+    if (!_termsAccepted) {
+      _safeSetState(() => _error = 'Debes leer y aceptar expresamente los Términos de Servicio de Nadie para continuar.');
+      return;
+    }
     _safeSetState(() {
       _loading = true;
       _error = null;
@@ -89,6 +102,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authRepositoryProvider).recordPrivacyConsent(
             policyVersion: _privacyPolicyVersion,
             user: event.session!.user,
+            termsAccepted: _termsAccepted,
+            termsVersion: _termsVersion,
           );
     } catch (e) {
       _safeSetState(() => _error = e.toString());
@@ -133,7 +148,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 controlAffinity: ListTileControlAffinity.leading,
                 title: Wrap(
                   children: [
-                    const Text('Autorizo de manera previa, expresa e informada el tratamiento de mis datos personales conforme a la '),
+                    const Text('Autorizo el tratamiento de mis datos personales conforme a la '),
                     GestureDetector(
                       onTap: () => launchUrl(_privacyUrl, mode: LaunchMode.externalApplication),
                       child: const Text(
@@ -142,6 +157,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                     const Text('.'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 4),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _termsAccepted,
+                onChanged: _loading ? null : (value) => _safeSetState(() => _termsAccepted = value ?? false),
+                controlAffinity: ListTileControlAffinity.leading,
+                title: Wrap(
+                  children: [
+                    const Text('He leído y acepto expresamente los '),
+                    GestureDetector(
+                      onTap: () => launchUrl(_termsUrl, mode: LaunchMode.externalApplication),
+                      child: const Text(
+                        'Términos de Servicio',
+                        style: TextStyle(decoration: TextDecoration.underline, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    const Text(' de Nadie.'),
                   ],
                 ),
               ),

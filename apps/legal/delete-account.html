@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#fbfaf7">
+  <meta name="description" content="Solicitud de eliminación de cuenta y datos personales de Nadie (Cumplimiento Google Play & COPPA).">
+  <title>Eliminación de Cuenta y Datos | Nadie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="icon" type="image/png" href="./vibeloop-icon.png">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topbar shell">
+    <a class="brand" href="./index.html" aria-label="Inicio legal de Nadie">
+      <span class="brand-dot"></span>
+      <span>Nadie</span>
+    </a>
+    <nav class="topnav" aria-label="Páginas legales">
+      <a href="./privacy.html">Política de privacidad</a>
+      <a href="./terms.html">Términos de servicio</a>
+      <a href="./csam-policy.html">Seguridad Infantil (CSAM)</a>
+      <a href="./ncmec-evidence.html">Evidencia NCMEC</a>
+      <a href="./delete-account.html" class="active">Eliminación de cuenta</a>
+      <a href="./index.html">Inicio</a>
+    </nav>
+  </header>
+
+  <main class="shell document" id="top">
+    <section class="doc-hero">
+      <p class="kicker">privacidad & control de datos</p>
+      <h1>Solicitud de Eliminación de Cuenta y Datos</h1>
+      <p class="updated">Última actualización: 22 de julio de 2026</p>
+      <p class="intro">
+        En cumplimiento con la Política de Datos de Usuario de Google Play, la Regla COPPA y las normativas internacionales de protección de datos, en Nadie garantizamos tu derecho a solicitar la eliminación permanente e irreversible de tu cuenta y de todos los datos personales asociados.
+      </p>
+    </section>
+
+    <div class="doc-grid">
+      <nav class="doc-nav" aria-label="Tabla de contenido">
+        <span class="doc-nav-title">En esta página</span>
+        <a href="#in-app">1. Eliminación desde la app</a>
+        <a href="#web-form">2. Formulario web externo</a>
+        <a href="#deleted-data">3. Qué datos se eliminan</a>
+        <a href="#retention">4. Retención de seguridad</a>
+        <a href="#contact">5. Contacto directo</a>
+      </nav>
+
+      <article class="doc-content">
+        <section id="in-app">
+          <h2>1. Eliminación Directa desde la Aplicación Móvil</h2>
+          <p>
+            Si tienes acceso a tu aplicación móvil <strong>Nadie</strong>, puedes realizar la eliminación de tu cuenta de manera inmediata sin esperar procesamiento manual:
+          </p>
+          <ol>
+            <li>Abre la aplicación <strong>Nadie</strong> en tu dispositivo.</li>
+            <li>Dirígete a tu <strong>Perfil</strong> (icono en la esquina superior).</li>
+            <li>Selecciona <strong>Ajustes de Privacidad y Seguridad</strong>.</li>
+            <li>Presiona <strong>Eliminar Mi Cuenta</strong>.</li>
+            <li>Confirma la acción. Tu sesión se cerrará y la eliminación de tu perfil se procesará de forma inmediata.</li>
+          </ol>
+        </section>
+
+        <section id="web-form">
+          <h2>2. Formulario Web de Solicitud de Eliminación Externa</h2>
+          <p>
+            Si desinstalaste la aplicación, perdiste tu dispositivo o prefieres gestionar la solicitud vía web, puedes completar el siguiente formulario. Procesaremos tu solicitud en un plazo máximo de <strong>48 horas hábiles</strong>.
+          </p>
+
+          <div class="deletion-form-card" id="deletion-form-container">
+            <form id="deletion-form" onsubmit="handleAccountDeletionRequest(event)">
+              <div class="form-group">
+                <label for="user-email">Correo Electrónico Registrado en Nadie <span class="req">*</span></label>
+                <input type="email" id="user-email" class="form-input" placeholder="tu-correo@ejemplo.com" required>
+              </div>
+
+              <div class="form-group">
+                <label for="deletion-reason">Motivo de la solicitud (Opcional)</label>
+                <textarea id="deletion-reason" class="form-input form-textarea" rows="3" placeholder="Cuéntanos brevemente la razón o cualquier detalle adicional..."></textarea>
+              </div>
+
+              <div class="form-checkbox-group">
+                <input type="checkbox" id="confirm-deletion" required>
+                <label for="confirm-deletion">
+                  Entiendo que la eliminación de mi cuenta es <strong>permanente e irreversible</strong>, e implica la pérdida de mi perfil, mis mensajes y mi acceso a los grupos de Nadie.
+                </label>
+              </div>
+
+              <div id="deletion-feedback" class="feedback-msg" style="display: none;"></div>
+
+              <button type="submit" id="btn-submit-deletion" class="btn-primary-deletion">
+                🛡️ Enviar Solicitud de Eliminación de Cuenta
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <section id="deleted-data">
+          <h2>3. ¿Qué Datos se Eliminan al Procesar la Solicitud?</h2>
+          <p>
+            Al procesarse la eliminación de tu cuenta, los siguientes datos se borran definitivamente de nuestros servidores:
+          </p>
+          <ul>
+            <li><strong>Perfil de usuario:</strong> Nombre público, dirección de correo electrónico, emoji de perfil e identificador único de cuenta.</li>
+            <li><strong>Mensajes y Contenido:</strong> Mensajes de chat enviados en grupos, mensajes anónimos del buzón y fotos de grupo cargadas por tu usuario.</li>
+            <li><strong>Membresías y Conexiones:</strong> Historial de pertenencia a grupos y registros de verificación de edad.</li>
+          </ul>
+        </section>
+
+        <section id="retention">
+          <h2>4. Datos Conservados Temporalmente por Razones Legales o de Seguridad</h2>
+          <p>
+            En estricto cumplimiento con los requisitos de seguridad de Google Play y la protección de menores:
+          </p>
+          <ul>
+            <li>Si la cuenta fue sancionada o bloqueada por violaciones de moderación (acaso, spam o contenido prohibido), los <strong>registros de sanción y logs de moderación</strong> se conservan durante un periodo de <strong>90 días</strong> exclusivamente para prevenir que el mismo usuario reingrese a la plataforma para cometer abusos. Transcurridos los 90 días, los registros son destruidos de forma automática.</li>
+          </ul>
+        </section>
+
+        <section id="contact">
+          <h2>5. Contacto Directo de Soporte de Privacidad</h2>
+          <p>
+            Si tienes dudas adicionales sobre el proceso o deseas hacer seguimiento a una solicitud previa, puedes escribirnos directamente a:
+          </p>
+          <p class="contact-box">
+            📧 Correo de soporte y privacidad: <a href="mailto:emotivanadie@gmail.com">emotivanadie@gmail.com</a>
+          </p>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <footer class="shell footer">
+    <p>© 2026 Nadie. Formulario de eliminación externa conforme a las políticas de seguridad de Google Play y COPPA.</p>
+  </footer>
+
+  <script src="./delete-account.js"></script>
+</body>
+</html>

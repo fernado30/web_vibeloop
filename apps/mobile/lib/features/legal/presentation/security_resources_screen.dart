@@ -39,6 +39,16 @@ class SecurityResourcesScreen extends StatelessWidget {
           ),
           SizedBox(height: 12),
           ModerationWarningCard(
+            title: 'Tolerancia Cero contra el Abuso Infantil (CSAE/CSAM)',
+            body: 'Nadie prohíbe categóricamente cualquier forma de abuso, explotación o material sexual infantil. Todo contenido o cuenta infractora será eliminada de inmediato y reportada a las autoridades competentes y al NCMEC.',
+          ),
+          SizedBox(height: 12),
+          ModerationWarningCard(
+            title: 'Punto de Contacto de Seguridad Infantil (Child Safety Contact)',
+            body: 'Departamento responsable: Oficial de Seguridad Infantil de Nadie.\nCorreo directo: emotivanadie@gmail.com\nAsunto: [SEGURIDAD INFANTIL / CSAM]\nAtención expedita prioritaria 24/7.',
+          ),
+          SizedBox(height: 12),
+          ModerationWarningCard(
             title: 'Cuando escribir a soporte',
             body: 'Hazlo si detectas acoso, contenido ilegal, suplantación, acceso indebido o problemas con invitaciones, fotos o mensajes que no puedas resolver desde la app.',
           ),

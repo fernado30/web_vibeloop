@@ -8,7 +8,7 @@ import '../../../core/widgets/vibe_ui.dart';
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
 
-  static const String _supportEmail = 'emotivavibeloop@gmail.com';
+  static const String _supportEmail = 'emotivanadie@gmail.com';
   static final Uri _emailUri = Uri(
     scheme: 'mailto',
     path: _supportEmail,
@@ -65,14 +65,20 @@ class HelpScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           MessageThreadPreview(
+            title: 'Recursos de seguridad y denuncias',
+            subtitle: 'Políticas de moderación, prevención de abuso e informes de seguridad',
+            onTap: () => context.push('/groups/settings/security-resources'),
+          ),
+          const SizedBox(height: 12),
+          MessageThreadPreview(
             title: 'Copyright y DMCA',
             subtitle: 'Enviar avisos de retirada o contraavisos',
             onTap: () => context.push('/groups/settings/dmca'),
           ),
           const SizedBox(height: 12),
           const ModerationWarningCard(
-            title: 'Si tu caso es de seguridad',
-            body: 'Si sospechas de abuso, acoso, contenido indebido o acceso no autorizado, revisa primero Recursos de seguridad desde Ajustes.',
+            title: 'Si tu caso es de seguridad urgente',
+            body: 'Si detectas acoso, contenido ilegal o explotación, repórtalo directamente con el botón de bandera en el mensaje o grupo.',
           ),
         ],
       ),

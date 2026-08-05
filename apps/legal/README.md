@@ -12,7 +12,7 @@ Puedes desplegar esta carpeta como sitio estático independiente o servirla en l
 
 ## Contacto
 
-El correo actual del sitio es `emotivanadien@gmail.com`.
+El correo actual del sitio es `emotivanadie@gmail.com`.
 
 ## Nota
 

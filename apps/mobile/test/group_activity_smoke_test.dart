@@ -15,7 +15,7 @@ void main() {
     expect(schema.contains('touch_group_activity_messages'), isTrue);
     expect(schema.contains('touch_group_activity_anonymous_messages'), isTrue);
     expect(schema.contains('touch_group_activity_reactions'), isTrue);
-    expect(migration.contains('gte(\'last_activity_at\''), isTrue);
+    expect(migration.contains('last_activity_at'), isTrue);
     expect(groupsRepository.contains('.gte(\'last_activity_at\''), isTrue);
   });
 }

@@ -6,7 +6,7 @@ import '../../../core/widgets/vibe_ui.dart';
 class DmcaScreen extends StatelessWidget {
   const DmcaScreen({super.key});
 
-  static const String _supportEmail = 'emotivanadien@gmail.com';
+  static const String _supportEmail = 'emotivanadie@gmail.com';
 
   static Uri _noticeUri(String subject) => Uri(
         scheme: 'mailto',
@@ -54,7 +54,7 @@ class DmcaScreen extends StatelessWidget {
           const SizedBox(height: 12),
           const SectionIntroCard(
             title: 'Canal de contacto',
-            body: 'Los avisos se reciben en emotivanadien@gmail.com con el asunto “[DMCA]”. El operador deberá completar y mantener actualizados los datos de la entidad y del agente designado, y registrar al agente ante la U.S. Copyright Office si busca acogerse al puerto seguro de la DMCA.',
+            body: 'Los avisos se reciben en emotivanadie@gmail.com con el asunto “[DMCA]”. El operador deberá completar y mantener actualizados los datos de la entidad y del agente designado, y registrar al agente ante la U.S. Copyright Office si busca acogerse al puerto seguro de la DMCA.',
           ),
           const SizedBox(height: 12),
           const SectionIntroCard(

@@ -45,7 +45,7 @@ class AuthRepository {
             .maybeSingle();
         if (existingProfile?['is_under_13'] == true || existingProfile?['account_status'] == 'blocked_under_13') {
           await _supabase.auth.signOut();
-          throw AuthException('Esta cuenta está bloqueada por protección de menores. Solicita la eliminación de sus datos a soporte@vibeloop.app.');
+          throw AuthException('Esta cuenta está bloqueada por protección de menores. Solicita la eliminación de sus datos a emotivanadie@gmail.com.');
         }
         await _ensureProfile(
           user,
@@ -69,12 +69,18 @@ class AuthRepository {
     required DateTime birthDate,
     String? emoji,
     String? privacyPolicyVersion,
+    required bool termsAccepted,
+    String? termsVersion,
   }) async {
+    if (!termsAccepted) {
+      throw const FormatException('Debes leer y aceptar los Términos de Servicio para registrarte.');
+    }
     final date = '${birthDate.year.toString().padLeft(4, '0')}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}';
     final result = await _supabase.functions.invoke('register-user', body: {
       'email': email, 'password': password, 'displayName': name, 'birthDate': date,
       'privacyPolicyVersion': privacyPolicyVersion ?? '2026-07-22',
-      'termsAccepted': true, 'termsVersion': '2026-07-22',
+      'termsAccepted': termsAccepted,
+      'termsVersion': termsVersion ?? '2026-07-22',
     });
     if (result.status < 200 || result.status >= 300) {
       final data = result.data;
@@ -86,7 +92,12 @@ class AuthRepository {
   Future<void> recordPrivacyConsent({
     required String policyVersion,
     required User user,
+    bool termsAccepted = true,
+    String? termsVersion,
   }) async {
+    if (!termsAccepted) {
+      throw const FormatException('Debes aceptar los Términos de Servicio.');
+    }
     await _ensureProfile(
       user,
       displayName: user.userMetadata?['display_name']?.toString() ?? user.email?.split('@').first ?? 'Usuario',
@@ -102,17 +113,42 @@ class AuthRepository {
     required DateTime birthDate,
     required String privacyPolicyVersion,
     required String termsVersion,
+    required bool termsAccepted,
   }) async {
     final user = currentUser;
     if (user == null) throw AuthException('No hay una sesion activa.');
+    if (!termsAccepted) {
+      throw const FormatException('Debes leer y aceptar los Términos de Servicio.');
+    }
     await _ensureProfile(user, displayName: user.userMetadata?['display_name']?.toString() ?? 'Invitado', emoji: emojiForSeed(user.id));
     final date = '${birthDate.year.toString().padLeft(4, '0')}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}';
     await _supabase.rpc('complete_age_verification', params: {
       'p_birth_date': date,
       'p_privacy_policy_version': privacyPolicyVersion,
-      'p_terms_accepted': true,
+      'p_terms_accepted': termsAccepted,
       'p_terms_version': termsVersion,
     });
+  }
+
+  Future<bool> isAgeVerified() async {
+    final user = currentUser;
+    if (user == null) return false;
+
+    try {
+      final profile = await _supabase
+          .from('users')
+          .select('age_verified_13_plus, age_verified_at, account_status')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      if (profile == null) return false;
+      final isVerified = profile['age_verified_13_plus'] == true;
+      final verifiedAt = profile['age_verified_at'];
+      final accountStatus = profile['account_status'];
+      return isVerified && verifiedAt != null && accountStatus == 'active';
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> signOut() {
@@ -137,79 +173,62 @@ class AuthRepository {
       throw StateError('Debes escribir ELIMINAR para continuar.');
     }
 
-    try {
-      final backendConfig = await BackendConfig.load();
-      final backendUrl = backendConfig.backendUrl;
-      if (backendUrl != null) {
-        try {
-          final session = _supabase.auth.currentSession;
-          final client = HttpClient();
-          try {
-            final request = await client.postUrl(Uri.parse('$backendUrl/functions/v1/delete-account'));
-            request.headers.contentType = ContentType.json;
-            if (session?.accessToken != null) {
-              request.headers.set(HttpHeaders.authorizationHeader, 'Bearer ${session!.accessToken}');
-            }
-            request.write(jsonEncode({
-              'confirmationText': confirmationText.trim(),
-            }));
-
-            final response = await request.close();
-            final responseBody = await utf8.decoder.bind(response).join();
-            Object? payload;
-            if (responseBody.trim().isNotEmpty) {
-              try {
-                payload = jsonDecode(responseBody);
-              } catch (_) {
-                payload = null;
-              }
-            }
-
-            if (response.statusCode < 200 || response.statusCode >= 300) {
-              final message = payload is Map<String, dynamic> && payload['error'] != null
-                  ? payload['error'].toString()
-                  : 'No se pudo eliminar la cuenta.';
-              throw StateError(message);
-            }
-          } finally {
-            client.close(force: true);
-          }
-
-          await signOut();
-          return;
-        } on SocketException {
-          // Fall through to the legacy path.
-        } on HttpException {
-          // Fall through to the legacy path.
-        } on HandshakeException {
-          // Fall back to the legacy Supabase Function path if the backend is unavailable.
+    final backendConfig = await BackendConfig.load();
+    final backendUrl = backendConfig.backendUrl;
+    if (backendUrl != null) {
+      final session = _supabase.auth.currentSession;
+      final client = HttpClient();
+      try {
+        final request = await client.postUrl(Uri.parse('$backendUrl/functions/v1/delete-account'));
+        request.headers.contentType = ContentType.json;
+        if (session?.accessToken != null) {
+          request.headers.set(HttpHeaders.authorizationHeader, 'Bearer ${session!.accessToken}');
         }
-      }
-
-      final response = await _supabase.functions.invoke(
-        'delete-account',
-        body: {
+        request.write(jsonEncode({
           'confirmationText': confirmationText.trim(),
-        },
-      );
+        }));
 
-      if (response.status < 200 || response.status >= 300) {
-        final payload = response.data;
-        final message = payload is Map<String, dynamic> && payload['error'] != null
-            ? payload['error'].toString()
-            : 'No se pudo eliminar la cuenta.';
-        throw StateError(message);
+        final response = await request.close();
+        final responseBody = await utf8.decoder.bind(response).join();
+        Object? payload;
+        if (responseBody.trim().isNotEmpty) {
+          try {
+            payload = jsonDecode(responseBody);
+          } catch (_) {
+            payload = null;
+          }
+        }
+
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          final message = payload is Map<String, dynamic> && payload['error'] != null
+              ? payload['error'].toString()
+              : 'No se pudo eliminar la cuenta de la base de datos de autenticación.';
+          throw StateError(message);
+        }
+
+        await signOut();
+        return;
+      } finally {
+        client.close(force: true);
       }
-
-      await signOut();
-    } on FunctionException catch (error) {
-      if (error.status != 404) {
-        rethrow;
-      }
-
-      await _softDeleteCurrentAccount(user);
-      await signOut();
     }
+
+    final response = await _supabase.functions.invoke(
+      'delete-account',
+      body: {
+        'confirmationText': confirmationText.trim(),
+      },
+    );
+
+    if (response.status < 200 || response.status >= 300) {
+      final payload = response.data;
+      final message = payload is Map<String, dynamic> && payload['error'] != null
+          ? payload['error'].toString()
+          : 'No se pudo eliminar la cuenta.';
+      throw StateError(message);
+    }
+
+    await signOut();
   }
 
   User? get currentUser => _supabase.auth.currentUser;
@@ -262,57 +281,7 @@ class AuthRepository {
     );
   }
 
-  Future<void> _softDeleteCurrentAccount(User user) async {
-    await Future.wait([
-      _bestEffort(() => _supabase.from('user_hidden_words').delete().eq('user_id', user.id)),
-      _bestEffort(() => _supabase.from('user_blocked_users').delete().eq('user_id', user.id)),
-      _bestEffort(() => _supabase.from('user_message_filter_settings').delete().eq('user_id', user.id)),
-      _bestEffort(() => _supabase.from('notifications').delete().eq('user_id', user.id)),
-      _bestEffort(() => _supabase.from('user_push_devices').delete().eq('user_id', user.id)),
-      _bestEffort(() => _supabase.from('reactions').delete().eq('user_id', user.id)),
-      _bestEffort(() => _supabase.from('group_members').delete().eq('user_id', user.id)),
-      _bestEffort(() => _supabase.from('group_photos').delete().eq('uploaded_by', user.id)),
-      _bestEffort(() => _supabase.from('users').update({
-            'username': 'deleted_${user.id.substring(0, 8)}',
-            'display_name': 'Cuenta eliminada',
-            'avatar_url': null,
-            'emoji': '🙂',
-          }).eq('id', user.id)),
-      _bestEffort(() async {
-        final avatarFiles = await _supabase.storage.from('avatars').list(
-              path: user.id,
-              searchOptions: const SearchOptions(
-                limit: 1000,
-                offset: 0,
-              ),
-            );
-        final avatarPaths = avatarFiles
-            .map((file) => '${user.id}/${file.name}')
-            .where((path) => path.trim().isNotEmpty)
-            .toSet()
-            .toList();
-        if (avatarPaths.isNotEmpty) {
-          await _supabase.storage.from('avatars').remove(avatarPaths);
-        }
-      }),
-      _bestEffort(() async {
-        final photoRows = await _supabase
-            .from('group_photos')
-            .select('storage_path')
-            .eq('uploaded_by', user.id);
-        final photoPaths = (photoRows as List<dynamic>)
-            .whereType<Map<String, dynamic>>()
-            .map((row) => row['storage_path']?.toString().trim())
-            .whereType<String>()
-            .where((path) => path.isNotEmpty)
-            .toSet()
-            .toList();
-        if (photoPaths.isNotEmpty) {
-          await _supabase.storage.from('group-photos').remove(photoPaths);
-        }
-      }),
-    ]);
-  }
+
 
   Future<void> _bestEffort(Future<void> Function() action) async {
     try {
@@ -368,8 +337,8 @@ class AuthController extends StateNotifier<local_auth.AuthState> {
     await _repository.signInWithEmail(email: email, password: password);
   }
 
-  Future<void> signUpWithEmail(String name, String email, String password, DateTime birthDate) async {
-    await _repository.signUpWithEmail(name: name, email: email, password: password, birthDate: birthDate);
+  Future<void> signUpWithEmail(String name, String email, String password, DateTime birthDate, {bool termsAccepted = true}) async {
+    await _repository.signUpWithEmail(name: name, email: email, password: password, birthDate: birthDate, termsAccepted: termsAccepted);
   }
 
   Future<void> signInAnonymously() async {

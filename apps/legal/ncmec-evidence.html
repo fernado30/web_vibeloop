@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#fbfaf7">
+  <meta name="description" content="Evidencia y Cadena de Custodia del Proceso de Reporte NCMEC / Autoridades Regionales de Nadie.">
+  <title>Evidencia de Proceso de Reporte NCMEC | Nadie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="icon" type="image/png" href="./vibeloop-icon.png">
+</head>
+<body>
+  <header class="topbar shell">
+    <a class="brand" href="./index.html" aria-label="Inicio legal de Nadie">
+      <span class="brand-dot"></span>
+      <span>Nadie</span>
+    </a>
+    <nav class="topnav" aria-label="Páginas legales">
+      <a href="./privacy.html">Política de privacidad</a>
+      <a href="./terms.html">Términos de servicio</a>
+      <a href="./csam-policy.html">Seguridad Infantil (CSAM)</a>
+      <a href="./ncmec-evidence.html" class="active">Evidencia NCMEC</a>
+      <a href="./delete-account.html">Eliminación de cuenta</a>
+      <a href="./index.html">Inicio</a>
+    </nav>
+  </header>
+
+  <main class="shell document" id="top">
+    <section class="doc-hero">
+      <p class="kicker">seguridad infantil & evidencia policial</p>
+      <h1>Evidencia del Proceso de Reporte a NCMEC / Autoridades</h1>
+      <p class="updated">Última actualización: 22 de julio de 2026</p>
+      <p class="intro">
+        Este documento constituye la <strong>Evidencia Demostrable de Cumplimiento Operativo</strong> ante Google Play y la ley federal de EE. UU. (18 U.S.C. § 2258A) referente a la remisión de informes de abuso sexual infantil al <strong>National Center for Missing & Exploited Children (NCMEC)</strong> y autoridades regionales de ciberdelincuencia.
+      </p>
+    </section>
+
+    <section class="doc-section">
+      <h2>1. Estructura Estándar del Expediente de Evidencia (JSON Schema)</h2>
+      <p>
+        Cuando el equipo de moderación marca un incidente como <em>Escalamiento CSAM</em>, la plataforma genera automáticamente un archivo estandarizado conteniendo la cadena de custodia preservada durante 90 días:
+      </p>
+      <pre style="background: #1e293b; color: #f8fafc; padding: 16px; border-radius: 12px; overflow-x: auto; font-size: 13px;"><code>{
+  "incident_type": "CSAM / Child Sexual Exploitation Report",
+  "ncmec_cybertip_target": "https://report.cybertip.org",
+  "generated_at": "2026-08-05T10:54:00.000Z",
+  "service_provider": {
+    "app_name": "Nadie",
+    "legal_entity": "Nadie Legal & Compliance",
+    "contact_email": "emotivanadie@gmail.com"
+  },
+  "incident_data": {
+    "report_id": "rep_9f83a2d1",
+    "reported_at": "2026-08-05T10:40:00.000Z",
+    "target_type": "message",
+    "target_id": "msg_0182374",
+    "group_name": "Grupo de Prueba",
+    "reason_category": "Explotación o abuso sexual infantil (CSAE/CSAM)",
+    "reporter_details": "Denuncia in-app recibida",
+    "content_snapshot": "[REMOVED_AND_HASHED_FOR_SAFETY]",
+    "moderator_notes": "[ESCALAMIENTO OBLIGATORIO CSAM/NCMEC] Contenido purgado y usuario baneado."
+  },
+  "law_enforcement_chain_of_custody": {
+    "evidence_preservation_period": "90 días (18 U.S.C. § 2258A)",
+    "status": "CONTENT_REMOVED_USER_BANNED_EVIDENCE_ISOLATED"
+  }
+}</code></pre>
+    </section>
+
+    <section class="doc-section">
+      <h2>2. Flujo de Envío a NCMEC CyberTipline</h2>
+      <ol style="padding-left: 20px; line-height: 1.8;">
+        <li><strong>Recepción y Triage:</strong> La denuncia es identificada in-app o vía <code>emotivanadie@gmail.com</code>.</li>
+        <li><strong>Ejecución del In-App Action:</strong> El moderador presiona <code>🚨 Retirar y Escalar a NCMEC</code> en el panel admin.</li>
+        <li><strong>Inhabilitación Inmediata:</strong> El contenido se elimina de base de datos y Storage en &lt; 15 minutos; la cuenta del infractor es revocada y baneada.</li>
+        <li><strong>Descarga de Expediente Auditado:</strong> El panel genera el archivo <code>.json</code> estandarizado para la custodia legal.</li>
+        <li><strong>Remisión a NCMEC:</strong> Los datos se cargan en el portal oficial <a href="https://report.cybertip.org" target="_blank" rel="noopener">NCMEC CyberTipline Portal</a> o se remiten a las unidades de ciberdelincuencia de la policía regional.</li>
+      </ol>
+    </section>
+
+    <section class="doc-section">
+      <h2>3. Cumplimiento Normativo de Conservación</h2>
+      <p>
+        De acuerdo con el artículo 18 U.S.C. § 2258A y directrices de Google Play, la evidencia no se destruye de inmediato si está vinculada a una investigación criminal; se aísla en almacenamiento encriptado seguro durante un periodo estricto de <strong>90 días</strong>, garantizando que el material no esté visible a ningún usuario en la plataforma.
+      </p>
+    </section>
+
+    <div class="doc-footer-nav">
+      <a href="#top" class="back-to-top">↑ Volver arriba</a>
+    </div>
+  </main>
+
+  <footer class="shell footer">
+    <p>Nadie Legal & Compliance — Evidencia de Cumplimiento de Reporte NCMEC.</p>
+  </footer>
+</body>
+</html>
