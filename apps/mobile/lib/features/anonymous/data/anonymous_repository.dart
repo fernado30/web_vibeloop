@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/safety/perspective_service.dart';
 import '../../settings/data/safety_repository.dart';
 import '../domain/anonymous_message_model.dart';
 
@@ -18,17 +19,31 @@ class AnonymousRepository {
   SupabaseClient get _supabase => _client;
 
   Future<List<AnonymousMessageModel>> fetchAnonymousMessages(String groupId) async {
-    final rows = await _supabase
-        .from('anonymous_messages')
-        .select('id, group_id, content, reactions, created_at')
-        .eq('group_id', groupId)
-        .order('created_at', ascending: false);
+    dynamic rows;
+    try {
+      rows = await _supabase
+          .from('anonymous_messages')
+          .select('id, group_id, content, reactions, is_flagged, created_at')
+          .eq('group_id', groupId)
+          .order('created_at', ascending: false);
+    } catch (_) {
+      rows = await _supabase
+          .from('anonymous_messages')
+          .select('id, group_id, content, reactions, created_at')
+          .eq('group_id', groupId)
+          .order('created_at', ascending: false);
+    }
 
     final messages = (rows as List<dynamic>).map((row) {
       final json = Map<String, dynamic>.from(row as Map);
+      final isFlagged = json['is_flagged'] == true;
+      final content = json['content']?.toString() ?? '';
+      if (isFlagged || PerspectiveService.isLocalProfane(content)) {
+        return null;
+      }
       json['reactions'] = _reactionCounts(json['reactions']);
       return AnonymousMessageModel.fromJson(json);
-    }).toList();
+    }).whereType<AnonymousMessageModel>().toList();
 
     try {
       return await SafetyRepository(_supabase).filterAnonymousMessages(messages);

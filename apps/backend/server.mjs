@@ -21,6 +21,56 @@ const corsAllowMethods = 'GET, POST, OPTIONS';
 
 const inviteCodePattern = /^[a-zA-Z0-9_-]{4,64}$/;
 
+const perspectiveApiKey = (process.env.PERSPECTIVE_API_KEY ?? 'AIzaSyBBNbrPJZclEg5mWhZ4lxbrJstD8E2zlIA').trim();
+
+async function checkPerspectiveToxicity(text) {
+  if (!text || typeof text !== 'string' || !text.trim()) {
+    return { isToxic: false, score: 0, attribute: 'TOXICITY' };
+  }
+  try {
+    const url = `https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${perspectiveApiKey}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        comment: { text },
+        languages: ['es', 'en'],
+        requestedAttributes: {
+          TOXICITY: {},
+          SEVERE_TOXICITY: {},
+          INSULT: {},
+          PROFANITY: {},
+          THREAT: {},
+          IDENTITY_ATTACK: {}
+        }
+      })
+    });
+    if (!res.ok) {
+      console.error('Perspective API error:', await res.text());
+      return { isToxic: false, score: 0, attribute: 'TOXICITY' };
+    }
+    const data = await res.json();
+    const scores = data.attributeScores || {};
+    let maxScore = 0;
+    let maxAttr = 'TOXICITY';
+    for (const [attr, val] of Object.entries(scores)) {
+      const score = val?.summaryScore?.value || 0;
+      if (score > maxScore) {
+        maxScore = score;
+        maxAttr = attr;
+      }
+    }
+    return {
+      isToxic: maxScore >= 0.70,
+      score: maxScore,
+      attribute: maxAttr
+    };
+  } catch (err) {
+    console.error('Perspective API fetch exception:', err);
+    return { isToxic: false, score: 0, attribute: 'TOXICITY' };
+  }
+}
+
 export function isUnder13(birthDate) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return null;
   const date = new Date(`${birthDate}T00:00:00Z`);
@@ -486,7 +536,10 @@ async function handleSendAnonymousMessage(req) {
     return jsonResponse({ error: 'Este enlace de invitacion esta pausado.' }, 403);
   }
 
-  const insertResponse = await supabaseRest('/rest/v1/anonymous_messages', {
+  const perspective = await checkPerspectiveToxicity(content);
+  const isFlaggedByAi = perspective.isToxic;
+
+  let insertResponse = await supabaseRest('/rest/v1/anonymous_messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -495,8 +548,23 @@ async function handleSendAnonymousMessage(req) {
     body: JSON.stringify({
       group_id: group.id,
       content,
+      is_flagged: isFlaggedByAi,
     }),
   });
+
+  if (!insertResponse.ok) {
+    insertResponse = await supabaseRest('/rest/v1/anonymous_messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify({
+        group_id: group.id,
+        content,
+      }),
+    });
+  }
 
   if (!insertResponse.ok) {
     const errorText = await insertResponse.text();
@@ -506,14 +574,29 @@ async function handleSendAnonymousMessage(req) {
   const data = await insertResponse.json().catch(() => []);
   const message = Array.isArray(data) ? data[0] : data;
 
-  await dispatchGroupPush({
-    groupId: group.id,
-    title: 'Mensaje anónimo',
-    body: 'Te han enviado un mensaje anónimo',
-    route: `/groups/${group.id}/anonymous`,
-    category: 'anonymous',
-    groupName: String(group.name ?? '').trim(),
-  });
+  if (isFlaggedByAi && message?.id) {
+    await supabaseRest('/rest/v1/content_reports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        target_type: 'anonymous_message',
+        target_id: message.id,
+        reason: `Google Perspective AI: Contenido ${perspective.attribute} (${Math.round(perspective.score * 100)}%)`,
+        details: `Origen: Buzón Web | Grupo: ${group.name || group.id} | Score: ${Math.round(perspective.score * 100)}%`,
+        content_snapshot: content,
+        status: 'pending',
+      }),
+    });
+  } else {
+    await dispatchGroupPush({
+      groupId: group.id,
+      title: 'Mensaje anónimo',
+      body: 'Te han enviado un mensaje anónimo',
+      route: `/groups/${group.id}/anonymous`,
+      category: 'anonymous',
+      groupName: String(group.name ?? '').trim(),
+    });
+  }
 
   return jsonResponse({ success: true, id: message?.id ?? null }, 200);
 }

@@ -150,9 +150,9 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () => context.push('/groups/settings/blocked-users'),
               ),
               _SettingsRow(
-                icon: Icons.gavel_rounded,
-                title: 'Cola de moderación',
-                subtitle: 'Gestiona denuncias de contenido y sanciones',
+                icon: Icons.shield_outlined,
+                title: 'Mis denuncias',
+                subtitle: 'Consulta el estado y resultado de tus reportes',
                 onTap: () => context.push('/groups/settings/moderation-queue'),
               ),
               _SettingsRow(

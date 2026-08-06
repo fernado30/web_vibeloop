@@ -35,58 +35,63 @@ class _StitchPlatformOnboardingScreenState extends ConsumerState<StitchPlatformO
     return OnboardingShell(
       backgroundSeed: 1,
       child: SafeArea(
-        bottom: false,
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final topPadding = MediaQuery.paddingOf(context).top;
+            final bottomPadding = MediaQuery.paddingOf(context).bottom;
+            final availableHeight = constraints.maxHeight - topPadding - bottomPadding;
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight - MediaQuery.paddingOf(context).top),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 36),
-                    _GradientHeadline(
-                      firstLine: '¿Dónde quieres',
-                      secondLine: 'utilizar ',
-                      gradientWord: 'Nadie',
-                      trailing: '?',
-                    ),
-                    const SizedBox(height: 14),
-                    const _BodyCopy(
-                      'Elige la plataforma donde quieres recibir mensajes.',
-                      align: TextAlign.center,
-                      width: 300,
-                    ),
-                    const SizedBox(height: 24),
-                    _PlatformCard(
-                      icon: const _InstagramMark(size: 50),
-                      label: 'Instagram',
-                      selected: _selectedChoice == _PlatformChoice.instagram,
-                      onTap: () => setState(() => _selectedChoice = _PlatformChoice.instagram),
-                    ),
-                    const SizedBox(height: 18),
-                    _PlatformCard(
-                      icon: const _WhatsAppMark(size: 50),
-                      label: 'WhatsApp',
-                      selected: _selectedChoice == _PlatformChoice.whatsapp,
-                      onTap: () => setState(() => _selectedChoice = _PlatformChoice.whatsapp),
-                    ),
-                    const SizedBox(height: 24),
-                    _GradientActionButton(
-                      label: 'Continuar',
-                      onPressed: _continue,
-                      icon: Icons.arrow_forward_ios_rounded,
-                    ),
-                    const SizedBox(height: 18),
-                    const _PrivacyNote(
-                      leading: 'Tu privacidad es nuestra prioridad.',
-                      trailing: 'Conoce nuestra ',
-                      highlighted: 'Política de privacidad.',
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+                constraints: BoxConstraints(
+                  minHeight: availableHeight - 24,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    children: [
+                      const Spacer(flex: 2),
+                      _GradientHeadline(
+                        firstLine: '¿Dónde quieres',
+                        secondLine: 'utilizar ',
+                        gradientWord: 'Nadie',
+                        trailing: '?',
+                      ),
+                      const SizedBox(height: 10),
+                      const _BodyCopy(
+                        'Elige la plataforma donde quieres recibir mensajes.',
+                        align: TextAlign.center,
+                        width: 320,
+                      ),
+                      const Spacer(flex: 3),
+                      _PlatformCard(
+                        icon: const _InstagramMark(size: 42),
+                        label: 'Instagram',
+                        selected: _selectedChoice == _PlatformChoice.instagram,
+                        onTap: () => setState(() => _selectedChoice = _PlatformChoice.instagram),
+                      ),
+                      const SizedBox(height: 14),
+                      _PlatformCard(
+                        icon: const _WhatsAppMark(size: 42),
+                        label: 'WhatsApp',
+                        selected: _selectedChoice == _PlatformChoice.whatsapp,
+                        onTap: () => setState(() => _selectedChoice = _PlatformChoice.whatsapp),
+                      ),
+                      const Spacer(flex: 3),
+                      _GradientActionButton(
+                        label: 'Continuar',
+                        onPressed: _continue,
+                        icon: Icons.arrow_forward_ios_rounded,
+                      ),
+                      const SizedBox(height: 16),
+                      const _PrivacyNote(
+                        leading: 'Tu privacidad es nuestra prioridad.',
+                        trailing: 'Conoce nuestra ',
+                        highlighted: 'Política de privacidad.',
+                      ),
+                      const Spacer(flex: 1),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -148,52 +153,57 @@ class _StitchUsernameOnboardingScreenState extends ConsumerState<StitchUsernameO
     return OnboardingShell(
       backgroundSeed: 2,
       child: SafeArea(
-        bottom: false,
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final topPadding = MediaQuery.paddingOf(context).top;
+            final bottomPadding = MediaQuery.paddingOf(context).bottom;
+            final availableHeight = constraints.maxHeight - topPadding - bottomPadding;
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight - MediaQuery.paddingOf(context).top),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 22),
-                    const _UserIllustration(),
-                    const SizedBox(height: 18),
-                    _GradientHeadline(
-                      firstLine: 'Elige tu nombre',
-                      secondLine: 'de ',
-                      gradientWord: 'usuario',
-                      trailing: '',
-                    ),
-                    const SizedBox(height: 14),
-                    const _BodyCopy(
-                      'Este será tu alias en el grupo.\nPuedes cambiarlo después.',
-                      align: TextAlign.center,
-                      width: 300,
-                    ),
-                    const SizedBox(height: 24),
-                    _UsernameField(
-                      controller: _controller,
-                      focusNode: _focusNode,
-                    ),
-                    const SizedBox(height: 22),
-                    _GradientActionButton(
-                      label: 'Continuar',
-                      onPressed: _continue,
-                      icon: Icons.arrow_forward_ios_rounded,
-                    ),
-                    const SizedBox(height: 24),
-                    const _PrivacyNote(
-                      leading: 'Al continuar, aceptas nuestras',
-                      trailing: '',
-                      highlighted: 'Condiciones y Política de privacidad.',
-                      centerTopPadding: 0,
-                    ),
-                    const SizedBox(height: 14),
-                  ],
+                constraints: BoxConstraints(
+                  minHeight: availableHeight - 24,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    children: [
+                      const Spacer(flex: 2),
+                      const _UserIllustration(),
+                      const SizedBox(height: 14),
+                      _GradientHeadline(
+                        firstLine: 'Elige tu nombre',
+                        secondLine: 'de ',
+                        gradientWord: 'usuario',
+                        trailing: '',
+                      ),
+                      const SizedBox(height: 10),
+                      const _BodyCopy(
+                        'Este será tu alias en el grupo.\nPuedes cambiarlo después.',
+                        align: TextAlign.center,
+                        width: 320,
+                      ),
+                      const Spacer(flex: 3),
+                      _UsernameField(
+                        controller: _controller,
+                        focusNode: _focusNode,
+                      ),
+                      const Spacer(flex: 3),
+                      _GradientActionButton(
+                        label: 'Continuar',
+                        onPressed: _continue,
+                        icon: Icons.arrow_forward_ios_rounded,
+                      ),
+                      const SizedBox(height: 16),
+                      const _PrivacyNote(
+                        leading: 'Al continuar, aceptas nuestras',
+                        trailing: '',
+                        highlighted: 'Condiciones y Política de privacidad.',
+                        centerTopPadding: 0,
+                      ),
+                      const Spacer(flex: 1),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -437,14 +447,14 @@ class _UserIllustration extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
-      width: 140,
-      height: 140,
+      width: 110,
+      height: 110,
       child: Stack(
         alignment: Alignment.center,
         children: [
           Container(
-            width: 96,
-            height: 96,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: const SweepGradient(
@@ -458,14 +468,14 @@ class _UserIllustration extends StatelessWidget {
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFF7A41FF).withValues(alpha: isDark ? 0.35 : 0.15),
-                  blurRadius: 18,
+                  blurRadius: 14,
                 ),
               ],
             ),
           ),
           Container(
-            width: 88,
-            height: 88,
+            width: 72,
+            height: 72,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isDark ? const Color(0xFF090816) : Colors.white,
@@ -474,21 +484,21 @@ class _UserIllustration extends StatelessWidget {
           Icon(
             Icons.person_outline_rounded,
             color: isDark ? Colors.white : VibeColors.primaryViolet,
-            size: 48,
+            size: 38,
           ),
           Positioned(
-            left: 22,
-            top: 60,
+            left: 18,
+            top: 48,
             child: Container(
-              width: 8,
-              height: 8,
+              width: 7,
+              height: 7,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: const Color(0xFF8F63FF),
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF8F63FF).withValues(alpha: 0.9),
-                    blurRadius: 10,
+                    blurRadius: 8,
                   ),
                 ],
               ),
@@ -519,16 +529,16 @@ class _GradientHeadline extends StatelessWidget {
     final style = TextStyle(
       color: isDark ? Colors.white : VibeColors.textPrimary,
       fontSize: 32,
-      height: 1.1,
+      height: 1.15,
       fontWeight: FontWeight.w800,
-      letterSpacing: -1.0,
+      letterSpacing: -0.8,
     );
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(firstLine, textAlign: TextAlign.center, style: style),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
         Wrap(
           alignment: WrapAlignment.center,
           crossAxisAlignment: WrapCrossAlignment.center,
@@ -595,11 +605,11 @@ class _BodyCopy extends StatelessWidget {
         text,
         textAlign: align,
         style: TextStyle(
-          color: isDark ? Colors.white.withValues(alpha: 0.62) : VibeColors.textSecondary,
-          fontSize: 18,
+          color: isDark ? Colors.white.withValues(alpha: 0.82) : VibeColors.textSecondary,
+          fontSize: 19.5,
           height: 1.45,
-          fontWeight: FontWeight.w400,
-          letterSpacing: -0.2,
+          fontWeight: FontWeight.w500,
+          letterSpacing: -0.3,
         ),
       ),
     );
@@ -643,60 +653,60 @@ class _PlatformCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 104,
+        height: 74,
         decoration: BoxDecoration(
           gradient: borderGradient,
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(22),
           boxShadow: selected
               ? [
                   BoxShadow(
                     color: isDark
-                        ? const Color(0xFF7A41FF).withValues(alpha: 0.3)
-                        : const Color(0xFF7A41FF).withValues(alpha: 0.15),
-                    blurRadius: 24,
-                    offset: const Offset(0, 10),
+                        ? const Color(0xFF7A41FF).withValues(alpha: 0.25)
+                        : const Color(0xFF7A41FF).withValues(alpha: 0.12),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
                   ),
                 ]
               : [
                   if (!isDark)
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
                 ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(2),
+          padding: const EdgeInsets.all(1.5),
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF141227) : Colors.white,
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(20.5),
               boxShadow: [
                 BoxShadow(
                   color: isDark
-                      ? Colors.black.withValues(alpha: 0.22)
+                      ? Colors.black.withValues(alpha: 0.20)
                       : Colors.black.withValues(alpha: 0.02),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
                   _PlatformIconShell(selected: selected, child: icon),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Text(
                       label,
                       style: TextStyle(
                         color: isDark ? Colors.white : VibeColors.textPrimary,
-                        fontSize: 20,
+                        fontSize: 18,
                         height: 1.0,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: -0.6,
+                        letterSpacing: -0.4,
                       ),
                     ),
                   ),
@@ -723,14 +733,14 @@ class _PlatformIconShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 58,
-      height: 58,
+      width: 44,
+      height: 44,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: selected ? const Color(0xFFB44DFF).withValues(alpha: 0.22) : Colors.transparent,
-            blurRadius: 14,
+            color: selected ? const Color(0xFFB44DFF).withValues(alpha: 0.20) : Colors.transparent,
+            blurRadius: 10,
           ),
         ],
       ),
@@ -749,8 +759,8 @@ class _PlatformCheck extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     if (selected) {
       return Container(
-        width: 46,
-        height: 46,
+        width: 32,
+        height: 32,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: const LinearGradient(
@@ -760,23 +770,23 @@ class _PlatformCheck extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFB44DFF).withValues(alpha: 0.5),
-              blurRadius: 18,
+              color: const Color(0xFFB44DFF).withValues(alpha: 0.4),
+              blurRadius: 12,
             ),
           ],
         ),
-        child: const Icon(Icons.check_rounded, color: Colors.white, size: 32),
+        child: const Icon(Icons.check_rounded, color: Colors.white, size: 20),
       );
     }
 
     return Container(
-      width: 44,
-      height: 44,
+      width: 30,
+      height: 30,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
           color: isDark ? const Color(0xFF4A476F) : const Color(0xFFD0D5DD),
-          width: 3,
+          width: 2.5,
         ),
       ),
     );
@@ -882,9 +892,9 @@ class _GradientActionButton extends StatelessWidget {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        height: 80,
+        height: 56,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(38),
+          borderRadius: BorderRadius.circular(28),
           gradient: const LinearGradient(
             colors: [Color(0xFF6747FF), Color(0xFF7F5BFF), Color(0xFFFF4BB0)],
             begin: Alignment.centerLeft,
@@ -892,9 +902,9 @@ class _GradientActionButton extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF8B5BFF).withValues(alpha: isDark ? 0.42 : 0.22),
-              blurRadius: 18,
-              offset: const Offset(0, 10),
+              color: const Color(0xFF8B5BFF).withValues(alpha: isDark ? 0.35 : 0.18),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -906,13 +916,13 @@ class _GradientActionButton extends StatelessWidget {
                 label,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
+                  fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: -0.6,
+                  letterSpacing: -0.4,
                 ),
               ),
-              const SizedBox(width: 10),
-              Icon(icon, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Icon(icon, color: Colors.white, size: 16),
             ],
           ),
         ),
@@ -938,9 +948,9 @@ class _PrivacyNote extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final baseStyle = TextStyle(
-      color: isDark ? Colors.white.withValues(alpha: 0.62) : VibeColors.textSecondary,
-      fontSize: 17,
-      height: 1.35,
+      color: isDark ? Colors.white.withValues(alpha: 0.78) : VibeColors.textSecondary,
+      fontSize: 16,
+      height: 1.4,
       fontWeight: FontWeight.w500,
       letterSpacing: -0.2,
     );
@@ -952,8 +962,8 @@ class _PrivacyNote extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock_outline_rounded, color: Color(0xFFB055FF), size: 24),
-              const SizedBox(width: 10),
+              const Icon(Icons.lock_outline_rounded, color: Color(0xFFB055FF), size: 22),
+              const SizedBox(width: 6),
               Flexible(
                 child: Text(
                   leading,
@@ -964,7 +974,7 @@ class _PrivacyNote extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         Wrap(
           alignment: WrapAlignment.center,
           crossAxisAlignment: WrapCrossAlignment.center,
@@ -996,31 +1006,31 @@ class _UsernameField extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      height: 92,
+      height: 64,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF457BFF), Color(0xFF8B50FF), Color(0xFFFF4BC7)],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
-        borderRadius: BorderRadius.circular(34),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF5D68FF).withValues(alpha: isDark ? 0.25 : 0.10),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: const Color(0xFF5D68FF).withValues(alpha: isDark ? 0.22 : 0.08),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(2),
+        padding: const EdgeInsets.all(1.5),
         child: Stack(
           clipBehavior: Clip.none,
           children: [
             Container(
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF151227) : Colors.white,
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(18.5),
               ),
               child: TextField(
                 controller: controller,
@@ -1028,29 +1038,30 @@ class _UsernameField extends StatelessWidget {
                 cursorColor: isDark ? Colors.white : VibeColors.primaryViolet,
                 style: TextStyle(
                   color: isDark ? Colors.white : VibeColors.textPrimary,
-                  fontSize: 19,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
                   letterSpacing: -0.3,
                 ),
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 28),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                   prefixIcon: Padding(
-                    padding: const EdgeInsets.only(left: 20, right: 14),
+                    padding: const EdgeInsets.only(left: 16, right: 10),
                     child: ShaderMask(
                       shaderCallback: (bounds) => const LinearGradient(
                         colors: [Color(0xFF7A5BFF), Color(0xFFFF55D6)],
                       ).createShader(bounds),
-                      child: const Icon(Icons.alternate_email_rounded, color: Colors.white, size: 34),
+                      child: const Icon(Icons.alternate_email_rounded, color: Colors.white, size: 24),
                     ),
                   ),
-                  prefixIconConstraints: const BoxConstraints(minWidth: 54, minHeight: 54),
+                  prefixIconConstraints: const BoxConstraints(minWidth: 46, minHeight: 64),
                   hintText: 'Tu nombre de usuario',
                   hintStyle: TextStyle(
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.48)
                         : const Color(0xFF98A2B3),
-                    fontSize: 23,
+                    fontSize: 17,
                     fontWeight: FontWeight.w400,
                     letterSpacing: -0.3,
                   ),
@@ -1058,18 +1069,18 @@ class _UsernameField extends StatelessWidget {
               ),
             ),
             Positioned(
-              top: -5,
-              right: 8,
+              top: -4,
+              right: 12,
               child: Container(
-                width: 10,
-                height: 10,
+                width: 8,
+                height: 8,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: const Color(0xFFFF4DD1),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFFFF4DD1).withValues(alpha: 0.9),
-                      blurRadius: 12,
+                      blurRadius: 10,
                     ),
                   ],
                 ),

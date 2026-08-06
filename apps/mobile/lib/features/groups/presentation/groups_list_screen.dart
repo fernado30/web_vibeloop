@@ -526,7 +526,7 @@ class _GroupsRichHeader extends StatelessWidget {
   }
 }
 
-class _GroupsSearchField extends StatelessWidget {
+class _GroupsSearchField extends StatefulWidget {
   const _GroupsSearchField({
     required this.controller,
     required this.onChanged,
@@ -536,53 +536,100 @@ class _GroupsSearchField extends StatelessWidget {
   final ValueChanged<String> onChanged;
 
   @override
+  State<_GroupsSearchField> createState() => _GroupsSearchFieldState();
+}
+
+class _GroupsSearchFieldState extends State<_GroupsSearchField> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onTextChange);
+  }
+
+  @override
+  void didUpdateWidget(covariant _GroupsSearchField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_onTextChange);
+      widget.controller.addListener(_onTextChange);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onTextChange);
+    super.dispose();
+  }
+
+  void _onTextChange() {
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? const Color(0xFF1A2034).withValues(alpha: 0.92) : Colors.white.withValues(alpha: 0.9);
-    final border = isDark ? const Color(0xFF2A3550) : const Color(0xFFE6E8F0);
+    final bg = isDark ? const Color(0xFF182032) : Colors.white;
+    final border = isDark ? const Color(0xFF2B364F) : const Color(0xFFE2E6F0);
     final shadow = isDark
-        ? Colors.black.withValues(alpha: 0.3)
-        : const Color(0xFF7680A8).withValues(alpha: 0.12);
+        ? Colors.black.withValues(alpha: 0.25)
+        : const Color(0xFF636D9A).withValues(alpha: 0.10);
+    final hasText = widget.controller.text.isNotEmpty;
 
     return Container(
-      height: 54,
+      height: 52,
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: border),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: border, width: 1.2),
         boxShadow: [
           BoxShadow(
             color: shadow,
             blurRadius: 18,
-            offset: const Offset(0, 8),
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        style: TextStyle(
-          color: isDark ? const Color(0xFFF4F7FF) : VibeColors.primaryDeepBlue,
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-        ),
-        decoration: InputDecoration(
-          hintText: 'Buscar grupo...',
-          hintStyle: TextStyle(
-            color: isDark ? const Color(0xFF7B86A6) : const Color(0xFF8B93A7),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(26),
+        child: TextField(
+          controller: widget.controller,
+          onChanged: widget.onChanged,
+          style: TextStyle(
+            color: isDark ? const Color(0xFFF4F7FF) : VibeColors.primaryDeepBlue,
             fontSize: 15,
             fontWeight: FontWeight.w500,
           ),
-          prefixIcon: Icon(
-            Icons.search_rounded,
-            size: 22,
-            color: isDark ? const Color(0xFF7B86A6) : const Color(0xFF7A8199),
+          decoration: InputDecoration(
+            hintText: 'Buscar grupo...',
+            hintStyle: TextStyle(
+              color: isDark ? const Color(0xFF7B86A6) : const Color(0xFF8B93A7),
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
+            prefixIcon: Icon(
+              Icons.search_rounded,
+              size: 22,
+              color: isDark ? const Color(0xFF7B86A6) : const Color(0xFF7A8199),
+            ),
+            prefixIconConstraints: const BoxConstraints(minWidth: 48),
+            suffixIcon: hasText
+                ? IconButton(
+                    icon: Icon(
+                      Icons.cancel_rounded,
+                      size: 18,
+                      color: isDark ? const Color(0xFF7B86A6) : const Color(0xFF949DB3),
+                    ),
+                    onPressed: () {
+                      widget.controller.clear();
+                      widget.onChanged('');
+                    },
+                  )
+                : null,
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
-          prefixIconConstraints: const BoxConstraints(minWidth: 52),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
         ),
       ),
     );

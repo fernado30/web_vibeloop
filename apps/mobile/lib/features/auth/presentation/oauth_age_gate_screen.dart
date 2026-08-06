@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/vibe_tokens.dart';
-import '../../../core/widgets/vibe_ui.dart';
 import '../data/auth_repository.dart';
 import 'auth_visuals.dart';
 

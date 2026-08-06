@@ -13,30 +13,30 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .text-gradient-purple {
-            background: linear-gradient(to right, #d8b4fe, #a78bfa);
+            background: linear-gradient(135deg, #ff38b8 0%, #a246ff 50%, #ff007a 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         .nebula-center {
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, rgba(76, 29, 149, 0.1) 50%, transparent 80%);
-            filter: blur(40px);
+            background: radial-gradient(circle, rgba(255, 38, 184, 0.55) 0%, rgba(147, 51, 234, 0.40) 45%, rgba(40, 10, 75, 0.15) 75%, transparent 100%);
+            filter: blur(45px);
         }
         .glow-green-halo { 
-            background: rgba(34, 197, 94, 0.2);
-            box-shadow: 0 0 40px 10px rgba(34, 197, 94, 0.3);
+            background: rgba(34, 197, 94, 0.25);
+            box-shadow: 0 0 40px 10px rgba(34, 197, 94, 0.35);
         }
         .glow-pink-halo {
-            background: rgba(236, 72, 153, 0.2);
-            box-shadow: 0 0 40px 10px rgba(236, 72, 153, 0.3);
+            background: rgba(255, 38, 184, 0.3);
+            box-shadow: 0 0 40px 10px rgba(255, 38, 184, 0.4);
         }
         .glow-gray-halo {
-            background: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 40px 10px rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 40px 10px rgba(255, 255, 255, 0.2);
         }
         
         .orbit-line-static {
             position: absolute;
-            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            border: 1.5px solid rgba(255, 38, 184, 0.25);
             border-radius: 50%;
             transform: rotate(-15deg);
         }
@@ -80,7 +80,7 @@
         }
 
         .galaxy-swirl {
-            background: radial-gradient(ellipse at center, rgba(167, 139, 250, 0.3) 0%, rgba(139, 92, 246, 0.1) 40%, transparent 70%);
+            background: radial-gradient(ellipse at center, rgba(255, 38, 184, 0.45) 0%, rgba(139, 0, 255, 0.28) 45%, transparent 75%);
             transform: rotate(-25deg);
         }</style>
 <style data-purpose="background-styles">
@@ -88,13 +88,16 @@
             font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #0b0a1f;
+            background-color: #120324;
             color: white;
             height: 100vh;
             overflow: hidden;
         }
         .main-bg {
-            background: radial-gradient(circle at 50% 40%, #1a154d 0%, #0b0a1f 80%);
+            background: 
+                radial-gradient(circle at 50% 20%, rgba(255, 38, 184, 0.38) 0%, transparent 55%),
+                radial-gradient(circle at 50% 60%, rgba(139, 0, 255, 0.32) 0%, transparent 60%),
+                linear-gradient(170deg, #32064d 0%, #61044e 35%, #24033b 70%, #0d0218 100%);
             position: relative;
         }
     </style>
@@ -112,11 +115,8 @@
 <!-- BEGIN: Top Content -->
 <section class="mt-8 text-center z-20" data-purpose="branding-section">
 <div class="flex justify-center mb-6">
-<div class="w-16 h-16 border-2 border-white/80 rounded-full flex items-center justify-center p-2">
-<svg class="text-white w-10 h-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-<path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke-linecap="round" stroke-linejoin="round"></path>
-<path d="M12 14.5c-1.5-1.5-1.5-3 0-3s1.5 1.5 0 3z"></path>
-</svg>
+<div class="w-20 h-20 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(255,38,184,0.65),0_0_70px_rgba(139,0,255,0.45)] border border-[#ff38b8]/50">
+<img src="./vibeloop-icon.png" alt="Nadie App Icon" class="w-full h-full object-cover">
 </div>
 </div>
 <h1 class="text-4xl font-bold mb-3 tracking-tight">
@@ -189,7 +189,7 @@
 <!-- END: Central Graphic -->
 <!-- BEGIN: Bottom Actions -->
 <footer class="mt-auto flex flex-col gap-4 z-20" data-purpose="onboarding-actions">
-<button id="explore-button" onclick="if(window.VibeLoop && window.VibeLoop.postMessage) { window.VibeLoop.postMessage('explore'); }" class="w-full bg-transparent hover:bg-white/5 text-white h-14 rounded-3xl font-bold border border-white/20 flex items-center justify-center relative transition-transform active:scale-[0.98]">
+<button id="explore-button" onclick="if(window.VibeLoop && window.VibeLoop.postMessage) { window.VibeLoop.postMessage('explore'); }" class="w-full bg-gradient-to-r from-[#ff2aab]/15 via-[#9900ff]/15 to-[#ff2aab]/15 hover:from-[#ff2aab]/25 hover:to-[#9900ff]/25 text-white h-14 rounded-3xl font-bold border border-[#ff2aab]/40 flex items-center justify-center relative transition-all active:scale-[0.98] shadow-[0_0_20px_rgba(255,42,171,0.25)]">
 <span class="">Explorar</span>
 <svg class="w-5 h-5 absolute right-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>

@@ -1161,135 +1161,132 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 72),
-              decoration: BoxDecoration(
-                color: surfaceColor,
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: borderColor),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.08),
-                    blurRadius: 24,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              child: AnimatedBuilder(
-                animation: _textController,
-                builder: (context, _) {
-                  return Row(
-                    children: [
-                      GestureDetector(
-                        onTap: _openEmojiPicker,
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: iconBackground,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: borderColor),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: isDark ? 0.10 : 0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
+        padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
+        child: AnimatedBuilder(
+          animation: _textController,
+          builder: (context, _) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: surfaceColor,
+                      borderRadius: BorderRadius.circular(26),
+                      border: Border.all(color: borderColor),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.06),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 2, bottom: 4),
+                          child: GestureDetector(
+                            onTap: _openEmojiPicker,
+                            child: Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: iconBackground,
+                                shape: BoxShape.circle,
                               ),
-                            ],
-                          ),
-                          child: Center(
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 180),
-                              switchInCurve: Curves.easeOutCubic,
-                              switchOutCurve: Curves.easeInCubic,
-                              transitionBuilder: (child, animation) {
-                                return ScaleTransition(
-                                  scale: animation,
-                                  child: FadeTransition(opacity: animation, child: child),
-                                );
-                              },
-                              child: Text(
-                                _currentUserEmoji,
-                                key: ValueKey<String>(_currentUserEmoji),
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  height: 1,
+                              child: Center(
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 180),
+                                  switchInCurve: Curves.easeOutCubic,
+                                  switchOutCurve: Curves.easeInCubic,
+                                  transitionBuilder: (child, animation) {
+                                    return ScaleTransition(
+                                      scale: animation,
+                                      child: FadeTransition(opacity: animation, child: child),
+                                    );
+                                  },
+                                  child: Text(
+                                    _currentUserEmoji,
+                                    key: ValueKey<String>(_currentUserEmoji),
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 19,
+                                      height: 1,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Container(
-                          height: 46,
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0F1526) : const Color(0xFFF8FAFF),
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(color: borderColor),
-                          ),
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: TextField(
-                            controller: _textController,
-                            focusNode: _focusNode,
-                            minLines: 1,
-                            maxLines: 1,
-                            textAlignVertical: TextAlignVertical.center,
-                            style: textStyle,
-                            textInputAction: TextInputAction.send,
-                            decoration: InputDecoration(
-                              hintText: 'Escribe un mensaje...',
-                              hintStyle: hintStyle,
-                              border: InputBorder.none,
-                              isCollapsed: true,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                            onSubmitted: (_) => _sendMessage(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      GestureDetector(
-                        onTap: _sendMessage,
-                        child: Container(
-                          width: 46,
-                          height: 46,
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Color(0xFF4F46E5),
-                                Color(0xFF8B5CF6),
-                                Color(0xFFB85BF7),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Center(
-                            child: Icon(
-                              Icons.send_rounded,
-                              size: 22,
-                              color: Colors.white,
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            child: TextField(
+                              controller: _textController,
+                              focusNode: _focusNode,
+                              minLines: 1,
+                              maxLines: 5,
+                              style: textStyle,
+                              textInputAction: TextInputAction.newline,
+                              decoration: InputDecoration(
+                                hintText: 'Escribe un mensaje...',
+                                hintStyle: hintStyle,
+                                border: InputBorder.none,
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                              ),
                             ),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: GestureDetector(
+                    onTap: _sendMessage,
+                    child: Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFF4F46E5),
+                            Color(0xFF8B5CF6),
+                            Color(0xFFB85BF7),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF8B5CF6).withValues(alpha: 0.35),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.send_rounded,
+                          size: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -1757,18 +1754,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                         fontWeight: FontWeight.w800,
-                                        fontSize: 20,
-                                        letterSpacing: -0.4,
+                                        fontSize: 19,
+                                        letterSpacing: -0.3,
                                       ),
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 2),
                                 Text(
                                   '$memberLabel • Privado',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                         color: colorScheme.onSurfaceVariant,
-                                        fontSize: 13,
+                                        fontSize: 12.5,
                                         fontWeight: FontWeight.w600,
                                         decoration: TextDecoration.none,
                                         decorationThickness: 0,
@@ -2143,7 +2140,12 @@ class _ExpandableHeaderActionMenuState extends State<_ExpandableHeaderActionMenu
   }
 
   void _triggerAction(VoidCallback action) {
-    _closeMenu();
+    _removeOverlay();
+    _isOpen = false;
+    _controller.reset();
+    if (mounted) {
+      setState(() {});
+    }
     action();
   }
 
@@ -2182,10 +2184,10 @@ class _ExpandableHeaderActionMenuState extends State<_ExpandableHeaderActionMenu
                 );
               },
               child: Icon(
-                _isOpen ? Icons.keyboard_arrow_down_rounded : Icons.keyboard_arrow_up_rounded,
+                Icons.more_vert_rounded,
                 key: ValueKey<bool>(_isOpen),
                 color: Colors.white,
-                size: 30,
+                size: 22,
               ),
             ),
           ),
@@ -2339,7 +2341,7 @@ class _ExpandableHeaderActionMenuState extends State<_ExpandableHeaderActionMenu
                           ),
                         ],
                       ),
-                      if (widget.onReportGroupTap != null || (widget.showDeleteAction && widget.onDeleteTap != null)) ...[
+                      if (widget.onReportGroupTap != null) ...[
                         const SizedBox(height: 10),
                         Container(
                           height: 1,
@@ -2348,58 +2350,30 @@ class _ExpandableHeaderActionMenuState extends State<_ExpandableHeaderActionMenu
                         const SizedBox(height: 6),
                         Row(
                           children: [
-                            if (widget.onReportGroupTap != null)
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () => _triggerAction(widget.onReportGroupTap!),
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: const [
-                                        Icon(Icons.flag_outlined, size: 16, color: Color(0xFFF43F5E)),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          'Denunciar grupo',
-                                          style: TextStyle(
-                                            color: Color(0xFFF43F5E),
-                                            fontSize: 12.5,
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => _triggerAction(widget.onReportGroupTap!),
+                                borderRadius: BorderRadius.circular(12),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: const [
+                                      Icon(Icons.flag_outlined, size: 16, color: Color(0xFFF43F5E)),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'Denunciar grupo',
+                                        style: TextStyle(
+                                          color: Color(0xFFF43F5E),
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w700,
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                            if (widget.showDeleteAction && widget.onDeleteTap != null) ...[
-                              if (widget.onReportGroupTap != null) const SizedBox(width: 6),
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () => _triggerAction(widget.onDeleteTap!),
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: const [
-                                        Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFF43F5E)),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          'Eliminar grupo',
-                                          style: TextStyle(
-                                            color: Color(0xFFF43F5E),
-                                            fontSize: 12.5,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ],
                         ),
                       ],
@@ -2435,16 +2409,16 @@ class _TopBarActionShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(14),
         child: Container(
-          width: 60,
-          height: 60,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
             color: backgroundColor,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(color: borderColor),
             boxShadow: [
               BoxShadow(
@@ -2478,20 +2452,20 @@ class _GradientTopBarActionShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(14),
         child: Container(
-          width: 60,
-          height: 60,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: colors,
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
             boxShadow: [
               BoxShadow(
@@ -2536,12 +2510,12 @@ class _AnonymousInboxHeaderButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(14),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 240),
             curve: Curves.easeOutCubic,
-            width: 60,
-            height: 60,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isDark
@@ -2558,7 +2532,7 @@ class _AnonymousInboxHeaderButton extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
                   color: shadowColor,
@@ -2578,20 +2552,20 @@ class _AnonymousInboxHeaderButton extends StatelessWidget {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                Center(
-                  child: VibeSvgIcon(
-                    VibeAssetIcons.mailbox,
-                    size: 26,
+                const Center(
+                  child: Icon(
+                    Icons.mail_outline_rounded,
+                    size: 22,
                     color: Colors.white,
                   ),
                 ),
                 if (hasUnread)
                   Positioned(
-                    top: -5,
-                    right: -5,
+                    top: -3,
+                    right: -3,
                     child: Container(
-                      width: 22,
-                      height: 22,
+                      width: 18,
+                      height: 18,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: const Color(0xFFF43F5E),
@@ -2605,12 +2579,12 @@ class _AnonymousInboxHeaderButton extends StatelessWidget {
                         ],
                       ),
                       child: Text(
-                        unseenCount > 9 ? '9+' : unseenCount.toString(),
+                        unseenCount > 99 ? '99+' : '$unseenCount',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
-                          height: 1,
+                          height: 1.0,
                         ),
                       ),
                     ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/theme/vibe_tokens.dart';
 import '../data/auth_repository.dart';
 import '../domain/age_eligibility.dart';
 import 'auth_visuals.dart';
@@ -139,8 +140,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       title: 'Crea tu cuenta',
       subtitle: 'Únete a Nadie y conecta con tu comunidad.',
       fields: [
-        const Text('Nadie no está dirigido a menores de 13 años.'),
-        const SizedBox(height: 12),
         Form(
           key: _formKey,
           child: Column(
@@ -152,25 +151,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 textInputAction: TextInputAction.next,
                 validator: (value) => (value ?? '').trim().isEmpty ? 'Ingresa tu nombre' : null,
               ),
-              const SizedBox(height: 16),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.cake_outlined),
-                title: Text(_birthDate == null
-                    ? 'Fecha de nacimiento'
-                    : 'Fecha de nacimiento: ${_birthDate!.day}/${_birthDate!.month}/${_birthDate!.year}'),
-                subtitle: const Text('Solo verificamos que tengas al menos 13 años; no guardamos la fecha.'),
-                onTap: _loading ? null : () async {
+              const SizedBox(height: 14),
+              AuthDatePickerField(
+                selectedDate: _birthDate,
+                enabled: !_loading,
+                onTap: () async {
                   final picked = await showDatePicker(
                     context: context,
                     firstDate: DateTime(1900),
                     lastDate: DateTime.now(),
                     initialDate: _birthDate ?? DateTime(DateTime.now().year - 13),
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: ColorScheme.light(
+                            primary: VibeColors.primaryViolet,
+                            onPrimary: Colors.white,
+                            surface: Colors.white,
+                            onSurface: VibeColors.primaryDeepBlue,
+                          ),
+                        ),
+                        child: child!,
+                      );
+                    },
                   );
                   if (picked != null) _safeSetState(() => _birthDate = picked);
                 },
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 14),
               AuthTextField(
                 controller: _emailController,
                 label: 'Correo electrónico',
@@ -179,7 +187,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 textInputAction: TextInputAction.next,
                 validator: (value) => value == null || !value.contains('@') ? 'Ingresa un email válido' : null,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               AuthTextField(
                 controller: _passwordController,
                 label: 'Contraseña',
@@ -190,44 +198,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 validator: (value) => (value ?? '').length < 8 ? 'Mínimo 8 caracteres' : null,
               ),
               const SizedBox(height: 12),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
+              AuthConsentCheckbox(
                 value: _privacyAccepted,
-                onChanged: _loading ? null : (value) => _safeSetState(() => _privacyAccepted = value ?? false),
-                controlAffinity: ListTileControlAffinity.leading,
-                title: Wrap(
-                  children: [
-                    const Text('Autorizo el tratamiento de mis datos personales conforme a la '),
-                    GestureDetector(
-                      onTap: () => launchUrl(_privacyUrl, mode: LaunchMode.externalApplication),
-                      child: const Text(
-                        'Política de Tratamiento de Datos',
-                        style: TextStyle(decoration: TextDecoration.underline, fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    const Text('.'),
-                  ],
-                ),
+                enabled: !_loading,
+                onChanged: (value) => _safeSetState(() => _privacyAccepted = value ?? false),
+                prefixText: 'Autorizo el tratamiento de mis datos personales conforme a la ',
+                linkText: 'Política de Tratamiento de Datos',
+                onLinkTap: () => launchUrl(_privacyUrl, mode: LaunchMode.externalApplication),
+                suffixText: '.',
               ),
-              const SizedBox(height: 4),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
+              const SizedBox(height: 10),
+              AuthConsentCheckbox(
                 value: _termsAccepted,
-                onChanged: _loading ? null : (value) => _safeSetState(() => _termsAccepted = value ?? false),
-                controlAffinity: ListTileControlAffinity.leading,
-                title: Wrap(
-                  children: [
-                    const Text('He leído y acepto expresamente los '),
-                    GestureDetector(
-                      onTap: () => launchUrl(_termsUrl, mode: LaunchMode.externalApplication),
-                      child: const Text(
-                        'Términos de Servicio',
-                        style: TextStyle(decoration: TextDecoration.underline, fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    const Text(' de Nadie.'),
-                  ],
-                ),
+                enabled: !_loading,
+                onChanged: (value) => _safeSetState(() => _termsAccepted = value ?? false),
+                prefixText: 'He leído y acepto expresamente los ',
+                linkText: 'Términos de Servicio',
+                onLinkTap: () => launchUrl(_termsUrl, mode: LaunchMode.externalApplication),
+                suffixText: ' de Nadie.',
               ),
             ],
           ),

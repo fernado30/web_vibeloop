@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/safety/perspective_service.dart';
 import '../../settings/data/safety_repository.dart';
 import '../domain/message_model.dart';
 
@@ -17,17 +18,30 @@ class ChatRepository {
   SupabaseClient get _supabase => _client;
 
   Future<MessageModel> _fetchMessageById(String messageId) async {
-    final row = await _supabase
-        .from('messages')
-        .select('id, group_id, sender_id, content, type, created_at, sender:users(display_name, emoji), reactions:reactions(emoji)')
-        .eq('id', messageId)
-        .maybeSingle();
+    dynamic row;
+    try {
+      row = await _supabase
+          .from('messages')
+          .select('id, group_id, sender_id, content, type, is_flagged, created_at, sender:users(display_name, emoji), reactions:reactions(emoji)')
+          .eq('id', messageId)
+          .maybeSingle();
+    } catch (_) {
+      row = await _supabase
+          .from('messages')
+          .select('id, group_id, sender_id, content, type, created_at, sender:users(display_name, emoji), reactions:reactions(emoji)')
+          .eq('id', messageId)
+          .maybeSingle();
+    }
 
     if (row == null) {
       throw StateError('No se pudo cargar el mensaje.');
     }
 
     final json = Map<String, dynamic>.from(row as Map);
+    final isFlagged = json['is_flagged'] == true;
+    if (isFlagged) {
+      throw StateError('Mensaje no disponible.');
+    }
     final sender = json['sender'] as Map<String, dynamic>?;
     json['sender_name'] = sender?['emoji']?.toString() ?? '🙂';
     json['reactions'] = _reactionCounts(json['reactions']);
@@ -44,19 +58,33 @@ class ChatRepository {
   }
 
   Future<List<MessageModel>> fetchMessages(String groupId) async {
-    final rows = await _supabase
-        .from('messages')
-        .select('id, group_id, sender_id, content, type, created_at, sender:users(display_name, emoji), reactions:reactions(emoji)')
-        .eq('group_id', groupId)
-        .order('created_at', ascending: false);
+    dynamic rows;
+    try {
+      rows = await _supabase
+          .from('messages')
+          .select('id, group_id, sender_id, content, type, is_flagged, created_at, sender:users(display_name, emoji), reactions:reactions(emoji)')
+          .eq('group_id', groupId)
+          .order('created_at', ascending: false);
+    } catch (_) {
+      rows = await _supabase
+          .from('messages')
+          .select('id, group_id, sender_id, content, type, created_at, sender:users(display_name, emoji), reactions:reactions(emoji)')
+          .eq('group_id', groupId)
+          .order('created_at', ascending: false);
+    }
 
     final messages = (rows as List<dynamic>).map((row) {
       final json = Map<String, dynamic>.from(row as Map);
+      final isFlagged = json['is_flagged'] == true;
+      final content = json['content']?.toString() ?? '';
+      if (isFlagged || PerspectiveService.isLocalProfane(content)) {
+        return null;
+      }
       final sender = json['sender'] as Map<String, dynamic>?;
       json['sender_name'] = sender?['emoji']?.toString() ?? '🙂';
       json['reactions'] = _reactionCounts(json['reactions']);
       return MessageModel.fromJson(json);
-    }).toList();
+    }).whereType<MessageModel>().toList();
 
     try {
       return await SafetyRepository(_supabase).filterMessages(messages);
@@ -71,12 +99,42 @@ class ChatRepository {
       throw const AuthException('Debes iniciar sesión para enviar mensajes.');
     }
 
-    await _supabase.from('messages').insert({
-      'group_id': groupId,
-      'sender_id': user.id,
-      'content': content,
-      'type': type,
-    });
+    final perspective = await PerspectiveService.analyze(content);
+    Map<String, dynamic>? inserted;
+
+    try {
+      inserted = await _supabase.from('messages').insert({
+        'group_id': groupId,
+        'sender_id': user.id,
+        'content': content,
+        'type': type,
+        'is_flagged': perspective.isToxic,
+      }).select('id').maybeSingle();
+    } catch (_) {
+      inserted = await _supabase.from('messages').insert({
+        'group_id': groupId,
+        'sender_id': user.id,
+        'content': content,
+        'type': type,
+      }).select('id').maybeSingle();
+    }
+
+    if (perspective.isToxic && inserted != null && inserted['id'] != null) {
+      final messageId = inserted['id'].toString();
+      try {
+        await _supabase.from('content_reports').insert({
+          'reporter_id': user.id,
+          'target_type': 'message',
+          'target_id': messageId,
+          'reason': 'Google Perspective AI: Contenido ${perspective.attribute} (${(perspective.score * 100).round()}%)',
+          'details': 'Origen: Chat de Grupo | ID Grupo: $groupId | Score: ${(perspective.score * 100).round()}%',
+          'content_snapshot': content,
+          'status': 'pending',
+        });
+      } catch (e) {
+        // Log report insertion error gracefully so sending flow never crashes
+      }
+    }
   }
 
   Future<void> editMessage(String messageId, String content) async {

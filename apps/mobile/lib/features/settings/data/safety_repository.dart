@@ -62,9 +62,18 @@ class SafetyRepository {
     }
   }
 
-  Future<List<ContentReportModel>> fetchModerationReports({String? statusFilter}) async {
+  Future<List<ContentReportModel>> fetchModerationReports({
+    String? statusFilter,
+    bool onlyMyReports = true,
+  }) async {
     try {
       var query = _supabase.from('content_reports').select();
+      if (onlyMyReports) {
+        final userId = await _currentUserId();
+        if (userId != null) {
+          query = query.eq('reporter_id', userId);
+        }
+      }
       if (statusFilter != null && statusFilter.isNotEmpty) {
         query = query.eq('status', statusFilter);
       }

@@ -53,39 +53,39 @@ class AuthScreenShell extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 4),
                             const _LogoBlock(),
-                            const SizedBox(height: 30),
+                            const SizedBox(height: 20),
                             Text(
                               title,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
-                                fontSize: 40,
-                                height: 1.02,
+                                fontSize: 32,
+                                height: 1.1,
                                 fontWeight: FontWeight.w800,
-                                letterSpacing: -1.1,
+                                letterSpacing: -0.8,
                                 color: VibeColors.primaryDeepBlue,
                               ),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 8),
                             Text(
                               subtitle,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
-                                fontSize: 20,
-                                height: 1.32,
+                                fontSize: 16,
+                                height: 1.3,
                                 fontWeight: FontWeight.w500,
                                 color: VibeColors.textSecondary,
                               ),
                             ),
-                            const SizedBox(height: 34),
+                            const SizedBox(height: 22),
                             ..._buildFields(),
                             if (errorText != null) ...[
                               const SizedBox(height: 12),
                               _AuthErrorBanner(message: errorText!),
                             ],
                             if (primaryLabel != null) ...[
-                              const SizedBox(height: 22),
+                              const SizedBox(height: 20),
                               _AuthGradientButton(
                                 label: primaryLabel!,
                                 icon: loading
@@ -102,19 +102,19 @@ class AuthScreenShell extends StatelessWidget {
                               ),
                             ],
                             if (googleLabel != null) ...[
-                              const SizedBox(height: 30),
+                              const SizedBox(height: 20),
                               const _AuthDivider(),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 18),
                               _AuthGoogleButton(
                                 label: googleLabel!,
                                 onPressed: loading ? null : onGooglePressed,
                               ),
                             ],
                             if (footer != null) ...[
-                              const SizedBox(height: 28),
+                              const SizedBox(height: 18),
                               footer!,
                             ],
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 4),
                           ],
                         ),
                       ),
@@ -134,7 +134,7 @@ class AuthScreenShell extends StatelessWidget {
     for (var i = 0; i < fields.length; i++) {
       widgets.add(fields[i]);
       if (i != fields.length - 1) {
-        widgets.add(const SizedBox(height: 16));
+        widgets.add(const SizedBox(height: 12));
       }
     }
     return widgets;
@@ -169,11 +169,29 @@ class AuthTextField extends StatefulWidget {
 
 class _AuthTextFieldState extends State<AuthTextField> {
   bool _isObscured = true;
+  final FocusNode _focusNode = FocusNode();
+  bool _isFocused = false;
 
   @override
   void initState() {
     super.initState();
     _isObscured = widget.obscureText;
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (mounted) {
+      setState(() {
+        _isFocused = _focusNode.hasFocus;
+      });
+    }
   }
 
   @override
@@ -181,55 +199,378 @@ class _AuthTextFieldState extends State<AuthTextField> {
     final colorScheme = Theme.of(context).colorScheme;
     final showToggle = widget.obscureText;
 
-    return TextFormField(
-      controller: widget.controller,
-      keyboardType: widget.keyboardType,
-      validator: widget.validator,
-      obscureText: _isObscured,
-      textInputAction: widget.textInputAction,
-      onFieldSubmitted: (_) => widget.onSubmitted?.call(),
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: VibeColors.primaryDeepBlue,
-      ),
-      decoration: InputDecoration(
-        hintText: widget.label,
-        hintStyle: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF8B93A7),
-        ),
-        prefixIcon: Padding(
-          padding: const EdgeInsets.only(left: 22, right: 14),
-          child: Icon(widget.icon, color: colorScheme.primary, size: 31),
-        ),
-        prefixIconConstraints: const BoxConstraints(minWidth: 58, minHeight: 60),
-        suffixIcon: showToggle
-            ? IconButton(
-                onPressed: () => setState(() => _isObscured = !_isObscured),
-                icon: Icon(
-                  _isObscured ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  color: const Color(0xFF8B93A7),
-                  size: 27,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: _isFocused ? 0.98 : 0.92),
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: _isFocused
+            ? [
+                BoxShadow(
+                  color: VibeColors.primaryViolet.withValues(alpha: 0.18),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                  spreadRadius: 1,
                 ),
-              )
-            : null,
-        filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.88),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: Color(0xFFE7E9F1)),
+                BoxShadow(
+                  color: VibeColors.electricBlue.withValues(alpha: 0.08),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: const Color(0xFF101828).withValues(alpha: 0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+      ),
+      child: TextFormField(
+        focusNode: _focusNode,
+        controller: widget.controller,
+        keyboardType: widget.keyboardType,
+        validator: widget.validator,
+        obscureText: _isObscured,
+        textInputAction: widget.textInputAction,
+        onFieldSubmitted: (_) => widget.onSubmitted?.call(),
+        style: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w600,
+          color: VibeColors.primaryDeepBlue,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: Color(0xFFE7E9F1)),
+        decoration: InputDecoration(
+          hintText: widget.label,
+          hintStyle: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF8B93A7),
+          ),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.only(left: 20, right: 14),
+            child: Icon(
+              widget.icon,
+              color: _isFocused ? VibeColors.primaryViolet : colorScheme.primary.withValues(alpha: 0.8),
+              size: 26,
+            ),
+          ),
+          prefixIconConstraints: const BoxConstraints(minWidth: 54, minHeight: 58),
+          suffixIcon: showToggle
+              ? Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: IconButton(
+                    onPressed: () => setState(() => _isObscured = !_isObscured),
+                    icon: Icon(
+                      _isObscured ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      color: _isObscured ? const Color(0xFF8B93A7) : VibeColors.primaryViolet,
+                      size: 24,
+                    ),
+                  ),
+                )
+              : null,
+          filled: true,
+          fillColor: Colors.transparent,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(26),
+            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(26),
+            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(26),
+            borderSide: BorderSide(color: VibeColors.primaryViolet.withValues(alpha: 0.75), width: 1.8),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(26),
+            borderSide: const BorderSide(color: VibeColors.dangerRed, width: 1.4),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(26),
+            borderSide: const BorderSide(color: VibeColors.dangerRed, width: 1.8),
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: BorderSide(color: colorScheme.primary.withValues(alpha: 0.55), width: 1.4),
+      ),
+    );
+  }
+}
+
+class AuthDatePickerField extends StatelessWidget {
+  const AuthDatePickerField({
+    super.key,
+    required this.selectedDate,
+    required this.onTap,
+    this.label = 'Fecha de nacimiento',
+    this.subtitle = 'Solo verificamos que tengas al menos 13 años; no guardamos la fecha.',
+    this.enabled = true,
+  });
+
+  final DateTime? selectedDate;
+  final VoidCallback? onTap;
+  final String label;
+  final String subtitle;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasValue = selectedDate != null;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final dateText = hasValue
+        ? '${selectedDate!.day.toString().padLeft(2, '0')} / ${selectedDate!.month.toString().padLeft(2, '0')} / ${selectedDate!.year}'
+        : label;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: enabled ? onTap : null,
+            borderRadius: BorderRadius.circular(26),
+            child: Container(
+              height: 58,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(26),
+                border: Border.all(
+                  color: hasValue ? VibeColors.primaryViolet.withValues(alpha: 0.45) : const Color(0xFFE5E7EB),
+                  width: hasValue ? 1.4 : 1.0,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF101828).withValues(alpha: 0.04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.cake_outlined,
+                    color: hasValue ? VibeColors.primaryViolet : colorScheme.primary.withValues(alpha: 0.8),
+                    size: 26,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      dateText,
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: hasValue ? FontWeight.w600 : FontWeight.w500,
+                        color: hasValue ? VibeColors.primaryDeepBlue : const Color(0xFF8B93A7),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: VibeColors.primaryViolet.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.calendar_month_rounded,
+                      size: 20,
+                      color: VibeColors.primaryViolet,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
+        if (subtitle.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.only(left: 14),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.shield_outlined,
+                  size: 14,
+                  color: VibeColors.textSecondary,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: VibeColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class AuthConsentCheckbox extends StatelessWidget {
+  const AuthConsentCheckbox({
+    super.key,
+    required this.value,
+    required this.onChanged,
+    required this.prefixText,
+    required this.linkText,
+    required this.onLinkTap,
+    this.suffixText = '',
+    this.enabled = true,
+  });
+
+  final bool value;
+  final ValueChanged<bool?>? onChanged;
+  final String prefixText;
+  final String linkText;
+  final VoidCallback onLinkTap;
+  final String suffixText;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: enabled ? () => onChanged?.call(!value) : null,
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              margin: const EdgeInsets.only(top: 2, right: 12),
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                color: value ? VibeColors.primaryViolet : Colors.white,
+                borderRadius: BorderRadius.circular(7),
+                border: Border.all(
+                  color: value ? VibeColors.primaryViolet : const Color(0xFFD0D5DD),
+                  width: 1.8,
+                ),
+                boxShadow: value
+                    ? [
+                        BoxShadow(
+                          color: VibeColors.primaryViolet.withValues(alpha: 0.3),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: value
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    )
+                  : null,
+            ),
+            Expanded(
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: prefixText,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        height: 1.35,
+                        color: VibeColors.textPrimary,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    WidgetSpan(
+                      child: GestureDetector(
+                        onTap: onLinkTap,
+                        child: Text(
+                          linkText,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            height: 1.35,
+                            color: VibeColors.primaryViolet,
+                            fontWeight: FontWeight.w700,
+                            decoration: TextDecoration.underline,
+                            decorationColor: VibeColors.primaryViolet,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (suffixText.isNotEmpty)
+                      TextSpan(
+                        text: suffixText,
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          height: 1.35,
+                          color: VibeColors.textPrimary,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class AuthAgeNoticeCard extends StatelessWidget {
+  const AuthAgeNoticeCard({
+    super.key,
+    this.message = 'Nadie no está dirigido a menores de 13 años.',
+  });
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: VibeColors.electricBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: VibeColors.electricBlue.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: VibeColors.electricBlue.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.verified_user_outlined,
+              size: 18,
+              color: VibeColors.electricBlue,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: VibeColors.primaryDeepBlue,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -253,7 +594,7 @@ class AuthFooterLink extends StatelessWidget {
     final hasPrompt = promptText.isNotEmpty;
     final actionStyle = TextStyle(
       color: Theme.of(context).colorScheme.secondary,
-      fontSize: 18,
+      fontSize: 17,
       fontWeight: FontWeight.w700,
     );
 
@@ -280,7 +621,7 @@ class AuthFooterLink extends StatelessWidget {
           Text(
             promptText,
             style: const TextStyle(
-              fontSize: 17,
+              fontSize: 16,
               fontWeight: FontWeight.w500,
               color: VibeColors.textSecondary,
             ),
@@ -307,26 +648,23 @@ class _LogoBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        width: 164,
-        height: 164,
+        width: 140,
+        height: 140,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(40),
+          borderRadius: BorderRadius.circular(36),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFF4F7DFF).withValues(alpha: 0.18),
-              blurRadius: 42,
-              offset: const Offset(0, 22),
+              blurRadius: 36,
+              offset: const Offset(0, 18),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(40),
-          child: Transform.scale(
-            scale: 1.34,
-            child: Image.asset(
-              'assets/icon/nadie_app_icon.png',
-              fit: BoxFit.cover,
-            ),
+          borderRadius: BorderRadius.circular(36),
+          child: Image.asset(
+            'assets/icon/nadie_app_icon.png',
+            fit: BoxFit.cover,
           ),
         ),
       ),
@@ -458,7 +796,8 @@ class _AuthGradientButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         gradient: onPressed == null
             ? LinearGradient(
@@ -476,14 +815,14 @@ class _AuthGradientButton extends StatelessWidget {
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(26),
         boxShadow: onPressed == null
             ? const []
             : [
                 BoxShadow(
-                  color: const Color(0xFF5C67E8).withValues(alpha: 0.28),
-                  blurRadius: 24,
-                  offset: const Offset(0, 12),
+                  color: const Color(0xFF6D4DFF).withValues(alpha: 0.35),
+                  blurRadius: 22,
+                  offset: const Offset(0, 10),
                 ),
               ],
       ),
@@ -493,7 +832,7 @@ class _AuthGradientButton extends StatelessWidget {
         label: Text(
           label,
           style: const TextStyle(
-            fontSize: 19,
+            fontSize: 18,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.2,
           ),
@@ -502,8 +841,8 @@ class _AuthGradientButton extends StatelessWidget {
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
           foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(64),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          minimumSize: const Size.fromHeight(58),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
         ).copyWith(
           iconColor: const WidgetStatePropertyAll<Color>(Colors.white),
         ),
@@ -522,12 +861,12 @@ class _AuthDivider extends StatelessWidget {
         Expanded(
           child: Container(
             height: 1,
-            margin: const EdgeInsets.only(right: 18),
+            margin: const EdgeInsets.only(right: 16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   Colors.transparent,
-                  const Color(0xFFCBD1E5).withValues(alpha: 0.95),
+                  const Color(0xFFD0D5DD).withValues(alpha: 0.8),
                 ],
               ),
             ),
@@ -536,19 +875,19 @@ class _AuthDivider extends StatelessWidget {
         const Text(
           'o continuar con',
           style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
             color: VibeColors.textSecondary,
           ),
         ),
         Expanded(
           child: Container(
             height: 1,
-            margin: const EdgeInsets.only(left: 18),
+            margin: const EdgeInsets.only(left: 16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFFCBD1E5).withValues(alpha: 0.95),
+                  const Color(0xFFD0D5DD).withValues(alpha: 0.8),
                   Colors.transparent,
                 ],
               ),
@@ -573,26 +912,26 @@ class _AuthGoogleButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFE7E9F1)),
+        color: Colors.white.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: const Color(0xFFE4E7EC)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF19306C).withValues(alpha: 0.08),
-            blurRadius: 22,
-            offset: const Offset(0, 12),
+            color: const Color(0xFF101828).withValues(alpha: 0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: SizedBox(
-        height: 66,
+        height: 58,
         child: FilledButton.icon(
           onPressed: onPressed,
           icon: const _GoogleMark(),
           label: Text(
             label,
             style: const TextStyle(
-              fontSize: 18,
+              fontSize: 17,
               fontWeight: FontWeight.w700,
               color: VibeColors.primaryDeepBlue,
             ),
@@ -601,8 +940,8 @@ class _AuthGoogleButton extends StatelessWidget {
             backgroundColor: Colors.transparent,
             shadowColor: Colors.transparent,
             foregroundColor: VibeColors.primaryDeepBlue,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-            minimumSize: const Size.fromHeight(66),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+            minimumSize: const Size.fromHeight(58),
           ).copyWith(
             iconColor: const WidgetStatePropertyAll<Color>(VibeColors.primaryDeepBlue),
           ),
@@ -619,13 +958,12 @@ class _GoogleMark extends StatelessWidget {
   Widget build(BuildContext context) {
     return Image.asset(
       'assets/icons/google_logo.png',
-      width: 30,
-      height: 30,
+      width: 26,
+      height: 26,
       fit: BoxFit.contain,
     );
   }
 }
-
 
 class _AuthErrorBanner extends StatelessWidget {
   const _AuthErrorBanner({required this.message});

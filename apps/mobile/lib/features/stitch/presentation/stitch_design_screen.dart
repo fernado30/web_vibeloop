@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -64,7 +65,19 @@ class _StitchDesignScreenState extends ConsumerState<StitchDesignScreen> {
 
   Future<void> _loadHtml() async {
     final rawHtml = await rootBundle.loadString('assets/stitch/loop_onboarding.html');
-    final normalizedHtml = rawHtml.replaceAll('Pol\u00c3\u00adtica', 'Política');
+    String normalizedHtml = rawHtml.replaceAll('Pol\u00c3\u00adtica', 'Política');
+    if (normalizedHtml.contains('./vibeloop-icon.png')) {
+      try {
+        final iconBytes = await rootBundle.load('assets/stitch/vibeloop-icon.png');
+        final base64Image = base64Encode(iconBytes.buffer.asUint8List());
+        normalizedHtml = normalizedHtml.replaceAll(
+          './vibeloop-icon.png',
+          'data:image/png;base64,$base64Image',
+        );
+      } catch (e) {
+        debugPrint('Error embedding icon base64 into WebView: $e');
+      }
+    }
     await _controller.loadHtmlString(normalizedHtml);
   }
 
@@ -107,7 +120,7 @@ class _StitchDesignScreenState extends ConsumerState<StitchDesignScreen> {
         statusBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFF0B0A1F),
+        backgroundColor: const Color(0xFF120324),
         body: Stack(
           children: [
             Positioned.fill(

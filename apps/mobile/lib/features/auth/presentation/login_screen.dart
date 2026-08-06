@@ -141,44 +141,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 validator: (value) => (value ?? '').length < 6 ? 'Mínimo 6 caracteres' : null,
               ),
               const SizedBox(height: 12),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
+              AuthConsentCheckbox(
                 value: _privacyAccepted,
-                onChanged: _loading ? null : (value) => _safeSetState(() => _privacyAccepted = value ?? false),
-                controlAffinity: ListTileControlAffinity.leading,
-                title: Wrap(
-                  children: [
-                    const Text('Autorizo el tratamiento de mis datos personales conforme a la '),
-                    GestureDetector(
-                      onTap: () => launchUrl(_privacyUrl, mode: LaunchMode.externalApplication),
-                      child: const Text(
-                        'Política de Tratamiento de Datos',
-                        style: TextStyle(decoration: TextDecoration.underline, fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    const Text('.'),
-                  ],
-                ),
+                enabled: !_loading,
+                onChanged: (value) => _safeSetState(() => _privacyAccepted = value ?? false),
+                prefixText: 'Autorizo el tratamiento de mis datos personales conforme a la ',
+                linkText: 'Política de Tratamiento de Datos',
+                onLinkTap: () => launchUrl(_privacyUrl, mode: LaunchMode.externalApplication),
+                suffixText: '.',
               ),
-              const SizedBox(height: 4),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
+              const SizedBox(height: 10),
+              AuthConsentCheckbox(
                 value: _termsAccepted,
-                onChanged: _loading ? null : (value) => _safeSetState(() => _termsAccepted = value ?? false),
-                controlAffinity: ListTileControlAffinity.leading,
-                title: Wrap(
-                  children: [
-                    const Text('He leído y acepto expresamente los '),
-                    GestureDetector(
-                      onTap: () => launchUrl(_termsUrl, mode: LaunchMode.externalApplication),
-                      child: const Text(
-                        'Términos de Servicio',
-                        style: TextStyle(decoration: TextDecoration.underline, fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    const Text(' de Nadie.'),
-                  ],
-                ),
+                enabled: !_loading,
+                onChanged: (value) => _safeSetState(() => _termsAccepted = value ?? false),
+                prefixText: 'He leído y acepto expresamente los ',
+                linkText: 'Términos de Servicio',
+                onLinkTap: () => launchUrl(_termsUrl, mode: LaunchMode.externalApplication),
+                suffixText: ' de Nadie.',
               ),
             ],
           ),
