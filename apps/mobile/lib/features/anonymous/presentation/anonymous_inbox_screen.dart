@@ -50,8 +50,10 @@ class _AnonymousInboxScreenState extends ConsumerState<AnonymousInboxScreen> {
             if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
               return ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(20),
-                children: const [LoadingStateCard(label: 'Cargando mensajes anónimos...')],
+                padding: const EdgeInsets.all(16),
+                children: const [
+                  VibeSkeletonCard(cardCount: 4),
+                ],
               );
             }
 

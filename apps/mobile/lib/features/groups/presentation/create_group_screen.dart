@@ -159,13 +159,13 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Padding(
-            padding: EdgeInsets.fromLTRB(14, isMultiline ? 12 : 10, 14, isMultiline ? 12 : 10),
+            padding: EdgeInsets.fromLTRB(14, isMultiline ? 12 : 8, 14, isMultiline ? 12 : 8),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: isMultiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: 30,
-                  height: 30,
+                  width: 34,
+                  height: 34,
                   decoration: BoxDecoration(
                     color: iconBgColor,
                     borderRadius: BorderRadius.circular(10),
@@ -181,12 +181,13 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                     maxLines: maxLines,
                     minLines: minLines,
                     keyboardType: keyboardType,
+                    textAlignVertical: isMultiline ? TextAlignVertical.top : TextAlignVertical.center,
                     cursorColor: isDark ? Colors.white : VibeColors.primaryViolet,
                     style: TextStyle(
                       color: textColor,
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
-                      height: 1.35,
+                      height: 1.25,
                     ),
                     decoration: InputDecoration(
                       isDense: true,
@@ -199,9 +200,9 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                         color: hintColor,
                         fontSize: isMultiline ? 14 : 15,
                         fontWeight: FontWeight.w400,
-                        height: 1.35,
+                        height: 1.25,
                       ),
-                      contentPadding: EdgeInsets.zero,
+                      contentPadding: EdgeInsets.symmetric(vertical: isMultiline ? 4 : 8),
                       fillColor: Colors.transparent,
                       filled: false,
                     ),
@@ -530,99 +531,20 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                               const SizedBox(height: 16),
                               _buildLabel('DESCRIPCIÓN', isDark: isDark),
                               const SizedBox(height: 8),
-                              // Description field (multiline)
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(VibeRadii.card),
-                                  border: Border.all(
-                                    color: isDark
-                                        ? Colors.white.withValues(alpha: 0.08)
-                                        : VibeColors.strokeSoft,
-                                  ),
-                                  color: isDark
-                                      ? Colors.white.withValues(alpha: 0.05)
-                                      : Colors.white.withValues(alpha: 0.92),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: isDark
-                                          ? Colors.black.withValues(alpha: 0.10)
-                                          : VibeColors.primaryDeepBlue.withValues(alpha: 0.06),
-                                      blurRadius: isDark ? 12 : 16,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
+                              _buildFieldCard(
+                                isDark: isDark,
+                                icon: ShaderMask(
+                                  shaderCallback: (bounds) => buttonGradient.createShader(bounds),
+                                  child: const Icon(Icons.edit_rounded, color: Colors.white, size: 18),
                                 ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(VibeRadii.card),
-                                  child: BackdropFilter(
-                                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Container(
-                                            width: 30,
-                                            height: 30,
-                                            decoration: BoxDecoration(
-                                              color: isDark
-                                                  ? Colors.white.withValues(alpha: 0.06)
-                                                  : VibeColors.surfaceSoft,
-                                              borderRadius: BorderRadius.circular(10),
-                                              border: Border.all(
-                                                color: isDark
-                                                    ? Colors.white.withValues(alpha: 0.08)
-                                                    : VibeColors.strokeSoft,
-                                              ),
-                                            ),
-                                            alignment: Alignment.center,
-                                            child: ShaderMask(
-                                              shaderCallback: (bounds) => buttonGradient.createShader(bounds),
-                                              child: const Icon(Icons.edit_rounded, color: Colors.white, size: 18),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 10),
-                                          Expanded(
-                                            child: TextFormField(
-                                              controller: _descriptionController,
-                                              keyboardType: TextInputType.multiline,
-                                              minLines: 2,
-                                              maxLines: 3,
-                                              cursorColor: isDark ? Colors.white : VibeColors.primaryViolet,
-                                              style: TextStyle(
-                                                color: isDark ? Colors.white : VibeColors.textPrimary,
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.w400,
-                                                height: 1.4,
-                                              ),
-                                              textAlignVertical: TextAlignVertical.top,
-                                              decoration: InputDecoration(
-                                                border: InputBorder.none,
-                                                enabledBorder: InputBorder.none,
-                                                focusedBorder: InputBorder.none,
-                                                isDense: true,
-                                                fillColor: Colors.transparent,
-                                                filled: false,
-                                                hintText:
-                                                    '¿De qué trata este grupo? Añade detalles para que los miembros sepan qué esperar.',
-                                                hintStyle: TextStyle(
-                                                  color: isDark
-                                                      ? Colors.white.withValues(alpha: 0.45)
-                                                      : VibeColors.textSecondary,
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w400,
-                                                  height: 1.4,
-                                                ),
-                                              ),
-                                              validator: (value) =>
-                                                  (value ?? '').trim().isEmpty ? 'Escribe una descripción' : null,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                                hintText:
+                                    '¿De qué trata este grupo? Añade detalles para que los miembros sepan qué esperar.',
+                                controller: _descriptionController,
+                                maxLines: 3,
+                                minLines: 2,
+                                keyboardType: TextInputType.multiline,
+                                validator: (value) =>
+                                    (value ?? '').trim().isEmpty ? 'Escribe una descripción' : null,
                               ),
                               const SizedBox(height: 6),
                               Align(
@@ -760,18 +682,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                           ),
                         ),
                         SizedBox(height: 20 + bottomPadding),
-                        Center(
-                          child: Container(
-                            width: 120,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.90)
-                                  : VibeColors.textSecondary.withValues(alpha: 0.25),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                          ),
-                        ),
+
                       ],
                     ),
                   ),

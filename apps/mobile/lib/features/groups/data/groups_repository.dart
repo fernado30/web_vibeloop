@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/config/invite_link_config.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/utils/profile_emojis.dart';
+import '../../../core/utils/string_extensions.dart';
 import '../domain/group_photo_model.dart';
 import '../domain/group_model.dart';
 
@@ -138,9 +139,11 @@ class GroupsRepository {
 
     await _ensureUserProfile(user);
 
+    final titleCaseName = name.trim().toTitleCase();
+
     final inserted = await _runWithSchemaCheck(
       () => _supabase.from('groups').insert({
-        'name': name,
+        'name': titleCaseName,
         'description': description,
         'image_url': imageUrl,
         'created_by': user.id,
@@ -681,6 +684,9 @@ class GroupsRepository {
 
   Map<String, dynamic> _normalizeGroupJson(Map<String, dynamic> json) {
     json['created_by'] = json['created_by']?.toString() ?? '';
+    if (json['name'] != null) {
+      json['name'] = json['name'].toString().toTitleCase();
+    }
     return json;
   }
 

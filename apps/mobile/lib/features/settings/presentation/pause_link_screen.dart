@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/widgets/vibe_ui.dart';
+import '../../../core/utils/string_extensions.dart';
 import '../../groups/data/groups_repository.dart';
 
 class PauseLinkScreen extends ConsumerStatefulWidget {
@@ -70,7 +71,7 @@ class _PauseLinkScreenState extends ConsumerState<PauseLinkScreen> {
                     value: group.invitePaused,
                     onChanged: (value) => _togglePaused(group, value),
                     title: Text(
-                      group.name,
+                      group.name.toTitleCase(),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     subtitle: Text(group.invitePaused ? 'El enlace está pausado' : 'El enlace está activo'),

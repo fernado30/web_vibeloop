@@ -11,6 +11,7 @@ import '../../../core/theme/vibe_tokens.dart';
 import '../../../core/widgets/vibe_svg_icon.dart';
 import '../../../core/widgets/vibe_ui.dart';
 import '../../../core/settings/app_preferences_repository.dart';
+import '../../../core/utils/string_extensions.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/groups_repository.dart';
 import '../domain/group_model.dart';
@@ -73,7 +74,9 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
       floatingActionButton: showEmptyState
           ? null
           : Padding(
-              padding: const EdgeInsets.only(bottom: 76),
+              padding: EdgeInsets.only(
+                bottom: 16 + MediaQuery.of(context).padding.bottom,
+              ),
               child: FloatingCreateButton(
                 onPressed: _handleCreateGroupTap,
                 tooltip: 'Crear grupo',
@@ -225,16 +228,49 @@ class _GroupsListScreenState extends ConsumerState<GroupsListScreen> {
 
 }
 
+class _GroupsHeaderSkeleton extends StatelessWidget {
+  const _GroupsHeaderSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            VibeSkeletonBox(width: 32, height: 32, borderRadius: 16),
+            SizedBox(width: 10),
+            VibeSkeletonBox(width: 140, height: 16, borderRadius: 8),
+            Spacer(),
+            VibeSkeletonBox(width: 40, height: 40, borderRadius: 20),
+            SizedBox(width: 10),
+            VibeSkeletonBox(width: 40, height: 40, borderRadius: 20),
+          ],
+        ),
+        SizedBox(height: 12),
+        VibeSkeletonBox(width: 180, height: 32, borderRadius: 12),
+        SizedBox(height: 10),
+        VibeSkeletonBox(width: 120, height: 16, borderRadius: 8),
+      ],
+    );
+  }
+}
+
 class _LoadingGroupsView extends StatelessWidget {
   const _LoadingGroupsView();
 
   @override
   Widget build(BuildContext context) {
+    final topInset = MediaQuery.of(context).padding.top;
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+      padding: EdgeInsets.fromLTRB(16, 18 + topInset, 16, 40 + MediaQuery.of(context).padding.bottom),
       children: const [
-        LoadingStateCard(label: 'Cargando tus grupos...'),
+        _GroupsHeaderSkeleton(),
+        SizedBox(height: 18),
+        VibeSkeletonBox(height: 52, borderRadius: 26),
+        SizedBox(height: 18),
+        VibeSkeletonCard(cardCount: 4),
       ],
     );
   }
@@ -730,7 +766,7 @@ class _GroupCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          group.name,
+                          group.name.toTitleCase(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -921,199 +957,6 @@ class _GreetingBadge extends StatelessWidget {
   }
 }
 
-class _GroupsTopBar extends StatelessWidget implements PreferredSizeWidget {
-  const _GroupsTopBar({
-    required this.onRefresh,
-    required this.onOpenSettings,
-  });
-
-  final VoidCallback onRefresh;
-  final VoidCallback onOpenSettings;
-
-  @override
-  Size get preferredSize => const Size.fromHeight(76);
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final scaffoldColor = Theme.of(context).scaffoldBackgroundColor;
-    final titleColor = isDark ? const Color(0xFFF0F4FF) : VibeColors.textPrimary;
-    final borderColor = isDark ? const Color(0xFF3A4560).withValues(alpha: 0.5) : const Color(0xFFC0C6D6).withValues(alpha: 0.28);
-
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: isDark
-          ? SystemUiOverlayStyle.light.copyWith(
-              statusBarColor: Colors.transparent,
-              statusBarBrightness: Brightness.dark,
-              statusBarIconBrightness: Brightness.light,
-            )
-          : SystemUiOverlayStyle.dark.copyWith(
-              statusBarColor: Colors.transparent,
-              statusBarBrightness: Brightness.light,
-              statusBarIconBrightness: Brightness.dark,
-            ),
-      child: ClipRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-          child: Container(
-            decoration: BoxDecoration(
-              color: scaffoldColor.withValues(alpha: isDark ? 0.82 : 0.82),
-              border: Border(
-                bottom: BorderSide(color: borderColor),
-              ),
-            ),
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Tus grupos',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.3,
-                          color: titleColor,
-                        ),
-                      ),
-                    ),
-                    _TopCircleButton(
-                      iconAsset: VibeAssetIcons.refresh,
-                      tooltip: 'Actualizar',
-                      onPressed: onRefresh,
-                    ),
-                    const SizedBox(width: 10),
-                    _TopCircleButton(
-                      iconData: Icons.settings_outlined,
-                      tooltip: 'Ajustes',
-                      onPressed: onOpenSettings,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GroupAvatar extends StatelessWidget {
-  const _GroupAvatar({this.imageUrl});
-
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: VibeGradients.cyanViolet,
-        boxShadow: [
-          BoxShadow(
-            color: VibeColors.primaryViolet.withValues(alpha: 0.12),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: imageUrl == null
-          ? const Icon(Icons.groups_rounded, size: 26, color: Colors.white)
-          : Image.network(
-              imageUrl!,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.groups_rounded, size: 26, color: Colors.white);
-              },
-            ),
-    );
-  }
-}
-
-class _GroupMetaPill extends StatelessWidget {
-  const _GroupMetaPill({
-    required this.label,
-    this.icon,
-  });
-
-  final String label;
-  final IconData? icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pillBg = isDark ? const Color(0xFF1E2D45).withValues(alpha: 0.9) : const Color(0xFFF0EDEF).withValues(alpha: 0.92);
-    final pillBorder = isDark ? const Color(0xFF3A4D6A) : const Color(0xFFE4E2E4);
-    final textColor = isDark ? const Color(0xFFB8C8E0) : VibeColors.primaryDeepBlue;
-    final iconColor = isDark ? const Color(0xFF9BB0CC) : VibeColors.primaryDeepBlue.withValues(alpha: 0.82);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: pillBg,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: pillBorder),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 15, color: iconColor),
-            const SizedBox(width: 6),
-          ],
-          Text(
-            label,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              height: 1.1,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _GroupActionButton extends StatelessWidget {
-  const _GroupActionButton({
-    required this.icon,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: 36,
-      height: 36,
-      child: IconButton(
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints.tightFor(width: 36, height: 36),
-        splashRadius: 18,
-        visualDensity: VisualDensity.compact,
-        onPressed: onPressed,
-        icon: Icon(
-          icon,
-          size: 22,
-          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-        ),
-      ),
-    );
-  }
-}
 
 class _TopCircleButton extends StatelessWidget {
   const _TopCircleButton({

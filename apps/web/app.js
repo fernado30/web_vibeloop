@@ -1,4 +1,5 @@
 const config = window.VIBELOOP_WEB_CONFIG ?? {};
+const skeletonViewEl = document.getElementById('skeletonView');
 const landingViewEl = document.getElementById('landingView');
 const inboxViewEl = document.getElementById('inboxView');
 const statusEl = document.getElementById('status');
@@ -31,7 +32,15 @@ function getApiBaseUrl() {
     : config.supabaseUrl.replace(/\/+$/, '');
 }
 
+function showSkeleton() {
+  errorViewEl.classList.add('hidden');
+  landingViewEl.classList.add('hidden');
+  inboxViewEl.classList.add('hidden');
+  if (skeletonViewEl) skeletonViewEl.classList.remove('hidden');
+}
+
 function showError(message) {
+  if (skeletonViewEl) skeletonViewEl.classList.add('hidden');
   landingViewEl.classList.add('hidden');
   inboxViewEl.classList.add('hidden');
   errorViewEl.textContent = message;
@@ -39,12 +48,14 @@ function showError(message) {
 }
 
 function showLanding() {
+  if (skeletonViewEl) skeletonViewEl.classList.add('hidden');
   errorViewEl.classList.add('hidden');
   inboxViewEl.classList.add('hidden');
   landingViewEl.classList.remove('hidden');
 }
 
 function showInbox() {
+  if (skeletonViewEl) skeletonViewEl.classList.add('hidden');
   errorViewEl.classList.add('hidden');
   landingViewEl.classList.add('hidden');
   inboxViewEl.classList.remove('hidden');
@@ -198,6 +209,7 @@ function attemptNativeOpen(token) {
 }
 
 async function bootstrap() {
+  showSkeleton();
   try {
     requireConfig();
 

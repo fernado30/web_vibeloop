@@ -348,15 +348,29 @@ class LoadingStateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(
-            width: 22,
-            height: 22,
-            child: CircularProgressIndicator(strokeWidth: 2.2),
+          Row(
+            children: [
+              const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 14),
-          Expanded(child: Text(label)),
+          const SizedBox(height: 14),
+          const VibeSkeletonBox(height: 12, borderRadius: 6),
+          const SizedBox(height: 8),
+          const VibeSkeletonBox(width: 180, height: 12, borderRadius: 6),
         ],
       ),
     );
@@ -687,7 +701,16 @@ class ReactionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
+    final pillBg = isDark
+        ? const Color(0xFF1E293B).withValues(alpha: 0.94)
+        : Colors.white.withValues(alpha: 0.96);
+    final pillBorder = isDark
+        ? Colors.white.withValues(alpha: 0.14)
+        : const Color(0xFFE2E8F0);
+    final textColor = isDark ? Colors.white : colorScheme.onSurface;
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
@@ -695,22 +718,28 @@ class ReactionBar extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: reactions.entries
             .map(
-              (entry) => Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: isMine ? Colors.white.withValues(alpha: 0.16) : colorScheme.primary.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(VibeRadii.pill),
-                  ),
-                  child: Text(
-                    '${entry.key} ${entry.value}',
-                    style: TextStyle(
-                      color: isMine ? Colors.white : colorScheme.onSurfaceVariant,
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      height: 1,
+              (entry) => Container(
+                margin: const EdgeInsets.only(right: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: pillBg,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: pillBorder, width: 0.8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.08),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
                     ),
+                  ],
+                ),
+                child: Text(
+                  '${entry.key} ${entry.value}',
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    height: 1,
                   ),
                 ),
               ),
@@ -842,6 +871,120 @@ class MessageThreadPreview extends StatelessWidget {
               ),
               const Icon(Icons.chevron_right_rounded),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class VibeSkeletonBox extends StatefulWidget {
+  const VibeSkeletonBox({
+    super.key,
+    this.width,
+    this.height,
+    this.borderRadius = 12,
+  });
+
+  final double? width;
+  final double? height;
+  final double borderRadius;
+
+  @override
+  State<VibeSkeletonBox> createState() => _VibeSkeletonBoxState();
+}
+
+class _VibeSkeletonBoxState extends State<VibeSkeletonBox>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark
+        ? Colors.white.withValues(alpha: 0.06)
+        : Colors.black.withValues(alpha: 0.06);
+    final highlightColor = isDark
+        ? Colors.white.withValues(alpha: 0.16)
+        : Colors.black.withValues(alpha: 0.12);
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Container(
+          width: widget.width,
+          height: widget.height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(widget.borderRadius),
+            gradient: LinearGradient(
+              begin: Alignment(-2.0 + (_controller.value * 4.0), -0.3),
+              end: Alignment(-1.0 + (_controller.value * 4.0), 0.3),
+              colors: [
+                baseColor,
+                highlightColor,
+                baseColor,
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class VibeSkeletonCard extends StatelessWidget {
+  const VibeSkeletonCard({super.key, this.cardCount = 3});
+
+  final int cardCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: List.generate(
+        cardCount,
+        (index) => const Padding(
+          padding: EdgeInsets.only(bottom: 14),
+          child: GlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    VibeSkeletonBox(width: 44, height: 44, borderRadius: 22),
+                    SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          VibeSkeletonBox(width: 120, height: 14, borderRadius: 6),
+                          SizedBox(height: 8),
+                          VibeSkeletonBox(width: 180, height: 10, borderRadius: 4),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16),
+                VibeSkeletonBox(height: 12, borderRadius: 4),
+                SizedBox(height: 8),
+                VibeSkeletonBox(width: 220, height: 12, borderRadius: 4),
+              ],
+            ),
           ),
         ),
       ),

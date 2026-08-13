@@ -36,6 +36,15 @@
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
         }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .animate-shimmer {
+            animation: shimmer 1.8s infinite linear;
+            background: linear-gradient(90deg, rgba(226,232,240,0.6) 0%, rgba(255,255,255,0.95) 50%, rgba(226,232,240,0.6) 100%);
+            background-size: 200% 100%;
+        }
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -90,7 +99,39 @@
 </section>
 <div id="errorView" class="hidden"></div>
 
-<main id="inboxView" class="max-w-md mx-auto px-margin-page pt-8 pb-32">
+<!-- Skeleton Loading View -->
+<section id="skeletonView" class="max-w-md mx-auto px-margin-page pt-8 pb-32">
+  <!-- Target Info Card Skeleton -->
+  <div class="mb-8">
+    <div class="glass-card ios-shadow rounded-3xl p-gutter-card flex items-center gap-4 border border-white/40">
+      <div class="w-14 h-14 rounded-2xl animate-shimmer shadow-sm flex-shrink-0"></div>
+      <div class="flex-1 space-y-2">
+        <div class="h-3 w-28 animate-shimmer rounded-md"></div>
+        <div class="h-6 w-40 animate-shimmer rounded-lg"></div>
+        <div class="h-3 w-full animate-shimmer rounded-md"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message Input Skeleton -->
+  <div class="mb-stack-gap-lg">
+    <div class="glass-card ios-shadow rounded-3xl p-6 border border-white/40 space-y-4">
+      <div class="h-4 w-44 animate-shimmer rounded-md"></div>
+      <div class="h-36 w-full animate-shimmer rounded-2xl"></div>
+      <div class="flex justify-between items-center pt-2">
+        <div class="h-3 w-14 animate-shimmer rounded-md"></div>
+        <div class="w-8 h-8 rounded-full animate-shimmer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Button Skeleton -->
+  <div class="mb-stack-gap-lg">
+    <div class="w-full h-16 rounded-3xl animate-shimmer shadow-md"></div>
+  </div>
+</section>
+
+<main id="inboxView" class="hidden max-w-md mx-auto px-margin-page pt-8 pb-32">
 <!-- Target Info Card (contains `groupName` and `groupDescription` for app.js) -->
 <section class="mb-8">
 <div class="glass-card ios-shadow rounded-3xl p-gutter-card flex items-center gap-4 border border-white/40">

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'dart:ui';
 
@@ -1027,95 +1028,97 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final availableWidth = constraints.maxWidth.isFinite ? constraints.maxWidth : MediaQuery.sizeOf(context).width;
-        final widthCap = (availableWidth - 56).clamp(176.0, 308.0).toDouble();
-        final bubbleMaxWidth = isMine ? widthCap : widthCap.clamp(176.0, 300.0).toDouble();
+        final bubbleMaxWidth = (availableWidth - 64).clamp(50.0, 308.0).toDouble();
+
         Widget bubbleBody({bool includeReactions = true}) {
-          return IntrinsicWidth(
-            child: Column(
-              crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: bubbleGradient,
-                      color: bubbleColor,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(22),
-                        topRight: const Radius.circular(22),
-                        bottomLeft: Radius.circular(isMine ? 22 : 12),
-                        bottomRight: Radius.circular(isMine ? 12 : 22),
-                      ),
-                      border: Border.all(color: borderColor),
-                      boxShadow: [
-                        BoxShadow(
-                          color: isMine
-                              ? const Color(0xFF7C3AED).withValues(alpha: isDark ? 0.24 : 0.18)
-                              : Colors.black.withValues(alpha: isDark ? 0.24 : 0.10),
-                          blurRadius: 24,
-                          offset: const Offset(0, 12),
-                        ),
-                      ],
+          return Column(
+            crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: bubbleGradient,
+                    color: bubbleColor,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(isMine ? 10 : 2),
+                      topRight: Radius.circular(isMine ? 2 : 10),
+                      bottomLeft: const Radius.circular(10),
+                      bottomRight: const Radius.circular(10),
                     ),
-                    padding: const EdgeInsets.fromLTRB(14, 11, 12, 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
+                    border: Border.all(color: borderColor),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isMine
+                            ? const Color(0xFF7C3AED).withValues(alpha: isDark ? 0.24 : 0.18)
+                            : Colors.black.withValues(alpha: isDark ? 0.24 : 0.10),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.fromLTRB(10, 6, 8, 6),
+                  child: Text.rich(
+                    TextSpan(
                       children: [
-                        Text(
-                          message.content,
-                          textWidthBasis: TextWidthBasis.longestLine,
-                          softWrap: true,
+                        TextSpan(
+                          text: '${message.content}  ',
                           style: TextStyle(
-                            fontSize: 16,
-                            height: 1.18,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 15.5,
+                            height: 1.20,
+                            fontWeight: FontWeight.w500,
                             color: textColor,
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        Align(
-                          alignment: Alignment.centerRight,
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
                                 timeLabel,
                                 style: TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w400,
                                   color: metaColor,
+                                  letterSpacing: -0.2,
                                 ),
                               ),
                               if (isMine) ...[
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 3),
                                 Icon(
                                   Icons.done_all_rounded,
-                                  size: 14,
+                                  size: 14.5,
                                   color: metaColor,
                                 ),
                               ],
                             ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (includeReactions && message.reactions.isNotEmpty) ...[
+                Transform.translate(
+                  offset: Offset(isMine ? -6 : 6, -5),
+                  child: Align(
+                    alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
+                    child: ReactionBar(reactions: message.reactions, isMine: isMine),
                   ),
                 ),
               ],
-            ),
-          ),
-        ),
-                if (includeReactions && message.reactions.isNotEmpty) ...[
-                  const SizedBox(height: 7),
-                  ReactionBar(reactions: message.reactions, isMine: isMine),
-                ],
-              ],
-            ),
+            ],
           );
         }
 
         return Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             if (!isMine) ...[
               _MessageEmojiAvatar(
@@ -1158,10 +1161,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       fontWeight: FontWeight.w500,
     );
 
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    final extraBottomPadding = bottomInset > 0 ? 8.0 : 10.0;
+
     return SafeArea(
       top: false,
+      bottom: true,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
+        padding: EdgeInsets.fromLTRB(12, 6, 12, extraBottomPadding),
         child: AnimatedBuilder(
           animation: _textController,
           builder: (context, _) {
@@ -1545,18 +1552,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
   }
 
-  Future<void> _copyInviteLink({
-    required String label,
-    required String Function(InviteLinks links) pickLink,
-  }) async {
-    final links = await _inviteLinksFuture;
-    await Clipboard.setData(ClipboardData(text: pickLink(links)));
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$label copiado al portapapeles')),
-    );
-    unawaited(AdService.instance.showInterstitialAfterInviteShared());
-  }
 
   Future<void> _shareInviteLink() async {
     final links = await _inviteLinksFuture;
@@ -1936,7 +1931,6 @@ class _HeaderActionTile extends StatelessWidget {
     required this.color,
     required this.onTap,
     this.compact = false,
-    this.horizontal = false,
   });
 
   final String label;
@@ -1944,7 +1938,6 @@ class _HeaderActionTile extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
   final bool compact;
-  final bool horizontal;
 
   @override
   Widget build(BuildContext context) {
@@ -1952,47 +1945,15 @@ class _HeaderActionTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(horizontal ? 20 : 18),
+        borderRadius: BorderRadius.circular(18),
         child: Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: horizontal ? 12 : 0,
+            horizontal: 0,
             vertical: compact ? 0 : 4,
           ),
-          child: horizontal
-              ? SizedBox(
-                  height: 52,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Center(
-                          child: VibeSvgIcon(iconAsset, size: 16, color: color),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                decoration: TextDecoration.none,
-                                decorationThickness: 0,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
                     Container(
                       width: compact ? 54 : 54,
                       height: compact ? 54 : 54,
@@ -2200,7 +2161,8 @@ class _ExpandableHeaderActionMenuState extends State<_ExpandableHeaderActionMenu
     final isDark = Theme.of(overlayContext).brightness == Brightness.dark;
     final panelBg = isDark ? const Color(0xFF0F1628).withValues(alpha: 0.96) : Colors.white.withValues(alpha: 0.98);
     final panelBorder = isDark ? Colors.white.withValues(alpha: 0.10) : const Color(0xFFE9ECF5);
-    final menuWidth = MediaQuery.sizeOf(overlayContext).width.clamp(318.0, 392.0).toDouble();
+    final screenWidth = MediaQuery.sizeOf(overlayContext).width;
+    final menuWidth = math.min(326.0, screenWidth - 24.0);
 
     return Material(
       color: Colors.transparent,
@@ -2213,7 +2175,7 @@ class _ExpandableHeaderActionMenuState extends State<_ExpandableHeaderActionMenu
             showWhenUnlinked: false,
             targetAnchor: Alignment.bottomRight,
             followerAnchor: Alignment.topRight,
-            offset: const Offset(0, 8),
+            offset: const Offset(8, 8),
             child: IgnorePointer(
               ignoring: !_isOpen && _controller.value == 0,
               child: Opacity(
@@ -2226,7 +2188,7 @@ class _ExpandableHeaderActionMenuState extends State<_ExpandableHeaderActionMenu
                       heightFactor: eased,
                       child: TapRegion(
                         groupId: _tapRegionGroupId,
-            child: _buildMenuPanel(
+                        child: _buildMenuPanel(
                           context: overlayContext,
                           panelBg: panelBg,
                           panelBorder: panelBorder,
@@ -2260,7 +2222,7 @@ class _ExpandableHeaderActionMenuState extends State<_ExpandableHeaderActionMenu
           children: [
             Positioned(
               top: -7,
-              right: 28,
+              right: 22,
               child: Transform.rotate(
                 angle: 0.7853981633974483,
                 child: Container(
@@ -2279,11 +2241,10 @@ class _ExpandableHeaderActionMenuState extends State<_ExpandableHeaderActionMenu
               onTap: () {},
               child: Container(
                 width: menuWidth,
-                constraints: const BoxConstraints(minWidth: 318, maxWidth: 392),
-                padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
+                padding: const EdgeInsets.fromLTRB(10, 14, 10, 12),
                 decoration: BoxDecoration(
                   color: panelBg,
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(24),
                   border: Border.all(color: panelBorder),
                   boxShadow: [
                     BoxShadow(
@@ -2396,41 +2357,31 @@ class _TopBarActionShell extends StatelessWidget {
     required this.borderColor,
     required this.shadowColor,
     required this.child,
-    this.onTap,
   });
 
   final Color backgroundColor;
   final Color borderColor;
   final Color shadowColor;
   final Widget child;
-  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: InkWell(
-        onTap: onTap,
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(14),
-        child: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: borderColor),
-            boxShadow: [
-              BoxShadow(
-                color: shadowColor,
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
+        border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: shadowColor,
+            blurRadius: 14,
+            offset: const Offset(0, 6),
           ),
-          child: child,
-        ),
+        ],
       ),
+      child: child,
     );
   }
 }
@@ -2663,16 +2614,23 @@ class _MessageEmojiAvatar extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: shadowColor,
-                blurRadius: 16,
-                offset: const Offset(0, 8),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
-          child: Center(
-            child: Text(
-              emoji,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 20, height: 1),
+          alignment: Alignment.center,
+          child: Text(
+            emoji,
+            textAlign: TextAlign.center,
+            strutStyle: const StrutStyle(
+              fontSize: 20,
+              height: 1.0,
+              forceStrutHeight: true,
+            ),
+            style: const TextStyle(
+              fontSize: 20,
+              height: 1.0,
             ),
           ),
         ),
